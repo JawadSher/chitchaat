@@ -3,6 +3,8 @@ import { Roboto } from "next/font/google";
 import "./globals.css";
 import QueryProvider from "@/providers/query-client-provider";
 import { Toaster } from "sonner";
+import { ClerkProvider } from "@clerk/nextjs";
+import { ThemeProvider } from "@/providers/theme-provider";
 
 const robotoSans = Roboto({
   weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
@@ -21,12 +23,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${robotoSans.variable}  antialiased bg-background`}>
-        <QueryProvider>
-          {children}
-          <Toaster />
-        </QueryProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <ClerkProvider>
+            <QueryProvider>
+              {children}
+              <Toaster />
+            </QueryProvider>
+          </ClerkProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

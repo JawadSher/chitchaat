@@ -21,6 +21,15 @@ import {
 import Logo from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import {
+  SignedIn,
+  SignedOut,
+  SignInButton,
+  SignUpButton,
+  UserButton,
+} from "@clerk/nextjs";
+import { ModeToggle } from "@/components/theme-toggle";
 
 export default function Home() {
   const router = useRouter();
@@ -409,21 +418,13 @@ export default function Home() {
       >
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           {/* Logo */}
-          <a
-            href="#home"
-            onClick={(e) => {
-              e.preventDefault();
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }}
-            className="flex items-center gap-2 sm:gap-3 group"
-          >
-            <Logo />
-          </a>
+
+          <Logo />
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-1">
             {navLinks.map((link) => (
-              <a
+              <Link
                 key={link.href}
                 href={link.href}
                 onClick={(e) => {
@@ -437,19 +438,25 @@ export default function Home() {
                 }`}
               >
                 {link.label}
-              </a>
+              </Link>
             ))}
           </div>
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-3">
-            <Button onClick={() => router.push("/sign-in")} className="px-4 py-2 text-gray-300 hover:text-white transition-colors font-medium rounded-full cursor-pointer">
-              Sign In
-            </Button>
-            <Button className="group relative px-6 py-2.5 bg-gradient-to-r from-yellow-500 to-amber-500 rounded-full font-medium overflow-hidden transition-all hover:shadow-lg hover:shadow-yellow-500/30 hover:scale-105">
-              <span className="relative z-10">Get Started</span>
-              <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-amber-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-            </Button>
+            <ModeToggle />
+            <SignedOut>
+              <SignInButton />
+              <SignUpButton>
+                <Button className="bg-primary rounded-full font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 cursor-pointer">
+                  Sign Up
+                </Button>
+              </SignUpButton>
+            </SignedOut>
+            {/* Show the user button when the user is signed in */}
+            <SignedIn>
+              <UserButton />
+            </SignedIn>
           </div>
 
           {/* Mobile Menu Button */}
@@ -476,7 +483,7 @@ export default function Home() {
         >
           <div className="px-4 py-6 space-y-4">
             {navLinks.map((link) => (
-              <a
+              <Link
                 key={link.href}
                 href={link.href}
                 onClick={(e) => {
@@ -486,7 +493,7 @@ export default function Home() {
                 className="block px-4 py-3 rounded-lg text-gray-300 hover:text-white hover:bg-white/5 transition-all font-medium"
               >
                 {link.label}
-              </a>
+              </Link>
             ))}
             <div className="pt-4 border-t border-white/5 space-y-3">
               <Button className="w-full px-4 py-3 text-gray-300 hover:text-white transition-colors font-medium text-left">
@@ -817,7 +824,10 @@ export default function Home() {
               </div>
 
               {/* CTA Button */}
-              <Button onClick={() => router.push("/sign-up")} className="group relative px-8 sm:px-10 py-4 sm:py-5 bg-white text-yellow-600 rounded-full font-bold text-base sm:text-lg hover:scale-105 transition-all shadow-2xl hover:shadow-white/30 overflow-hidden">
+              <Button
+                onClick={() => router.push("/sign-up")}
+                className="group relative px-8 sm:px-10 py-4 sm:py-5 bg-white text-yellow-600 rounded-full font-bold text-base sm:text-lg hover:scale-105 transition-all shadow-2xl hover:shadow-white/30 overflow-hidden"
+              >
                 <span className="relative z-10">Create Free Account</span>
                 <div className="absolute inset-0 bg-gradient-to-r from-gray-100 to-white opacity-0 group-hover:opacity-100 transition-opacity" />
               </Button>
@@ -866,12 +876,12 @@ export default function Home() {
                 <ul className="space-y-2 sm:space-y-3">
                   {section.links.map((link) => (
                     <li key={link}>
-                      <a
+                      <Link
                         href="#"
                         className="text-gray-400 hover:text-white transition-colors text-sm"
                       >
                         {link}
-                      </a>
+                      </Link>
                     </li>
                   ))}
                 </ul>
@@ -886,13 +896,13 @@ export default function Home() {
             </p>
             <div className="flex items-center gap-4 sm:gap-6">
               {["Twitter", "GitHub", "LinkedIn", "Discord"].map((social) => (
-                <a
+                <Link
                   key={social}
                   href="#"
                   className="text-gray-500 hover:text-white transition-colors text-xs sm:text-sm"
                 >
                   {social}
-                </a>
+                </Link>
               ))}
             </div>
           </div>

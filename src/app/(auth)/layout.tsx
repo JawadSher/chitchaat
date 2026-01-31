@@ -61,106 +61,6 @@ function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="w-full min-h-screen flex bg-black text-white overflow-hidden relative">
       {/* Global Styles */}
-      <style jsx global>{`
-        @keyframes float {
-          0%,
-          100% {
-            transform: translateY(0) rotate(0deg);
-          }
-          50% {
-            transform: translateY(-20px) rotate(5deg);
-          }
-        }
-
-        @keyframes float-reverse {
-          0%,
-          100% {
-            transform: translateY(0) rotate(0deg);
-          }
-          50% {
-            transform: translateY(20px) rotate(-5deg);
-          }
-        }
-
-        @keyframes pulse-glow {
-          0%,
-          100% {
-            opacity: 0.5;
-            transform: scale(1);
-          }
-          50% {
-            opacity: 0.8;
-            transform: scale(1.1);
-          }
-        }
-
-        @keyframes gradient-shift {
-          0% {
-            background-position: 0% 50%;
-          }
-          50% {
-            background-position: 100% 50%;
-          }
-          100% {
-            background-position: 0% 50%;
-          }
-        }
-
-        @keyframes slide-up {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes fade-in {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-
-        .animate-float {
-          animation: float 6s ease-in-out infinite;
-        }
-
-        .animate-float-reverse {
-          animation: float-reverse 8s ease-in-out infinite;
-        }
-
-        .animate-pulse-glow {
-          animation: pulse-glow 4s ease-in-out infinite;
-        }
-
-        .animate-gradient {
-          background-size: 200% 200%;
-          animation: gradient-shift 3s ease infinite;
-        }
-
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-          width: 6px;
-        }
-
-        ::-webkit-scrollbar-track {
-          background: #0a0a0a;
-        }
-
-        ::-webkit-scrollbar-thumb {
-          background: linear-gradient(to bottom, #eab308, #f59e0b);
-          border-radius: 3px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-          background: linear-gradient(to bottom, #fbbf24, #f97316);
-        }
-      `}</style>
 
       {/* Animated Background - Full Screen */}
       <div className="fixed inset-0 pointer-events-none">
@@ -330,20 +230,6 @@ function AuthLayout({ children }: { children: React.ReactNode }) {
         <div className="absolute bottom-1/4 left-1/4 w-64 h-64 bg-amber-500/5 rounded-full blur-[100px] animate-float-reverse lg:hidden" />
 
         {/* Mobile Logo (shown only on mobile/tablet) */}
-        <div
-          className={`lg:hidden absolute top-6 left-1/2 -translate-x-1/2 transition-all duration-700 ${
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"
-          }`}
-        >
-          <Link href="/" className="inline-flex items-center gap-2 group">
-            <div className="w-10 h-10 bg-gradient-to-br from-yellow-500 via-amber-500 to-orange-500 rounded-xl flex items-center justify-center shadow-lg shadow-yellow-500/30">
-              <MessageCircle className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-yellow-400 via-amber-400 to-orange-400 bg-clip-text text-transparent">
-              ChitChaat
-            </span>
-          </Link>
-        </div>
 
         {/* Auth Form Card */}
         <div className="relative z-10 w-full max-w-md mt-16 lg:mt-0 flex flex-col items-center justify-start">
@@ -374,18 +260,7 @@ function AuthLayout({ children }: { children: React.ReactNode }) {
           </p>
         </div>
 
-        {/* Mobile bottom decoration */}
-        <div className="lg:hidden absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-6 text-xs text-gray-500">
-          <span>© 2025 ChitChaat</span>
-          <span>•</span>
-          <a href="#" className="hover:text-white transition-colors">
-            Help
-          </a>
-          <span>•</span>
-          <a href="#" className="hover:text-white transition-colors">
-            Privacy
-          </a>
-        </div>
+        
       </div>
     </div>
   );

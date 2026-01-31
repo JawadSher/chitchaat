@@ -317,12 +317,11 @@ export default function Home() {
           <div className="hidden md:flex items-center gap-3">
             <ModeToggle />
             <SignedOut>
-              <SignInButton />
-              <SignUpButton>
-                <Button className="bg-primary rounded-full font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 cursor-pointer">
-                  Sign Up
+              <SignInButton>
+                <Button className="bg-primary rounded-full font-medium text-sm sm:text-base px-4 sm:px-5 cursor-pointer">
+                  Sign in
                 </Button>
-              </SignUpButton>
+              </SignInButton>
             </SignedOut>
             {/* Show the user button when the user is signed in */}
             <SignedIn>
@@ -367,10 +366,16 @@ export default function Home() {
               </Link>
             ))}
             <div className="pt-4 border-t border-white/5 space-y-3">
-              <Button className="w-full px-4 py-3 text-gray-300 hover:text-white transition-colors font-medium text-left">
+              <Button
+                onClick={() => router.push("/sign-in")}
+                className="w-full px-4 py-3 text-gray-300 hover:text-white transition-colors font-medium text-left"
+              >
                 Sign In
               </Button>
-              <Button className="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-amber-500 rounded-lg font-medium">
+              <Button
+                onClick={() => router.push("/sign-up")}
+                className="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-amber-500 rounded-lg font-medium"
+              >
                 Get Started
               </Button>
             </div>

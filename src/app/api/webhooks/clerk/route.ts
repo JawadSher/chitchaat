@@ -4,7 +4,7 @@ import { verifyClerkWebhook } from "@/lib/verify-clerk-webhook";
 import { NextRequest, NextResponse } from "next/server";
 
 async function deleteUser({ user_id }: { user_id: string }) {
-  const supabase = await createWebhookClient();
+  const supabase = createWebhookClient();
 
   const query = supabase
     .from("users")
@@ -34,7 +34,7 @@ async function addNewUser({
   email: string;
   full_name: string;
 }) {
-  const supabase = await createWebhookClient();
+  const supabase = createWebhookClient();
 
   const query = supabase
     .from("users")

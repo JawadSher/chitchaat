@@ -6,17 +6,24 @@ import { NextRequest, NextResponse } from "next/server";
 async function deleteUser({ user_id }: { user_id: string }) {
   const supabase = createWebhookClient();
 
-  const query = supabase
+  const { data: existing, error: selectError } = await supabase
+    .from("users")
+    .select("*")
+    .eq("user_id", user_id);
+
+  if (selectError) throw new Error(selectError.message);
+  if (!existing || existing.length === 0) {
+    console.log("No user found to delete:", user_id);
+    return null;
+  }
+
+  const { error, data } = await supabase
     .from("users")
     .update({ is_deleted: true })
     .eq("user_id", user_id)
     .select();
 
-  const { error, data } = await query;
-
-  if (error) {
-    throw new Error(error.message);
-  }
+  if (error) throw new Error(error.message);
 
   return data;
 }

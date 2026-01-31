@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { createClient } from "@/lib/supabase/server";
+import { createWebhookClient } from "@/lib/supabase/createWebHookClient";
 import { verifyClerkWebhook } from "@/lib/verify-clerk-webhook";
 import { NextRequest, NextResponse } from "next/server";
 
 async function deleteUser({ user_id }: { user_id: string }) {
-  const supabase = await createClient();
+  const supabase = await createWebhookClient();
 
   const query = supabase
     .from("users")
@@ -34,7 +34,7 @@ async function addNewUser({
   email: string;
   full_name: string;
 }) {
-  const supabase = await createClient();
+  const supabase = await createWebhookClient();
 
   const query = supabase
     .from("users")

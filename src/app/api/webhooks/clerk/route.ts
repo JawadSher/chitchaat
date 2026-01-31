@@ -36,11 +36,41 @@ async function addNewUser({
 }) {
   const supabase = createWebhookClient();
 
-  const query = supabase
-    .from("users")
-    .insert({ user_id, username, avatar_url, email, full_name });
+  const oldUser = await supabase
+    .from("user")
+    .select("is_deleted")
+    .eq("email", email);
 
-  const { data, error } = await query;
+  if (oldUser.error) {
+    throw new Error(oldUser.error?.message);
+  }
+
+  if (!oldUser.data) {
+    const query = supabase
+      .from("users")
+      .insert({ user_id, username, avatar_url, email, full_name });
+
+    const { data, error } = await query;
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data;
+  }
+
+  const updateOldUser = supabase
+    .from("users")
+    .update({
+      user_id,
+      username,
+      avatar_url,
+      email,
+      full_name,
+      is_deleted: false,
+    });
+
+  const { data, error } = await updateOldUser;
 
   if (error) {
     throw new Error(error.message);

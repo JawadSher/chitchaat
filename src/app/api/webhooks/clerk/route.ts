@@ -68,7 +68,8 @@ async function addNewUser({
       email,
       full_name,
       is_deleted: false,
-    });
+    })
+    .eq("user_id", user_id);
 
   const { data, error } = await updateOldUser;
 

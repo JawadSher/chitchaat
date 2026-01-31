@@ -37,7 +37,7 @@ async function addNewUser({
   const supabase = createWebhookClient();
 
   const oldUser = await supabase
-    .from("user")
+    .from("users")
     .select("is_deleted")
     .eq("email", email);
 

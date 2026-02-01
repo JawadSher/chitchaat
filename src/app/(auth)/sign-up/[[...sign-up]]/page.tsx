@@ -1,5 +1,4 @@
 import { IMAGES } from "@/constants/images";
-import { ROUTES } from "@/constants/routes";
 import {  SignUp } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 
@@ -20,7 +19,6 @@ export default function SignUpPage() {
         },
         theme: dark,
       }}
-      fallbackRedirectUrl={ROUTES.HOME}
     />
   );
 }

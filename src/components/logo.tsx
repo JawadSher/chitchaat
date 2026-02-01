@@ -6,7 +6,7 @@ import { useWindowSize } from "@/hooks/useWindowSize";
 import Link from "next/link";
 import { ROUTES } from "@/constants/routes";
 
-function Logo() {
+function Logo({ className } : { className?: string}) {
   const { width } = useWindowSize();
   const ASPECT_RATIO = 2.5;
   let logoWidth = 400;
@@ -26,7 +26,7 @@ function Logo() {
         width={logoWidth}
         height={logoHeight}
         priority
-        className="object-contain"
+        className={`object-contain ${className}`}
       />
     </Link>
   );

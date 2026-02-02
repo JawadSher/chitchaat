@@ -1,3 +1,4 @@
+import Chat from "@/components/chat";
 import {
   Card,
   CardContent,
@@ -5,25 +6,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+
 import { TabsContent } from "@/components/ui/tabs";
 
 function ChatPage() {
   return (
-    <>
-      <TabsContent value="chat">
-        <Card>
-          <CardHeader>
-            <CardTitle>Overview</CardTitle>
-            <CardDescription>
-              View your key metrics and recent project activity.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">
-            You have 12 active projects and 3 pending tasks.
-          </CardContent>
-        </Card>
-      </TabsContent>
-
+    <div className="w-full h-full">
+      <Chat />
       <TabsContent value="call">
         <Card>
           <CardHeader>
@@ -37,9 +26,7 @@ function ChatPage() {
           </CardContent>
         </Card>
       </TabsContent>
-
-     
-    </>
+    </div>
   );
 }
 

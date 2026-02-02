@@ -60,7 +60,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
             </TabsList>
           </div>
 
-          <div className="flex-1 h-full bg-background border-l border-t rounded-tl-lg overflow-auto">
+          <div className="flex-1 h-full bg-background border-primary-foreground border-r-0 border border-l border-t rounded-tl-lg overflow-clip">
             {children}
           </div>
         </div>

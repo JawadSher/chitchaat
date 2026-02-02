@@ -1,64 +1,67 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+"use client";
+
 import MainHeader from "@/components/main-header";
 import React from "react";
-
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MessageSquareText, Phone } from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { useSearchParams, useRouter } from "next/navigation";
+
+type TabItem = {
+  Icon: keyof typeof icons;
+  value: string;
+};
+
+const icons = {
+  MessageSquareText,
+  Phone,
+};
 
 function AppLayout({ children }: { children: React.ReactNode }) {
-  const icons: Record<string, React.ElementType> = {
-    MessageSquareText,
-    Phone,
-  };
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
-  const items = [
-    {
-      Icon: "MessageSquareText",
-      value: "chats",
-    },
-    {
-      Icon: "Phone",
-      value: "calls",
-    },
+  const items: TabItem[] = [
+    { Icon: "MessageSquareText", value: "chat" },
+    { Icon: "Phone", value: "call" },
   ];
+
+  const currentTab = searchParams.get("tab") || "chat";
+
+  const handleTabChange = (value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", value);
+    router.replace(`?${params.toString()}`);
+  };
 
   return (
     <div className="w-full h-screen flex flex-col">
       <MainHeader />
 
-      <Tabs defaultValue="chats" className="flex flex-1">
-        <div className="flex w-full flex-1 h-screen">
+      <Tabs
+        value={currentTab}
+        onValueChange={handleTabChange}
+        className="flex flex-1 overflow-hidden"
+      >
+        <div className="flex flex-1 overflow-hidden">
           <div className="max-w-fit bg-sidebar">
             <TabsList className="flex bg-sidebar flex-col flex-1 items-center justify-start gap-2 p-2 border-none rounded-none w-14">
-              {items.map((item: any) => {
+              {items.map((item) => {
                 const Icon = icons[item.Icon];
                 return (
-                  <Tooltip key={item.value}>
-                    <TooltipTrigger>
-                      <TabsTrigger
-                        className="flex items-center justify-center gap-2 rounded-full border-none h-fit p-2 cursor-pointer"
-                        value={item.value}
-                        key={item.value}
-                      >
-                        <Icon className="size-5" strokeWidth={1.89} />
-                      </TabsTrigger>
-                    </TooltipTrigger>
-                    <TooltipContent side="right">{item.value}</TooltipContent>
-                  </Tooltip>
+                  <TabsTrigger
+                    key={item.value}
+                    value={item.value}
+                    className="flex items-center justify-center gap-2 rounded-full border-none h-fit p-2 cursor-pointer"
+                  >
+                    <Icon className="size-5" strokeWidth={1.89} />
+                  </TabsTrigger>
                 );
               })}
             </TabsList>
           </div>
 
-          <div className="h-full w-full bg-sidebar">
-            <div className="border-l border-t rounded-tl-lg h-full  bg-background">
-              {/* {children} */}
-            </div>
+          <div className="flex-1 h-full bg-background border-l border-t rounded-tl-lg overflow-auto">
+            {children}
           </div>
         </div>
       </Tabs>

@@ -10,7 +10,7 @@ import { TabsContent } from "@/components/ui/tabs";
 function ChatPage() {
   return (
     <>
-      <TabsContent value="chats">
+      <TabsContent value="chat">
         <Card>
           <CardHeader>
             <CardTitle>Overview</CardTitle>
@@ -24,9 +24,7 @@ function ChatPage() {
         </Card>
       </TabsContent>
 
-    
-
-      <TabsContent value="calls">
+      <TabsContent value="call">
         <Card>
           <CardHeader>
             <CardTitle>Reports</CardTitle>

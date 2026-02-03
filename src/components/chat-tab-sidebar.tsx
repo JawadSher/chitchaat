@@ -5,7 +5,6 @@ import { Label } from "./ui/label";
 import { ResizablePanel } from "./ui/resizable";
 import { Input } from "./ui/input";
 import { TabsList, TabsTrigger } from "./ui/tabs";
-import Image from "next/image";
 
 function ChatTabSidebar() {
   return (
@@ -13,17 +12,17 @@ function ChatTabSidebar() {
       defaultSize={20}
       minSize={16}
       maxSize={40}
-      className="p-2 flex flex-1 w-full flex-col items-start gap-2"
+      className="p-2 flex flex-1 w-full flex-col items-start gap-2 bg-accent/30"
     >
-      <div className="w-full flex items-center justify-between">
-        <Label className="font-normal text-lg">Chats</Label>
-        <div className="flex items-center gap-2">
-          <Button className="p-0 h-8 w-8 rounded-full bg-accent hover:bg-primary-foreground cursor-pointer">
-            <SquarePlus className="size-4 text-primary" strokeWidth={1.89} />
+      <div className="w-full flex items-center justify-between h-10 py-5">
+        <Label className="font-semibold text-lg">Chats</Label>
+        <div className="flex items-center">
+          <Button className="p-0 h-8 w-8 rounded-full bg-transparent hover:bg-primary-foreground cursor-pointer">
+            <SquarePlus className="size-5 text-primary" strokeWidth={1.89} />
           </Button>
-          <Button className="p-0 h-8 w-8 rounded-full bg-accent hover:bg-primary-foreground cursor-pointer">
+          <Button className="p-0 h-8 w-8 rounded-full bg-transparent hover:bg-primary-foreground cursor-pointer">
             <EllipsisVertical
-              className="size-4 text-primary"
+              className="size-5 text-primary"
               strokeWidth={1.89}
             />
           </Button>

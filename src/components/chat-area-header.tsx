@@ -1,0 +1,97 @@
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "./ui/button";
+import {
+  BatteryPlus,
+  ChevronDown,
+  EllipsisVertical,
+  MessageCircleX,
+  Phone,
+  Video,
+} from "lucide-react";
+import { DropdownMenuSeparator } from "@radix-ui/react-dropdown-menu";
+
+function ChatAreaHeader({
+  setActiveTab,
+}: {
+  setActiveTab: (e: string) => void;
+}) {
+  const handleCloseChat = () => {
+    setActiveTab("empty");
+  };
+
+  return (
+    <header className="flex items-center justify-between w-full h-16 px-4 bg-accent/40 shrink-0">
+      <div className="flex items-center gap-3">
+        <div className="rounded-full w-10 h-10 border" />
+        <span className="font-medium text-sm">John Doe</span>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              className="rounded-full flex items-center justify-center gap-2"
+            >
+              <BatteryPlus className="size-5" strokeWidth={1.89} />
+              <span className="text-sm">Call</span>
+              <ChevronDown className="size-4" strokeWidth={1.89} />
+            </Button>
+          </DropdownMenuTrigger>
+
+          <DropdownMenuContent
+            side="bottom"
+            align="end"
+            className="min-w-70 flex flex-col gap-2"
+          >
+            <DropdownMenuGroup className="flex items-center gap-3">
+              <div className="rounded-full w-8 h-8 border" />
+              <span>John Doe</span>
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator className="h-px bg-accent" />
+            <DropdownMenuGroup className="flex gap-2">
+              <DropdownMenuItem className="flex-1 rounded-full bg-amber-900 flex items-center justify-center gap-1 cursor-pointer">
+                <Phone className="size-5" strokeWidth={1.89} />
+                Audio
+              </DropdownMenuItem>
+              <DropdownMenuItem className="flex-1 rounded-full bg-amber-900 flex items-center justify-center gap-1 cursor-pointer">
+                <Video className="size-5" strokeWidth={1.89} />
+                Video
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              className="rounded-full h-9 w-9 flex items-center justify-center"
+            >
+              <EllipsisVertical className="size-5" strokeWidth={1.89} />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent side="bottom" align="end" className="min-w-45">
+            <DropdownMenuGroup>
+              <DropdownMenuItem
+                className="flex items-center gap-2 cursor-pointer"
+                onClick={handleCloseChat}
+              >
+                <MessageCircleX className="size-5" strokeWidth={1.89} />
+                <span>Close chat</span>
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </header>
+  );
+}
+
+export default ChatAreaHeader;

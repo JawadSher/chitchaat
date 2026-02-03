@@ -375,3 +375,17 @@ html {
 ::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(to bottom, #fbbf24, #f97316);
 }
+
+
+@keyframes loading-bar {
+  0% {
+    left: -40%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+.animate-loading-bar {
+  animation: loading-bar 1.2s linear infinite;
+}

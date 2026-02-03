@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
-import { Roboto } from "next/font/google";
 import "./globals.css";
 import QueryProvider from "@/providers/query-client-provider";
 import { Toaster } from "sonner";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ThemeProvider } from "@/providers/theme-provider";
 
-const robotoSans = Roboto({
-  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
-  variable: "--font-robot-sans",
+import { Poppins } from "next/font/google";
+
+const poppins = Poppins({
   subsets: ["latin"],
+  variable: "--font-poppins",
+  weight: ["500", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {
@@ -24,7 +25,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${robotoSans.variable}  antialiased bg-background`}>
+      <body
+        className={`${poppins.variable} font-sans antialiased bg-background`}
+      >
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

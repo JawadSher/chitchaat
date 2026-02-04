@@ -9,7 +9,7 @@ import { Input } from "./ui/input";
 import z from "zod";
 import { useForm } from "@tanstack/react-form";
 import { FieldError, FieldGroup, Field, FieldLabel } from "./ui/field";
-import EmojiPicker from "emoji-picker-react";
+import EmojiPicker, { Theme, EmojiStyle }  from "emoji-picker-react";
 import { useRef, useState } from "react";
 import { Textarea } from "./ui/textarea";
 
@@ -110,9 +110,9 @@ function ChatForm() {
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               <EmojiPicker
+                emojiStyle={EmojiStyle.GOOGLE}
                 searchPlaceHolder="Search your emoji..."
-                emojiStyle="google"
-                theme="dark"
+                theme={Theme.AUTO}
                 className="z-10"
                 onEmojiClick={({ emoji }) => handleEmojiClick(emoji)}
                 open={isOpen}

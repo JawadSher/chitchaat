@@ -7,6 +7,7 @@ export const IMAGES = {
     LOGIN: "/svgs/login-page.svg",
   },
   ICONS: {
-    GOOGLE: "/icons/google.png"
+    GOOGLE: "/icons/google.png",
+    UNKNOWN_USER: "/icons/unknown-user.png"
   }
 };

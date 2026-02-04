@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { EllipsisVertical, Search, SquarePlus } from "lucide-react";
 import { Button } from "./ui/button";
 import { Label } from "./ui/label";

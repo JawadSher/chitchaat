@@ -56,14 +56,14 @@ function ChatAreaHeader({
             </DropdownMenuGroup>
             <DropdownMenuSeparator className="h-px bg-accent" />
             <DropdownMenuGroup className="flex gap-2">
-              <DropdownMenuItem className="flex-1 rounded-full bg-amber-900 flex items-center justify-center gap-1 cursor-pointer">
+              <Button className="flex-1 rounded-full flex items-center justify-center gap-2 cursor-pointer hover:bg-primary/80">
                 <Phone className="size-5" strokeWidth={1.89} />
                 Audio
-              </DropdownMenuItem>
-              <DropdownMenuItem className="flex-1 rounded-full bg-amber-900 flex items-center justify-center gap-1 cursor-pointer">
+              </Button>
+              <Button className="flex-1 rounded-full flex items-center justify-center gap-2 cursor-pointer hover:bg-primary/80">
                 <Video className="size-5" strokeWidth={1.89} />
                 Video
-              </DropdownMenuItem>
+              </Button>
             </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>

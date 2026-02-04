@@ -11,7 +11,7 @@ import { TabsContent } from "@/components/ui/tabs";
 
 function ChatPage() {
   return (
-    <div className="w-full h-full">
+    <div className="w-full h-full overflow-auto">
       <Chat />
       <TabsContent value="call">
         <Card>

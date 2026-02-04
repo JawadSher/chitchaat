@@ -1,33 +1,56 @@
-import { Mic, Plus, Send, SmilePlus } from "lucide-react";
+import { Mic, Plus, Send, SmilePlus, X } from "lucide-react";
 import { Button } from "./ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { Input } from "./ui/input";
 import z from "zod";
 import { useForm } from "@tanstack/react-form";
 import { FieldError, FieldGroup, Field, FieldLabel } from "./ui/field";
+import EmojiPicker from "emoji-picker-react";
+import { useRef, useState } from "react";
+import { Textarea } from "./ui/textarea";
 
 const formSchema = z.object({
   message: z
     .string()
     .min(1, "Message must be at least 1 character.")
     .max(7000, "Message must be at most 7000 characters."),
+  file: z.instanceof(File).optional(),
 });
 
+type FormValues = z.infer<typeof formSchema>;
+
 function ChatForm() {
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const form = useForm({
-    defaultValues: { message: "" },
+    defaultValues: { message: "", file: undefined } as FormValues,
     validators: { onSubmit: formSchema },
-    onSubmit: async ({ value }: any) => {
+    onSubmit: async ({ value }: { value: FormValues }) => {
       console.log("Sent message:", value.message);
-      form.reset(); 
+      if (value.file) {
+        console.log("Attached file:", value.file.name);
+      }
+      form.reset();
     },
   });
+
+  const handleEmojiClick = (emoji: string) => {
+    const currentMessage = form.getFieldValue("message") || "";
+    form.setFieldValue("message", currentMessage + emoji);
+    setIsOpen(false);
+  };
+
+  const handleRemoveFile = () => {
+    form.setFieldValue("file", undefined);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
 
   return (
     <footer className="shrink-0 w-full p-2 flex items-center bg-accent/10">
@@ -37,36 +60,67 @@ function ChatForm() {
           e.preventDefault();
           form.handleSubmit();
         }}
-        className="flex items-center w-full gap-2 bg-input/30 p-2 rounded-full"
+        className="flex items-center w-full bg-input/30 p-2 rounded-4xl"
       >
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+        <div className="flex items-center justify-center px-4 gap-4">
+          <FieldGroup className="relative flex items-center justify-center">
             <Button
-              variant="ghost"
-              className="rounded-full h-10 w-10 flex items-center justify-center"
+              className="absolute rounded-full 
+          cursor-pointer bg-transparent w-7 h-7 text-white"
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
             >
-              <Plus className="size-5" strokeWidth={1.89} />
+              <Plus className=" size-5 " strokeWidth={1.89} />
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent side="top" align="start" className="min-w-45">
-            <DropdownMenuGroup>
-              <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
-                Attach File
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
+            <form.Field name="file">
+              {(field) => {
+                const isInvalid =
+                  field.state.meta.isTouched && !field.state.meta.isValid;
 
-        {/* Emoji button */}
-        <Button
-          className="rounded-full h-10 w-10 flex items-center justify-center"
-          variant="ghost"
-          type="button"
-        >
-          <SmilePlus className="size-5" strokeWidth={1.89} />
-        </Button>
+                return (
+                  <Field data-invalid={isInvalid}>
+                    <Input
+                      ref={fileInputRef}
+                      type="file"
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.files?.[0])}
+                      className="hidden"
+                    />
+                    {isInvalid && (
+                      <FieldError errors={field.state.meta.errors} />
+                    )}
+                  </Field>
+                );
+              }}
+            </form.Field>
+          </FieldGroup>
 
-        {/* Message input */}
+          {/* Emoji button */}
+          <DropdownMenu
+            open={isOpen}
+            onOpenChange={() => setIsOpen((prev) => !prev)}
+          >
+            <DropdownMenuTrigger asChild>
+              <Button
+                className="cursor-pointer w-7 h-7 bg-transparent rounded-full"
+                type="button"
+              >
+                <SmilePlus strokeWidth={1.89} className="size-5 text-white" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <EmojiPicker
+                searchPlaceHolder="Search your emoji..."
+                emojiStyle="google"
+                theme="dark"
+                className="z-10"
+                onEmojiClick={({ emoji }) => handleEmojiClick(emoji)}
+                open={isOpen}
+              />
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
         <FieldGroup className="flex-1">
           <form.Field name="message">
             {(field) => {
@@ -77,16 +131,19 @@ function ChatForm() {
                   <FieldLabel htmlFor={field.name} className="sr-only">
                     Message
                   </FieldLabel>
-                  <Input
+                  <Textarea
                     id={field.name}
                     name={field.name}
                     value={field.state.value}
                     onBlur={field.handleBlur}
                     onChange={(e) => field.handleChange(e.target.value)}
                     placeholder="Type a message..."
-                    className="w-full border-none outline-none focus-visible:ring-0 px-4 py-2 bg-transparent dark:bg-transparent"
+                    className="w-full border-none outline-none focus-visible:ring-0 px-4 py-2 bg-transparent dark:bg-transparent min-h-full max-h-50 resize-none"
                     autoComplete="off"
+                    maxLength={7000}
+                    minLength={1}
                   />
+                  
                   {isInvalid && <FieldError errors={field.state.meta.errors} />}
                 </Field>
               );

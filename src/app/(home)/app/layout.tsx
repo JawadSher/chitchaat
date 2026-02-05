@@ -3,7 +3,7 @@
 import MainHeader from "@/components/main-header";
 import React, { Suspense } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MessageSquareText, Phone } from "lucide-react";
+import { BellRing, MessageSquareText, Phone } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { ModeToggle } from "@/components/theme-toggle";
 import {
@@ -24,6 +24,7 @@ type TabItem = {
 const icons = {
   MessageSquareText,
   Phone,
+  BellRing,
 };
 
 function AppLayoutContent({ children }: { children: React.ReactNode }) {
@@ -33,6 +34,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const items: TabItem[] = [
     { Icon: "MessageSquareText", value: "chat" },
     { Icon: "Phone", value: "call" },
+    { Icon: "BellRing", value: "notification" },
   ];
 
   const currentTab = searchParams.get("tab") || "chat";
@@ -58,7 +60,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                 <TabsTrigger
                   key={item.value}
                   value={item.value}
-                  className="flex items-center justify-center gap-2 rounded-full border-none max-h-9 min-w-9 p-2 cursor-pointer"
+                  className="flex items-center justify-center dark:data-[state=active]:bg-primary-foreground gap-2 rounded-full border-none max-h-9 min-w-9 p-2 cursor-pointer"
                 >
                   <Icon className="size-5" strokeWidth={1.89} />
                 </TabsTrigger>

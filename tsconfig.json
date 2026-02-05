@@ -29,6 +29,6 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts"
-, "src/lib/supabase"  ],
+, "src/lib/supabase", "src/lib/capitalize-name.ts"  ],
   "exclude": ["node_modules"]
 }

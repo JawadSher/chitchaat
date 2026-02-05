@@ -1,4 +1,4 @@
-import { findContact } from "@/server-actions/contact";
+import { findContact } from "@/server-actions/contact.action";
 import { useQuery } from "@tanstack/react-query";
 
 export const useFindContact = ({userName, enabled}:{userName: string, enabled: boolean}) => {

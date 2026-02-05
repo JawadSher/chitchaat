@@ -3,7 +3,7 @@ import { Button } from "./ui/button";
 import { Label } from "@radix-ui/react-dropdown-menu";
 import { Input } from "./ui/input";
 import { useFindContact } from "@/hooks/react-query/query-contact";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useDebounce } from "use-debounce";
 import FindedContactInfoSkeleton from "./skeletons/finded-contact-skeleton";
 import FindedContactInfo from "./finded-contact-info";
@@ -54,7 +54,7 @@ function AddFriend({
           placeholder="Enter your friends username..."
         />
       </div>
-      <div className="w-full h-full flex flex-col items-start justify-start">
+      <div className="w-full h-full flex flex-col items-start justify-start gap-2">
         {isLoading ? (
           <FindedContactInfoSkeleton />
         ) : data && data?.length > 0 ? (

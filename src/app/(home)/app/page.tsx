@@ -1,4 +1,5 @@
 import Chat from "@/components/chat";
+import Notification from "@/components/notification";
 import {
   Card,
   CardContent,
@@ -26,19 +27,7 @@ function ChatPage() {
           </CardContent>
         </Card>
       </TabsContent>
-      <TabsContent value="notification">
-        <Card>
-          <CardHeader>
-            <CardTitle>Reports</CardTitle>
-            <CardDescription>
-              Generate and download detailed reports.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">
-            You have 5 reports ready.
-          </CardContent>
-        </Card>
-      </TabsContent>
+      <Notification />
     </div>
   );
 }

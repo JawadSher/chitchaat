@@ -72,6 +72,7 @@ async function addNewUser({
   const { data, error } = await supabase
     .from("users")
     .update({
+      user_id,
       avatar_url,
       full_name,
       is_deleted: false,

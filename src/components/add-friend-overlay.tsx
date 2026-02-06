@@ -59,7 +59,7 @@ function AddFriend({
           <FindedContactInfoSkeleton />
         ) : data && data?.length > 0 ? (
           data.map((contact) => (
-            <FindedContactInfo key={contact.id} userInfo={contact} />
+            <FindedContactInfo key={contact.user_id} userInfo={contact} />
           ))
         ) : data?.length === 0 ? (
           <span className="text-primary">🤦No contact found!</span>

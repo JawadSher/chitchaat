@@ -1,12 +1,12 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { supabaseServer } from "@/lib/supabase/server";
 import { auth } from "@clerk/nextjs/server";
 
 export async function findContact({ userName }: { userName: string }) {
   try {
     const { userId } = await auth();
-    const supabase = await createClient();
+    const supabase = await supabaseServer();
     const query = supabase
       .from("users")
       .select("user_id,full_name,username,avatar_url")
@@ -35,11 +35,13 @@ export async function sendConnectionToContact({
 }) {
   try {
     const { userId, has } = await auth();
-    const supabase = await createClient();
+    const supabase = await supabaseServer();
 
     const { error: contactErr } = await supabase.from("contacts").insert({
       user_id: userId,
       contact_user_id: contact_id,
+      status: "requested",
+      is_deleted: false,
     });
 
     if (contactErr) {
@@ -53,7 +55,7 @@ export async function sendConnectionToContact({
         notification_type: "connect_request",
         title: "New Connection Request",
         body: `${has.name} wants to connect`,
-        data: null,
+        data: "",
       });
 
     if (notificationError) {

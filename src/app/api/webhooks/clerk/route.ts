@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import { capitalizeName } from "@/lib/capitalize-name";
 import { createWebhookClient } from "@/lib/supabase/createWebHookClient";
 import { verifyClerkWebhook } from "@/lib/verify-clerk-webhook";
 import { NextRequest, NextResponse } from "next/server";
@@ -58,7 +58,7 @@ async function addNewUser({
         username,
         avatar_url,
         email,
-        full_name,
+        full_name: full_name.length ? capitalizeName({ name: full_name }) : "",
         is_deleted: false,
       })
       .select();
@@ -74,7 +74,7 @@ async function addNewUser({
     .update({
       user_id,
       avatar_url,
-      full_name,
+      full_name: full_name.length ? capitalizeName({ name: full_name }) : "",
       is_deleted: false,
     })
     .eq("user_id", existingUserId)

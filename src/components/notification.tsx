@@ -1,5 +1,5 @@
 "use client";
-import { createClient } from "@/lib/supabase/client";
+import { supabaseClient } from "@/lib/supabase/client";
 import { useUser } from "@clerk/nextjs";
 import { TabsContent } from "@radix-ui/react-tabs";
 import { useEffect, useState } from "react";
@@ -9,7 +9,7 @@ function Notification() {
   const { user } = useUser();
 
   useEffect(() => {
-    const supabase = createClient();
+    const supabase = supabaseClient();
     const channel = supabase
       .channel("notifications")
       .on(
@@ -18,7 +18,7 @@ function Notification() {
           event: "INSERT",
           schema: "public",
           table: "notifications",
-          filter: `userId=eq.${user?.id}`,
+          filter: `user_id=eq.${user?.id}`,
         },
         (payload) => {
           setNotifications((prev: any) => [payload.new, ...prev]);
@@ -26,10 +26,13 @@ function Notification() {
       )
       .subscribe();
 
+    console.log(channel);
+
     return () => {
       supabase.removeChannel(channel);
     };
   }, []);
+  
   return (
     <TabsContent value="notification">
       <div>

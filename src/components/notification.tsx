@@ -18,15 +18,14 @@ function Notification() {
           event: "INSERT",
           schema: "public",
           table: "notifications",
-          filter: `user_id=eq.${user?.id}`,
+          // filter: `user_id=eq.${user?.id}`,
         },
         (payload) => {
+          console.log(payload);
           setNotifications((prev: any) => [payload.new, ...prev]);
         },
       )
       .subscribe();
-
-    console.log(channel);
 
     return () => {
       supabase.removeChannel(channel);

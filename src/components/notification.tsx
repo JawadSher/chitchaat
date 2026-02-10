@@ -1,44 +1,56 @@
 "use client";
-import { supabaseClient } from "@/lib/supabase/client";
-import { useUser } from "@clerk/nextjs";
+
+import { useSupabaseClient } from "@/lib/supabase/get-supabase-client";
 import { TabsContent } from "@radix-ui/react-tabs";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 function Notification() {
-  const [notifications, setNotifications] = useState<any>([]);
-  const { user } = useUser();
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const subscribedRef = useRef(false);
+  const { getClient } = useSupabaseClient();
 
   useEffect(() => {
-    const supabase = supabaseClient();
-    const channel = supabase
-      .channel("notifications")
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "notifications",
-          // filter: `user_id=eq.${user?.id}`,
-        },
-        (payload) => {
-          console.log(payload);
-          setNotifications((prev: any) => [payload.new, ...prev]);
-        },
-      )
-      .subscribe();
+    if (subscribedRef.current) return;
+    subscribedRef.current = true;
+
+    let supabase: any;
+    let channel: any;
+
+    const init = async () => {
+      supabase = await getClient();
+      channel = supabase
+        .channel("notifications")
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "notifications",
+          },
+          (payload: any) => {
+            console.log("New notification:", payload);
+            setNotifications((prev) => [payload.new, ...prev]);
+          },
+        )
+        .subscribe((status: any) => {
+          console.log("Realtime status:", status);
+        });
+    };
+
+    init();
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel && supabase) {
+        supabase.removeChannel(channel);
+      }
     };
-  }, []);
-  
+  }, [getClient]);
+
   return (
     <TabsContent value="notification">
-      <div>
-        {notifications.map((n: any) => (
-          <div key={n.id}>{n.title}</div>
-        ))}
-      </div>
+      {notifications.map((n) => (
+        <div key={n.id}>{n.title}</div>
+      ))}
     </TabsContent>
   );
 }

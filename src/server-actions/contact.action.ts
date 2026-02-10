@@ -55,7 +55,10 @@ export async function sendConnectionToContact({
         notification_type: "connect_request",
         title: "New Connection Request",
         body: `${has.name} wants to connect`,
-        data: "",
+        data: {
+          contact_user_id: contact_id,
+        },
+        contact_id: contact_id,
       });
 
     if (notificationError) {

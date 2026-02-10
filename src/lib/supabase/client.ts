@@ -12,22 +12,34 @@ export const supabaseClientSSR = () => {
   );
 };
 
-export function createSupabaseClient(token?: string) {
-  if (!ENV.SUPABASE.SUPABASE_URL || !ENV.SUPABASE.SUPABASE_PUBLISHABLE_KEY) {
-    throw new Error("Supabase env variables missing");
-  }
-
+export const supabaseClient = (session: any) => {
   return createClient(
     ENV.SUPABASE.SUPABASE_URL,
     ENV.SUPABASE.SUPABASE_PUBLISHABLE_KEY,
-    token
-      ? {
-          global: {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          },
-        }
-      : {},
+    {
+      global: {
+        fetch: async (url, options = {}) => {
+          const clerkToken = await session?.getToken({
+            template: "supabase",
+          });
+
+          console.log("🔑 Clerk token:", clerkToken ? "Present" : "Missing");
+
+          if (clerkToken) {
+            const payload = JSON.parse(atob(clerkToken.split(".")[1]));
+            console.log("📋 Token payload:", payload);
+            console.log("👤 User ID in token:", payload.sub);
+          }
+
+          const headers = new Headers(options?.headers);
+          headers.set("Authorization", `Bearer ${clerkToken}`);
+
+          return fetch(url, {
+            ...options,
+            headers,
+          });
+        },
+      },
+    },
   );
-}
+};

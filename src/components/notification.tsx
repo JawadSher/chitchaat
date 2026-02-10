@@ -7,28 +7,31 @@ import { useEffect, useRef, useState } from "react";
 
 function Notification() {
   const [notifications, setNotifications] = useState<any[]>([]);
-  const subscribedRef = useRef(false);
   const { user } = useUser();
   const { session } = useSession();
-  const supabase = supabaseClient(session);
+  
+  // Create supabase client once using useRef
+  const supabaseRef = useRef(supabaseClient(session));
+  const channelRef = useRef<any>(null);
 
   useEffect(() => {
-    if (subscribedRef.current) return;
-    subscribedRef.current = true;
+    if (!user?.id || channelRef.current) return;
+
+    const supabase = supabaseRef.current;
 
     const channel = supabase
-      .channel(`notifications:${user?.id}`)
+      .channel(`notifications:${user.id}`)
       .on(
         "postgres_changes",
         {
           event: "INSERT",
           schema: "public",
           table: "notifications",
-          filter: `contact_id=eq.${user?.id}`,
+          filter: `contact_id=eq.${user.id}`,
         },
         (payload) => {
           console.log("New notification:", payload.new);
-          setNotifications((prev) => [payload.new as Notification, ...prev]);
+          setNotifications((prev) => [payload.new as any, ...prev]);
         },
       )
       .subscribe((channelStatus: any) => {
@@ -41,11 +44,15 @@ function Notification() {
         }
       });
 
+    channelRef.current = channel;
+
     return () => {
-      supabase.removeChannel(channel);
-      subscribedRef.current = false;
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
     };
-  }, [supabase, user, subscribedRef]);
+  }, [user?.id]);
 
   return (
     <TabsContent value="notification">

@@ -58,7 +58,6 @@ export async function sendConnectionToContact({
         data: {
           contact_user_id: contact_id,
         },
-        contact_id: contact_id,
       });
 
     if (notificationError) {

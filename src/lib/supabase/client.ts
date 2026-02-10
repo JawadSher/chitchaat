@@ -1,6 +1,7 @@
+// lib/supabase/client.ts
 import { ENV } from "@/constants/env-exports";
 import { createBrowserClient } from "@supabase/ssr";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
 export const supabaseClientSSR = () => {
   if (!ENV.SUPABASE.SUPABASE_URL || !ENV.SUPABASE.SUPABASE_ANON_KEY) {
@@ -12,8 +13,17 @@ export const supabaseClientSSR = () => {
   );
 };
 
+// Singleton instance
+let supabaseInstance: SupabaseClient | null = null;
+
 export const supabaseClient = (session: any) => {
-  return createClient(
+  // Return existing instance if already created
+  if (supabaseInstance) {
+    return supabaseInstance;
+  }
+
+  // Create new instance only once
+  supabaseInstance = createClient(
     ENV.SUPABASE.SUPABASE_URL,
     ENV.SUPABASE.SUPABASE_PUBLISHABLE_KEY,
     {
@@ -42,4 +52,6 @@ export const supabaseClient = (session: any) => {
       },
     },
   );
+
+  return supabaseInstance;
 };

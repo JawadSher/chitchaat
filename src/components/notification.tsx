@@ -1,24 +1,18 @@
 "use client";
 
-import { supabaseClient } from "@/lib/supabase/client";
-import { useSession, useUser } from "@clerk/nextjs";
+import { useSupabase } from "@/providers/supabase-provider";
+import { useUser } from "@clerk/nextjs";
 import { TabsContent } from "@radix-ui/react-tabs";
 import { useEffect, useRef, useState } from "react";
 
 function Notification() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const { user } = useUser();
-  const { session } = useSession();
-  
-  // Create supabase client once using useRef
-  const supabaseRef = useRef(supabaseClient(session));
   const channelRef = useRef<any>(null);
+  const supabase = useSupabase();
 
   useEffect(() => {
     if (!user?.id || channelRef.current) return;
-
-    const supabase = supabaseRef.current;
-
     const channel = supabase
       .channel(`notifications:${user.id}`)
       .on(
@@ -52,7 +46,7 @@ function Notification() {
         channelRef.current = null;
       }
     };
-  }, [user?.id]);
+  }, [user, supabase]);
 
   return (
     <TabsContent value="notification">

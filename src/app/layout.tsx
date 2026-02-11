@@ -6,6 +6,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { ThemeProvider } from "@/providers/theme-provider";
 
 import { Poppins } from "next/font/google";
+import { SupabaseProvider } from "@/providers/supabase-provider";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -35,10 +36,12 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <ClerkProvider>
-            <QueryProvider>
-              {children}
-              <Toaster />
-            </QueryProvider>
+            <SupabaseProvider>
+              <QueryProvider>
+                {children}
+                <Toaster />
+              </QueryProvider>
+            </SupabaseProvider>
           </ClerkProvider>
         </ThemeProvider>
       </body>

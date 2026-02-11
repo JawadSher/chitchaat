@@ -1,4 +1,4 @@
-export function capitalizeName({ name }: { name: string }) {
+export function capitalizeName({ name }: { name: string}) {
   const parts = name.trim().split(" ");
 
   const firstName =

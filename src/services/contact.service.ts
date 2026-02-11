@@ -1,15 +1,13 @@
-"use server";
+import { SupabaseClient } from "@supabase/supabase-js";
 
-import { supabaseServer } from "@/lib/supabase/server";
-import { auth } from "@clerk/nextjs/server";
-
-export async function findContact({ userName }: { userName: string }) {
+export async function findContact(
+  supabase: SupabaseClient,
+  { userName, userId }: { userName: string, userId: string | undefined },
+) {
   try {
-    const { userId } = await auth();
-    const supabase = await supabaseServer();
     const query = supabase
-      .from("users")
-      .select("user_id,full_name,username,avatar_url")
+      .from("users_public")
+      .select("*")
       .filter("user_id", "neq", userId)
       .ilike("username", `%${userName}%`)
       .eq("is_deleted", false)
@@ -28,20 +26,19 @@ export async function findContact({ userName }: { userName: string }) {
   }
 }
 
-export async function sendConnectionToContact({
-  contact_id,
-}: {
-  contact_id: string;
-}) {
+export async function sendConnectionToContact(
+  supabase: SupabaseClient,
+  {
+    contact_id,
+    senderName,
+  }: {
+    contact_id: string;
+    senderName: string;
+  },
+) {
   try {
-    const { userId, has } = await auth();
-    const supabase = await supabaseServer();
-
     const { error: contactErr } = await supabase.from("contacts").insert({
-      user_id: userId,
       contact_user_id: contact_id,
-      status: "requested",
-      is_deleted: false,
     });
 
     if (contactErr) {
@@ -51,13 +48,11 @@ export async function sendConnectionToContact({
     const { error: notificationError } = await supabase
       .from("notifications")
       .insert({
-        user_id: userId,
+        contact_id,
         notification_type: "connect_request",
         title: "New Connection Request",
-        body: `${has.name} wants to connect`,
-        data: {
-          contact_user_id: contact_id,
-        },
+        body: `${senderName} wants to connect`,
+        data: null,
       });
 
     if (notificationError) {

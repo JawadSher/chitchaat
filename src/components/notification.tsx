@@ -1,60 +1,60 @@
 "use client";
 
-import { useSupabase } from "@/providers/supabase-provider";
-import { useUser } from "@clerk/nextjs";
+import { createSupabaseClient } from "@/lib/supabase/createBrowserClient";
+import { useUser, useSession } from "@clerk/nextjs";
 import { TabsContent } from "@radix-ui/react-tabs";
 import { useEffect, useRef, useState } from "react";
 
 function Notification() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const { user } = useUser();
+  const { session } = useSession();
   const channelRef = useRef<any>(null);
-  const supabase = useSupabase();
+  const supabaseRef = useRef<any>(null);
 
   useEffect(() => {
-    if (!user?.id || channelRef.current) return;
-    const channel = supabase
-      .channel(`notifications:${user.id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "notifications",
-          filter: `contact_id=eq.${user.id}`,
-        },
-        (payload) => {
-          console.log("New notification:", payload.new);
-          setNotifications((prev) => [payload.new as any, ...prev]);
-        },
-      )
-      .subscribe((channelStatus: any) => {
-        console.log("Realtime status:", channelStatus);
+    if (!user?.id || !session || channelRef.current) return;
 
-        if (channelStatus === "SUBSCRIBED") {
-          console.log("✅ Subscribed to notifications");
-        } else if (channelStatus === "CHANNEL_ERROR") {
-          console.error("❌ Channel error — check RLS & realtime policies");
-        }
-      });
+    const setupRealtime = async () => {
+      const token = await session.getToken({ template: "supabase" });
+      const supabase = createSupabaseClient(token);
+      supabaseRef.current = supabase;
+      await supabase.realtime.setAuth(token!);
 
-    channelRef.current = channel;
+      const channel = supabase
+        .channel(`notifications:${user.id}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "notifications",
+            filter: `contact_id=eq.${user.id}`,
+          },
+          (payload) => {
+            setNotifications((prev) => [payload.new as any, ...prev]);
+          }
+        )
+        .subscribe((status) => {
+          console.log("Realtime status:", status);
+        });
+
+      channelRef.current = channel;
+    };
+
+    setupRealtime();
 
     return () => {
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
+      if (channelRef.current && supabaseRef.current) {
+        supabaseRef.current.removeChannel(channelRef.current);
         channelRef.current = null;
       }
     };
-  }, [user, supabase]);
+  }, [user, session]);
 
   return (
     <TabsContent value="notification">
-      {notifications.length === 0 ? (
-        <div>No notifications</div>
-      ) : (
-        notifications.map((n) => <div key={n.id}>{n.title}</div>)
-      )}
+      <h2 className="text-2xl font-bold mb-4">Notifications</h2>
     </TabsContent>
   );
 }

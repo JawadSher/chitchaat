@@ -1,10 +1,9 @@
-// lib/supabase/provider.tsx
 "use client";
 
-import { createContext, useContext, useMemo } from "react";
-import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { createContext, useContext, useMemo, useEffect } from "react";
 import { useSession } from "@clerk/nextjs";
 import { ENV } from "@/constants/env-exports";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
 const SupabaseContext = createContext<SupabaseClient | null>(null);
 
@@ -27,7 +26,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
             });
 
             const headers = new Headers(options?.headers);
-            
+
             if (clerkToken) {
               headers.set("Authorization", `Bearer ${clerkToken}`);
             }
@@ -35,9 +34,22 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
             return fetch(url, { ...options, headers });
           },
         },
-      }
+      },
     );
   }, [session]);
+
+  useEffect(() => {
+    const setRealtimeAuth = async () => {
+      if (session) {
+        const token = await session.getToken({ template: "supabase" });
+        if (token) {
+          supabase.realtime.setAuth(token);
+        }
+      }
+    };
+
+    setRealtimeAuth();
+  }, [session, supabase]);
 
   return (
     <SupabaseContext.Provider value={supabase}>

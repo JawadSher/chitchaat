@@ -60,35 +60,26 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
 
     const setupRealtime = async () => {
       try {
-        // Get the Supabase token
         const token = await session.getToken({ template: "supabase" });
         if (!isMounted || !token) return;
 
-        // Set auth for Realtime
         await supabase.realtime.setAuth(token);
 
-        // Clean up existing channel
         if (channelRef.current) {
           await supabase.removeChannel(channelRef.current);
           channelRef.current = null;
         }
 
-        // Create a PRIVATE channel for broadcast messages
-        // The topic must match the format used in the trigger: 'notifications:{user_id}'
         const notificationChannel = supabase
           .channel(`notifications:${user.id}`, {
             config: {
               private: true,
             },
           })
-          // Listen to INSERT events
           .on("broadcast", { event: "INSERT" }, (payload) => {
             console.log("New notification inserted:", payload);
-            // Handle new notification
           })
           .subscribe((status) => {
-            console.log("Realtime subscription status:", status);
-
             if (status === "SUBSCRIBED") {
               console.log("Successfully subscribed to notifications channel");
             } else if (status === "CHANNEL_ERROR") {
@@ -118,7 +109,6 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
 
     setupRealtime();
 
-    // Refresh auth token every 50 seconds
     const refreshInterval = setInterval(refreshAuth, 50_000);
 
     return () => {

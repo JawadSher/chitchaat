@@ -1,7 +1,7 @@
 "use client";
 
 import MainHeader from "@/components/main-header";
-import React, { Suspense } from "react";
+import React, { Suspense, useEffect, useMemo, useRef } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BellRing, MessageSquareText, Phone } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -11,10 +11,13 @@ import {
   SignedOut,
   SignInButton,
   UserButton,
+  useSession,
   useUser,
 } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import SplashScreen from "@/components/splash-screen";
+import { getSupabaseClient } from "@/lib/supabase/createBrowserClient";
+import { RealtimeChannel } from "@supabase/supabase-js";
 
 type TabItem = {
   Icon: keyof typeof icons;
@@ -27,15 +30,20 @@ const icons = {
   BellRing,
 };
 
+const items: TabItem[] = [
+  { Icon: "MessageSquareText", value: "chat" },
+  { Icon: "Phone", value: "call" },
+  { Icon: "BellRing", value: "notification" },
+];
+
 function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { user } = useUser();
+  const { session } = useSession();
+  const supabase = useMemo(() => getSupabaseClient(), []);
 
-  const items: TabItem[] = [
-    { Icon: "MessageSquareText", value: "chat" },
-    { Icon: "Phone", value: "call" },
-    { Icon: "BellRing", value: "notification" },
-  ];
+  const channelRef = useRef<RealtimeChannel | null>(null);
 
   const currentTab = searchParams.get("tab") || "chat";
 
@@ -44,6 +52,85 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
     params.set("tab", value);
     router.replace(`?${params.toString()}`);
   };
+
+  useEffect(() => {
+    if (!user?.id || !session) return;
+
+    let isMounted = true;
+
+    const setupRealtime = async () => {
+      try {
+        // Get the Supabase token
+        const token = await session.getToken({ template: "supabase" });
+        if (!isMounted || !token) return;
+
+        // Set auth for Realtime
+        await supabase.realtime.setAuth(token);
+
+        // Clean up existing channel
+        if (channelRef.current) {
+          await supabase.removeChannel(channelRef.current);
+          channelRef.current = null;
+        }
+
+        // Create a PRIVATE channel for broadcast messages
+        // The topic must match the format used in the trigger: 'notifications:{user_id}'
+        const notificationChannel = supabase
+          .channel(`notifications:${user.id}`, {
+            config: {
+              private: true,
+            },
+          })
+          // Listen to INSERT events
+          .on("broadcast", { event: "INSERT" }, (payload) => {
+            console.log("New notification inserted:", payload);
+            // Handle new notification
+          })
+          .subscribe((status) => {
+            console.log("Realtime subscription status:", status);
+
+            if (status === "SUBSCRIBED") {
+              console.log("Successfully subscribed to notifications channel");
+            } else if (status === "CHANNEL_ERROR") {
+              console.error("Error subscribing to channel");
+            } else if (status === "TIMED_OUT") {
+              console.error("Subscription timed out");
+            } else if (status === "CLOSED") {
+              console.log("Channel closed");
+            }
+          });
+
+        channelRef.current = notificationChannel;
+      } catch (error) {
+        console.error("Error setting up Realtime:", error);
+      }
+    };
+
+    const refreshAuth = async () => {
+      try {
+        const token = await session.getToken({ template: "supabase" });
+        if (!isMounted || !token) return;
+        await supabase.realtime.setAuth(token);
+      } catch (error) {
+        console.error("Error refreshing auth:", error);
+      }
+    };
+
+    setupRealtime();
+
+    // Refresh auth token every 50 seconds
+    const refreshInterval = setInterval(refreshAuth, 50_000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(refreshInterval);
+
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
+    };
+  }, [user?.id, session, supabase]);
 
   return (
     <Tabs

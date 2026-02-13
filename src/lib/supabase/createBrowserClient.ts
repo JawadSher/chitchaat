@@ -1,4 +1,5 @@
 import { createBrowserClient } from "@supabase/ssr";
+import { SupabaseClient } from "@supabase/supabase-js";
 
 export function createSupabaseClient(clerkToken?: string | null) {
   const supabase = createBrowserClient(
@@ -12,3 +13,16 @@ export function createSupabaseClient(clerkToken?: string | null) {
 
   return supabase;
 }
+
+// Create a singleton instance outside the component
+// In a separate file: lib/supabase/client.ts
+let supabaseInstance: SupabaseClient | null = null;
+
+export function getSupabaseClient() {
+  if (!supabaseInstance) {
+    supabaseInstance = createSupabaseClient();
+  }
+  return supabaseInstance;
+}
+
+// Then in your component:

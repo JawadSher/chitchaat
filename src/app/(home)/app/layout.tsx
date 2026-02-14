@@ -174,7 +174,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
           </div>
         </div>
 
-        <div className="flex-1 h-full bg-background border-primary border-r-0 border border-l border-t rounded-tl-lg overflow-clip">
+        <div className="flex-1 h-full bg-background border-primary border-r-0  border-l border-t rounded-tl-lg overflow-clip">
           {children}
         </div>
       </div>

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import {
   ResizableHandle,
@@ -43,7 +42,6 @@ function Chat() {
                 key={index}
                 className="w-full h-full flex flex-col"
               >
-                {/* HEADER */}
                 <ChatAreaHeader setActiveTab={setActiveTab} />
 
                 <main className="flex-1 overflow-y-auto p-4">

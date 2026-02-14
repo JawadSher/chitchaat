@@ -23,6 +23,7 @@ type NotificationItem = {
   data?: unknown;
 };
 
+
 function NotificationRow({ n }: { n: NotificationItem }) {
   const avatar =
     n.info?.avatar_url ||
@@ -166,7 +167,7 @@ export default function Notification() {
             </div>
 
             <div className="flex w-full gap-2 sm:w-auto">
-              <button
+              <Button
                 type="button"
                 onClick={() => setFilter("all")}
                 className={[
@@ -175,12 +176,12 @@ export default function Notification() {
                   filter === "all"
                     ? "bg-accent text-foreground"
                     : "bg-background text-muted-foreground hover:bg-accent",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer",
                 ].join(" ")}
               >
                 All
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
                 onClick={() => setFilter("unread")}
                 className={[
@@ -189,25 +190,25 @@ export default function Notification() {
                   filter === "unread"
                     ? "bg-accent text-foreground"
                     : "bg-background text-muted-foreground hover:bg-accent",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer",
                 ].join(" ")}
               >
                 Unread
-              </button>
+              </Button>
 
-              <button
+              <Button
                 type="button"
                 disabled={unreadCount === 0}
                 className={[
                   "hidden sm:inline-flex rounded-lg px-3 py-2 text-sm font-medium",
                   "border border-border bg-background text-foreground",
                   "hover:bg-accent disabled:opacity-50 disabled:hover:bg-background",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer",
                 ].join(" ")}
                 title="Wire this to a mark-all-read mutation"
               >
                 Mark all as read
-              </button>
+              </Button>
             </div>
           </div>
         </div>

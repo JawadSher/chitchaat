@@ -19,7 +19,6 @@ import SplashScreen from "@/components/splash-screen";
 import { getSupabaseClient } from "@/lib/supabase/createBrowserClient";
 import { RealtimeChannel } from "@supabase/supabase-js";
 import { toast } from "sonner";
-import Link from "next/link";
 import { ROUTES } from "@/constants/routes";
 
 type TabItem = {
@@ -80,16 +79,13 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
             },
           })
           .on("broadcast", { event: "INSERT" }, (payload) => {
-            toast.custom(payload.payload.title, {
+            toast(payload.payload.title, {
+              action: {
+                label: "View",
+                onClick: () => router.push(ROUTES.NOTIFICATIONS),
+              },
               description: payload.payload.body,
-              action: (
-                <Button
-                  variant={"outline"}
-                  onClick={() => router.push(ROUTES.NOTIFICATIONS)}
-                >
-                  View
-                </Button>
-              ),
+              className: "bg-secondary text-secondary-foreground border-none py-0",
             });
           })
           .subscribe((status) => {

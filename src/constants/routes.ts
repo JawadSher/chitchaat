@@ -3,5 +3,5 @@ export const ROUTES = {
   LOGIN: "/sign-in",
   SIGN_UP: "/sign-up",
   CHAT: "/app?tab=chat",
-  NOTIFICATIONS: "/app?tab=notifications"
+  NOTIFICATIONS: "/app?tab=notification"
 };

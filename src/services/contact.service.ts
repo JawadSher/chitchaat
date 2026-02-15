@@ -97,7 +97,9 @@ export async function getContacts(
   try {
     const { data, error } = await supabase
       .from("contacts")
-      .select("*, info: users!contacts_contact_user_id_fkey(avatar_url, full_name)")
+      .select(
+        "*, info: users!contacts_contact_user_id_fkey(avatar_url, full_name)",
+      )
       .eq("user_id", userId)
       .eq("status", "accepted")
       .neq("is_deleted", true)
@@ -112,6 +114,7 @@ export async function getContacts(
     throw new Error(error.message);
   }
 }
+
 export async function getInvitations(
   supabase: SupabaseClient,
   { userId }: { userId: string },
@@ -130,6 +133,26 @@ export async function getInvitations(
     }
 
     return data;
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
+}
+
+export async function withdrawConnectionRequest(
+  supabase: SupabaseClient,
+  { contact_id }: { contact_id: string },
+) {
+  try {
+    const { error } = await supabase
+      .from("contacts")
+      .delete()
+      .eq("id", contact_id);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return null;
   } catch (error: any) {
     throw new Error(error.message);
   }

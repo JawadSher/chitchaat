@@ -1,17 +1,19 @@
 import { useGetPendingContacts } from "@/hooks/react-query/query-contact";
 import * as Tabs from "@radix-ui/react-tabs";
-import PersonRow from "./network-pending-person-row";
 import OutlineButton from "./out-line-button";
 import EmptyState from "./network-empty-state";
 import { useEffect } from "react";
 import { NetworkListSkeleton } from "./skeletons/network-skeleton";
 import PendingPersonRow from "./network-pending-person-row";
+import { useWithdrawConnectionRequest } from "@/hooks/react-query/mutation-contact";
 
 function NetworkPendings({
   setPendingRequestsLength,
 }: {
   setPendingRequestsLength: (length: number) => void;
 }) {
+  const { mutate: withdrawConnectionFn, isPending } =
+    useWithdrawConnectionRequest();
   const { data: pendingRequests, isLoading, error } = useGetPendingContacts();
   useEffect(() => {
     if (pendingRequests && !isLoading) {
@@ -22,7 +24,7 @@ function NetworkPendings({
   if (isLoading) {
     return <NetworkListSkeleton />;
   }
-  
+
   if (error) {
     console.log(error);
     return (
@@ -48,7 +50,13 @@ function NetworkPendings({
                 person={p}
                 right={
                   <div className="flex flex-col gap-2 sm:flex-row">
-                    <OutlineButton type="button">Withdraw</OutlineButton>
+                    <OutlineButton
+                      disabled={isPending}
+                      type="button"
+                      onClick={() => withdrawConnectionFn({ contact_id: p.id })}
+                    >
+                      Withdraw
+                    </OutlineButton>
                   </div>
                 }
               />

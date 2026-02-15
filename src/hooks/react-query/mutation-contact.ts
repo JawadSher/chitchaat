@@ -11,7 +11,7 @@ import { toast } from "sonner";
 export const useSendConnection = () => {
   const supabase = useSupabase();
   const { user } = useUser();
-
+  const client = useQueryClient();
   return useMutation({
     mutationKey: ["send-connection"],
     mutationFn: async ({ contact_id }: { contact_id: string }) => {
@@ -24,6 +24,9 @@ export const useSendConnection = () => {
       toast.error(error.message);
     },
     onSuccess: () => {
+      client.invalidateQueries({
+        queryKey: ["get-pending-contacts", user?.id],
+      });
       toast.success("Connection Sended Successfully.");
     },
   });
@@ -32,6 +35,7 @@ export const useSendConnection = () => {
 export const useWithdrawConnectionRequest = () => {
   const supabase = useSupabase();
   const client = useQueryClient();
+  const { user } = useUser();
 
   return useMutation({
     mutationKey: ["withdraw-connection-request"],
@@ -44,7 +48,7 @@ export const useWithdrawConnectionRequest = () => {
       toast.error(error.message);
     },
     onSuccess: (_, variables) => {
-      client.setQueryData(["pending-contacts"], (old: any) => {
+      client.setQueryData(["get-pending-contacts", user?.id], (old: any) => {
         if (!old) return old;
 
         return old.filter(

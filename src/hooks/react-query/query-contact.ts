@@ -1,5 +1,5 @@
 import { useSupabase } from "@/providers/supabase-provider";
-import { findContact, getInvitations, getPendingContacts } from "@/services/contact.service";
+import { findContact, getContacts, getInvitations, getPendingContacts } from "@/services/contact.service";
 import { useUser } from "@clerk/nextjs";
 import { useQuery } from "@tanstack/react-query";
 
@@ -45,6 +45,19 @@ export const useGetInvitations = () => {
     queryKey: ["get-invitations", user?.id],
     queryFn: async () => {
       return await getInvitations(supabase, { userId: user?.id! });
+    },
+    staleTime: 60_000,
+    enabled: !!user?.id,
+  });
+};
+export const useGetContacts = () => {
+  const supabase = useSupabase();
+  const { user } = useUser();
+
+  return useQuery({
+    queryKey: ["get-contacts", user?.id],
+    queryFn: async () => {
+      return await getContacts(supabase, { userId: user?.id! });
     },
     staleTime: 60_000,
     enabled: !!user?.id,

@@ -4,18 +4,26 @@ import PersonRow from "./network-person-row";
 import OutlineButton from "./out-line-button";
 import EmptyState from "./network-empty-state";
 import { useEffect } from "react";
+import { NetworkListSkeleton } from "./skeletons/network-skeleton";
 
-function NetworkPendings() {
+function NetworkPendings({
+  setPendingRequestsLength,
+}: {
+  setPendingRequestsLength: (length: number) => void;
+}) {
   const { data: pendingRequests, isLoading, error } = useGetPendingContacts();
-
   useEffect(() => {
-    if(pendingRequests){
-    console.log(pendingRequests);
-  }
+    if (pendingRequests && !isLoading) {
+      setPendingRequestsLength(pendingRequests.length);
+    }
   }, [pendingRequests]);
 
+  if (isLoading) {
+    return <NetworkListSkeleton />;
+  }
+  
   if (error) {
-    console.log(error); 
+    console.log(error);
     return (
       <div className="p-4 text-sm text-red-500">
         Failed to load pending requests.
@@ -23,7 +31,6 @@ function NetworkPendings() {
     );
   }
 
-  
   return (
     <Tabs.Content value="pending" className="outline-none">
       {pendingRequests?.length === 0 ? (
@@ -33,17 +40,19 @@ function NetworkPendings() {
         />
       ) : (
         <div className="space-y-2">
-          {pendingRequests?.map((p) => (
-            <PersonRow
-              key={p.id}
-              person={p}
-              right={
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  <OutlineButton type="button">Withdraw</OutlineButton>
-                </div>
-              }
-            />
-          ))}
+          {pendingRequests?.map((p) => {
+            return (
+              <PersonRow
+                key={p.id}
+                person={p}
+                right={
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <OutlineButton type="button">Withdraw</OutlineButton>
+                  </div>
+                }
+              />
+            );
+          })}
         </div>
       )}
     </Tabs.Content>

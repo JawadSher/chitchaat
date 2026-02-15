@@ -87,7 +87,7 @@ function MyNetwork() {
 
           <NetworkConnections />
           <NetworkInvitations />
-          <NetworkPendings />
+          <NetworkPendings setPendingRequestsLength={setPendingRequestsLength} />
         </Tabs.Root>
       </div>
     </TabsContent>

@@ -1,7 +1,7 @@
 import * as Tabs from "@radix-ui/react-tabs";
 import { useState } from "react";
 import EmptyState from "./network-empty-state";
-import PersonRow from "./network-person-row";
+import PersonRow from "./network-pending-person-row";
 import OutlineButton from "./out-line-button";
 import { Person } from "./my-network";
 

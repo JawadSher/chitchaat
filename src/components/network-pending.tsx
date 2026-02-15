@@ -1,10 +1,11 @@
 import { useGetPendingContacts } from "@/hooks/react-query/query-contact";
 import * as Tabs from "@radix-ui/react-tabs";
-import PersonRow from "./network-person-row";
+import PersonRow from "./network-pending-person-row";
 import OutlineButton from "./out-line-button";
 import EmptyState from "./network-empty-state";
 import { useEffect } from "react";
 import { NetworkListSkeleton } from "./skeletons/network-skeleton";
+import PendingPersonRow from "./network-pending-person-row";
 
 function NetworkPendings({
   setPendingRequestsLength,
@@ -42,7 +43,7 @@ function NetworkPendings({
         <div className="space-y-2">
           {pendingRequests?.map((p) => {
             return (
-              <PersonRow
+              <PendingPersonRow
                 key={p.id}
                 person={p}
                 right={

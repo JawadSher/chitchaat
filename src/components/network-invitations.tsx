@@ -1,9 +1,13 @@
 import * as Tabs from "@radix-ui/react-tabs";
 import OutlineButton from "./out-line-button";
-import PersonRow from "./network-person-row";
+import PersonRow from "./network-pending-person-row";
 import EmptyState from "./network-empty-state";
 import { Person } from "./my-network";
 import { Button } from "./ui/button";
+import { useGetInvitations } from "@/hooks/react-query/query-contact";
+import { NetworkListSkeleton } from "./skeletons/network-skeleton";
+import InvitationPendingPersonRow from "./network-invitation-person-row";
+import { use, useEffect } from "react";
 
 function PrimaryButton(
   props: React.ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -27,31 +31,42 @@ function PrimaryButton(
   );
 }
 
-function NetworkInvitations() {
-  const invitations: Person[] = [
-    {
-      id: 101,
-      info: {
-        full_name: "Ayesha Khan",
-        avatar_url: null,
-      },
-      status: "requested",
-      created_at: new Date().toISOString(),
-      user_id: "user-123",
-    },
-  ];
+function NetworkInvitations({
+  setInvitationsLength,
+}: {
+  setInvitationsLength: (length: number) => void;
+}) {
+  const { data: invitations, isLoading, error } = useGetInvitations();
+
+  useEffect(() => {
+    if (invitations && !isLoading) {
+      setInvitationsLength(invitations.length);
+    }
+  }, [invitations, isLoading]);
+  if (isLoading) {
+    return <NetworkListSkeleton />;
+  }
+
+  if (error) {
+    return (
+      <EmptyState
+        title="Error loading invitations"
+        text="There was an error loading your invitations. Please try again later."
+      />
+    );
+  }
 
   return (
     <Tabs.Content value="invitations" className="outline-none">
-      {invitations.length === 0 ? (
+      {invitations?.length === 0 ? (
         <EmptyState
           title="No invitations"
           text="When people invite you, you’ll see them here."
         />
       ) : (
         <div className="space-y-2">
-          {invitations.map((p) => (
-            <PersonRow
+          {invitations?.map((p) => (
+            <InvitationPendingPersonRow
               key={p.id}
               person={p}
               right={

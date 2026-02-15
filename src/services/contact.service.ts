@@ -72,8 +72,33 @@ export async function getPendingContacts(
   try {
     const { data, error } = await supabase
       .from("contacts")
-      .select("*, info: users!contacts_contact_user_id_fkey(avatar_url, full_name)")
+      .select(
+        "*, info: users!contacts_contact_user_id_fkey(avatar_url, full_name)",
+      )
       .eq("user_id", userId)
+      .eq("status", "requested")
+      .neq("is_deleted", true)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data;
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
+}
+
+export async function getInvitations(
+  supabase: SupabaseClient,
+  { userId }: { userId: string },
+) {
+  try {
+    const { data, error } = await supabase
+      .from("contacts")
+      .select("*, info: users!contacts_user_id_fkey(avatar_url, full_name)")
+      .eq("contact_user_id", userId)
       .eq("status", "requested")
       .neq("is_deleted", true)
       .order("created_at", { ascending: false });

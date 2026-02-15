@@ -3,7 +3,7 @@ import Avatar from "./avatar";
 import { Person } from "./my-network";
 import { timeAgo } from "@/lib/time-ago";
 
-export default function PersonRow({
+export default function PendingPersonRow({
   person,
   right,
 }: {

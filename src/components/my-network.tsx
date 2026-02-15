@@ -51,6 +51,7 @@ function TabTrigger({
 
 function MyNetwork() {
   const [pendingRequestsLength, setPendingRequestsLength] = useState<number>(1);
+  const [invitationsLength, setInvitationsLength] = useState<number>(1);
 
   return (
     <TabsContent value="my-network" className="p-3 sm:p-6">
@@ -75,7 +76,7 @@ function MyNetwork() {
               <TabTrigger
                 value="invitations"
                 label="Invitations"
-                count={pendingRequestsLength}
+                count={invitationsLength}
               />
               <TabTrigger
                 value="pending"
@@ -86,7 +87,7 @@ function MyNetwork() {
           </div>
 
           <NetworkConnections />
-          <NetworkInvitations />
+          <NetworkInvitations setInvitationsLength={setInvitationsLength} />
           <NetworkPendings setPendingRequestsLength={setPendingRequestsLength} />
         </Tabs.Root>
       </div>

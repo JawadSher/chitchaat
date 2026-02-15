@@ -3,7 +3,7 @@
 import MainHeader from "@/components/main-header";
 import React, { Suspense, useEffect, useMemo, useRef } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BellRing, MessageSquareText, Phone } from "lucide-react";
+import { BellRing, MessageSquareText, Phone, UsersRound } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { ModeToggle } from "@/components/theme-toggle";
 import {
@@ -30,12 +30,14 @@ const icons = {
   MessageSquareText,
   Phone,
   BellRing,
+  UsersRound,
 };
 
 const items: TabItem[] = [
   { Icon: "MessageSquareText", value: "chat" },
   { Icon: "Phone", value: "call" },
   { Icon: "BellRing", value: "notification" },
+  { Icon: "UsersRound", value: "my-network" },
 ];
 
 function AppLayoutContent({ children }: { children: React.ReactNode }) {
@@ -85,7 +87,8 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                 onClick: () => router.push(ROUTES.NOTIFICATIONS),
               },
               description: payload.payload.body,
-              className: "bg-secondary text-secondary-foreground border-none py-0",
+              className:
+                "bg-secondary text-secondary-foreground border-none py-0",
             });
           })
           .subscribe((status) => {

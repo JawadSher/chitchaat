@@ -1,4 +1,5 @@
 import Chat from "@/components/chat";
+import MyNetwork from "@/components/my-network";
 import Notification from "@/components/notification";
 import {
   Card,
@@ -27,6 +28,7 @@ function ChatPage() {
           </CardContent>
         </Card>
       </TabsContent>
+      <MyNetwork />
       <Notification />
     </div>
   );

@@ -3,10 +3,13 @@
 import { useNotification } from "@/hooks/react-query/query-notification";
 import { TabsContent } from "@radix-ui/react-tabs";
 import Image from "next/image";
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "./ui/button";
 import { timeAgo } from "@/lib/time-ago";
 import { NotificationSkeleton } from "./skeletons/notification-skeleton";
+import { PaginationType } from "@/types/pagination";
+import InfiniteScroll from "react-infinite-scroll-component";
+import { useQueryClient } from "@tanstack/react-query";
 
 type NotificationInfo = {
   avatar_url?: string;
@@ -22,7 +25,6 @@ type NotificationItem = {
   info?: NotificationInfo | null;
   data?: unknown;
 };
-
 
 function NotificationRow({ n }: { n: NotificationItem }) {
   const avatar =
@@ -110,22 +112,29 @@ function NotificationRow({ n }: { n: NotificationItem }) {
 }
 
 export default function Notification() {
-  const { data, error, isLoading } = useNotification() as {
-    data?: NotificationItem[];
-    error?: { message: string };
-    isLoading?: boolean;
-  };
+  const {
+    data,
+    error,
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useNotification({ limit: 5 });
 
   const [filter, setFilter] = useState<"all" | "unread">("all");
 
-  const sorted = useMemo(() => {
-    const list = (data ?? []).slice();
-    list.sort(
-      (a, b) =>
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-    );
-    return list;
+  const notifications = useMemo(() => {
+    return data?.pages.flatMap((page) => page.data) ?? [];
   }, [data]);
+
+  const sorted = useMemo(() => {
+    return notifications
+      .slice()
+      .sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      );
+  }, [notifications]);
 
   const unreadCount = useMemo(
     () => sorted.filter((n) => !n.is_read).length,
@@ -212,27 +221,34 @@ export default function Notification() {
             </div>
           </div>
         </div>
-
-        {isLoading ? (
-          <NotificationSkeleton />
-        ) : filtered.length === 0 ? (
-          <div className="rounded-xl border border-border bg-card p-8 text-center">
-            <p className="text-sm font-medium text-foreground">
-              No notifications
-            </p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {filter === "unread"
-                ? "You have no unread notifications."
-                : "We’ll let you know when something happens."}
-            </p>
-          </div>
-        ) : (
-          <ul className="space-y-3">
-            {filtered.map((n) => (
-              <NotificationRow key={n.id} n={n} />
-            ))}
-          </ul>
-        )}
+        <InfiniteScroll
+          dataLength={notifications.length}
+          next={fetchNextPage}
+          hasMore={!!hasNextPage}
+          loader={<NotificationSkeleton />}
+          scrollableTarget="scrollableDiv"
+        >
+          {isLoading ? (
+            <NotificationSkeleton />
+          ) : filtered.length === 0 ? (
+            <div className="rounded-xl border border-border bg-card p-8 text-center">
+              <p className="text-sm font-medium text-foreground">
+                No notifications
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {filter === "unread"
+                  ? "You have no unread notifications."
+                  : "We’ll let you know when something happens."}
+              </p>
+            </div>
+          ) : (
+            <ul className="space-y-3">
+              {filtered.map((n: any) => (
+                <NotificationRow key={n.id} n={n} />
+              ))}
+            </ul>
+          )}
+        </InfiniteScroll>
       </div>
     </TabsContent>
   );

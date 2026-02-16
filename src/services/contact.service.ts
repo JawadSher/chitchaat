@@ -5,7 +5,8 @@ export async function findContact(
   { userName, userId }: { userName: string; userId: string | undefined },
 ) {
   try {
-    const query = supabase
+    // Step 1: Fetch users
+    const { data: users, error: usersError } = await supabase
       .from("users_public")
       .select("*")
       .filter("user_id", "neq", userId)
@@ -14,25 +15,30 @@ export async function findContact(
       .order("username", { ascending: true })
       .limit(10);
 
-    const { data, error } = await query;
+    if (usersError) throw new Error(usersError.message);
+    if (!users || users.length === 0) return [];
 
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    const { data: contactStatus, error: contactError } = await supabase
+    // Step 2: Fetch contact statuses for all matched users
+    const { data: contacts, error: contactsError } = await supabase
       .from("contacts")
-      .select("status")
+      .select("contact_user_id, status")
       .eq("user_id", userId)
-      .eq("contact_user_id", data?.[0]?.user_id)
-      .neq("is_deleted", true)
-      .single();
+      .in(
+        "contact_user_id",
+        users.map((u) => u.user_id) // fetch all statuses for these users
+      )
+      .neq("is_deleted", true);
 
-    if (contactError) {
-      throw new Error(contactError.message);
-    }
+    if (contactsError) throw new Error(contactsError.message);
 
-    return [{ ...data?.[0], contactStatus: contactStatus?.status ?? null }];
+    // Step 3: Merge users with their contact status
+    return users.map((u) => {
+      const statusObj = contacts?.find((c) => c.contact_user_id === u.user_id);
+      return {
+        ...u,
+        contactStatus: statusObj?.status ?? null,
+      };
+    });
   } catch (error: any) {
     throw new Error(error.message);
   }

@@ -8,7 +8,7 @@ import { useUser } from "@clerk/nextjs";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-export const useSendConnection = () => {
+export const useSendConnection = ({ setIsSended } : { setIsSended: (e: boolean) => void}) => {
   const supabase = useSupabase();
   const { user } = useUser();
   const client = useQueryClient();
@@ -27,6 +27,7 @@ export const useSendConnection = () => {
       client.invalidateQueries({
         queryKey: ["get-pending-contacts", user?.id],
       });
+      setIsSended(true)
       toast.success("Connection Sended Successfully.");
     },
   });

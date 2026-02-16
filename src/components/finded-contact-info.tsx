@@ -7,9 +7,11 @@ import { Button } from "./ui/button";
 import { UserRoundPlus } from "lucide-react";
 import { useSendConnection } from "@/hooks/react-query/mutation-contact";
 import { Loader } from "./loader";
+import { useState } from "react";
 
 function FindedContactInfo({ userInfo }: { userInfo: IContact }) {
-  const { mutate, isPending } = useSendConnection();
+  const [isSended, setIsSended] = useState(false);
+  const { mutate, isPending } = useSendConnection({ setIsSended });
 
   async function handleSendConnect() {
     mutate({ contact_id: userInfo.user_id });
@@ -39,7 +41,9 @@ function FindedContactInfo({ userInfo }: { userInfo: IContact }) {
       <Button
         onClick={handleSendConnect}
         className="rounded-full cursor-pointer p-1 w-full h-8"
-        disabled={isPending || userInfo.contactStatus === "requested"}
+        disabled={
+          isPending || userInfo.contactStatus === "requested" || isSended
+        }
       >
         {isPending ? (
           <>
@@ -50,9 +54,11 @@ function FindedContactInfo({ userInfo }: { userInfo: IContact }) {
           <>
             <UserRoundPlus className="size-5" strokeWidth={1.89} />
             <span>
-              {userInfo.contactStatus === "requested"
+              {userInfo.contactStatus === "requested" || isSended
                 ? "Pending..."
-                : "Connect"}
+                : userInfo.contactStatus === "accepted"
+                  ? "Connection"
+                  : "Connect"}
             </span>
           </>
         )}

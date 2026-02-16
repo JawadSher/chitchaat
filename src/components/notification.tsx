@@ -7,9 +7,7 @@ import { useMemo, useState } from "react";
 import { Button } from "./ui/button";
 import { timeAgo } from "@/lib/time-ago";
 import { NotificationSkeleton } from "./skeletons/notification-skeleton";
-import { PaginationType } from "@/types/pagination";
 import InfiniteScroll from "react-infinite-scroll-component";
-import { useQueryClient } from "@tanstack/react-query";
 
 type NotificationInfo = {
   avatar_url?: string;
@@ -112,14 +110,8 @@ function NotificationRow({ n }: { n: NotificationItem }) {
 }
 
 export default function Notification() {
-  const {
-    data,
-    error,
-    isLoading,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useNotification({ limit: 5 });
+  const { data, error, isLoading, fetchNextPage, hasNextPage } =
+    useNotification({ limit: 5 });
 
   const [filter, setFilter] = useState<"all" | "unread">("all");
 

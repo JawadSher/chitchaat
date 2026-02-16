@@ -20,7 +20,19 @@ export async function findContact(
       throw new Error(error.message);
     }
 
-    return data;
+    const { data: contactStatus, error: contactError } = await supabase
+      .from("contacts")
+      .select("status")
+      .eq("user_id", userId)
+      .eq("contact_user_id", data?.[0]?.user_id)
+      .neq("is_deleted", true)
+      .single();
+
+    if (contactError) {
+      throw new Error(contactError.message);
+    }
+
+    return [{ ...data?.[0], contactStatus: contactStatus?.status ?? null }];
   } catch (error: any) {
     throw new Error(error.message);
   }

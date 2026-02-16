@@ -39,7 +39,7 @@ function FindedContactInfo({ userInfo }: { userInfo: IContact }) {
       <Button
         onClick={handleSendConnect}
         className="rounded-full cursor-pointer p-1 w-full h-8"
-        disabled={isPending}
+        disabled={isPending || userInfo.contactStatus === "requested"}
       >
         {isPending ? (
           <>
@@ -49,7 +49,11 @@ function FindedContactInfo({ userInfo }: { userInfo: IContact }) {
         ) : (
           <>
             <UserRoundPlus className="size-5" strokeWidth={1.89} />
-            <span>Connect</span>
+            <span>
+              {userInfo.contactStatus === "requested"
+                ? "Pending..."
+                : "Connect"}
+            </span>
           </>
         )}
       </Button>

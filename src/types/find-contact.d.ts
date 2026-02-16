@@ -3,4 +3,5 @@ export interface IContact {
   full_name: string;
   avatar_url?: string;
   user_id: string;
+  contactStatus: "requested" | "blocked" | "accepted";
 }

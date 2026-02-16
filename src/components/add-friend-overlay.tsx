@@ -58,7 +58,7 @@ function AddFriend({
         {isLoading ? (
           <FindedContactInfoSkeleton />
         ) : data && data?.length > 0 ? (
-          data.map((contact) => (
+          data.map((contact: any) => (
             <FindedContactInfo key={contact.user_id} userInfo={contact} />
           ))
         ) : data?.length === 0 ? (

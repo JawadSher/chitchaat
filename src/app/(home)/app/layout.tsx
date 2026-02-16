@@ -86,6 +86,9 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
             client.invalidateQueries({
               queryKey: ["get-invitations", user?.id],
             });
+            client.invalidateQueries({
+              queryKey: ["notifications", user?.id],
+            });
             toast(payload.payload.title, {
               action: {
                 label: "View",

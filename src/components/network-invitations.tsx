@@ -8,6 +8,7 @@ import { useGetInvitations } from "@/hooks/react-query/query-contact";
 import { NetworkListSkeleton } from "./skeletons/network-skeleton";
 import InvitationPendingPersonRow from "./network-invitation-person-row";
 import { use, useEffect } from "react";
+import { useResponsedToConnectionRequest } from "@/hooks/react-query/mutation-contact";
 
 function PrimaryButton(
   props: React.ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -36,6 +37,8 @@ function NetworkInvitations({
 }: {
   setInvitationsLength: (length: number) => void;
 }) {
+  const { mutate: responsedToConnectionFn, isPending } =
+    useResponsedToConnectionRequest();
   const { data: invitations, isLoading, error } = useGetInvitations();
 
   useEffect(() => {
@@ -71,8 +74,20 @@ function NetworkInvitations({
               person={p}
               right={
                 <div className="flex flex-col gap-2 sm:flex-row">
-                  <PrimaryButton type="button">Accept</PrimaryButton>
-                  <OutlineButton type="button">Ignore</OutlineButton>
+                  <PrimaryButton
+                    type="button"
+                    onClick={() => responsedToConnectionFn({ contact_id: p.id, accept: true })}
+                    disabled={isPending}
+                  >
+                    Accept
+                  </PrimaryButton>
+                  <OutlineButton
+                    type="button"
+                    onClick={() => responsedToConnectionFn({ contact_id: p.id, accept: false })}
+                    disabled={isPending}
+                  >
+                    Ignore
+                  </OutlineButton>
                 </div>
               }
             />

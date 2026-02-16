@@ -25,7 +25,7 @@ export async function findContact(
       .eq("user_id", userId)
       .in(
         "contact_user_id",
-        users.map((u) => u.user_id) // fetch all statuses for these users
+        users.map((u) => u.user_id), // fetch all statuses for these users
       )
       .neq("is_deleted", true);
 
@@ -60,6 +60,17 @@ export async function sendConnectionToContact(
     });
 
     if (contactErr) {
+      if (contactErr.code === "23505") {
+        await supabase
+          .from("contacts")
+          .update({ status: "requested" })
+          .eq("contact_user_id", contact_id)
+          .eq("status", "ignored")
+          .eq("is_deleted", false);
+
+        return null;
+      }
+
       throw new Error(contactErr.message);
     }
 
@@ -168,6 +179,56 @@ export async function withdrawConnectionRequest(
 
     if (error) {
       throw new Error(error.message);
+    }
+
+    return null;
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
+}
+
+export async function responseToConnectionRequest(
+  supabase: SupabaseClient,
+  {
+    contact_id,
+    accept,
+    user_id,
+    senderName,
+  }: {
+    user_id: string;
+    senderName: string;
+    contact_id: string;
+    accept: boolean;
+  },
+) {
+  try {
+    const { error } = await supabase
+      .from("contacts")
+      .update({
+        status: accept ? "accepted" : "ignored",
+      })
+      .eq("id", contact_id)
+      .eq("status", "requested")
+      .neq("is_deleted", true);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    if (accept) {
+      const { error: notificationError } = await supabase
+        .from("notifications")
+        .insert({
+          contact_id: user_id,
+          notification_type: "connect_request",
+          title: `${senderName}`,
+          body: `Accepted your invitation`,
+          data: null,
+        });
+
+      if (notificationError) {
+        throw new Error(notificationError.message);
+      }
     }
 
     return null;

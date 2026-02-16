@@ -65,15 +65,19 @@ export const useResponsedToConnectionRequest = () => {
       client.setQueryData(["get-invitations", user?.id], (old: any) => {
         if (!old) return old;
 
-        return old.filter(
-          (contact: any) => contact.id !== variables.id,
-        );
+        return old.filter((contact: any) => contact.id !== variables.id);
       });
 
-      toast.success("Connection response sent successfully.");
+      if (variables.accept) {
+        client.invalidateQueries({
+          queryKey: ["get-contacts", user?.id],
+        });
+        toast.success("Invitation accepted successfully.");
+      }
     },
   });
 };
+
 export const useWithdrawConnectionRequest = () => {
   const supabase = useSupabase();
   const client = useQueryClient();

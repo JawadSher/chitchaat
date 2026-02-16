@@ -20,6 +20,7 @@ import { getSupabaseClient } from "@/lib/supabase/createBrowserClient";
 import { RealtimeChannel } from "@supabase/supabase-js";
 import { toast } from "sonner";
 import { ROUTES } from "@/constants/routes";
+import { useQueryClient } from "@tanstack/react-query";
 
 type TabItem = {
   Icon: keyof typeof icons;
@@ -46,6 +47,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const { user } = useUser();
   const { session } = useSession();
   const supabase = useMemo(() => getSupabaseClient(), []);
+  const client = useQueryClient();
 
   const channelRef = useRef<RealtimeChannel | null>(null);
 
@@ -81,6 +83,9 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
             },
           })
           .on("broadcast", { event: "INSERT" }, (payload) => {
+            client.invalidateQueries({
+              queryKey: ["get-invitations", user?.id],
+            });
             toast(payload.payload.title, {
               action: {
                 label: "View",

@@ -9,11 +9,7 @@ import { useUser } from "@clerk/nextjs";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-export const useSendConnection = ({
-  setIsSended,
-}: {
-  setIsSended: (e: boolean) => void;
-}) => {
+export const useSendConnection = () => {
   const supabase = useSupabase();
   const { user } = useUser();
   const client = useQueryClient();
@@ -32,7 +28,6 @@ export const useSendConnection = ({
       client.invalidateQueries({
         queryKey: ["get-pending-contacts", user?.id],
       });
-      setIsSended(true);
       toast.success("Connection Sended Successfully.");
     },
   });
@@ -46,16 +41,18 @@ export const useResponsedToConnectionRequest = () => {
   return useMutation({
     mutationKey: ["response-to-connection-request"],
     mutationFn: async ({
-      contact_id,
+      id,
       accept,
+      contact_user_id,
     }: {
-      contact_id: string;
+      id: string;
       accept: boolean;
+      contact_user_id: string;
     }) => {
       return await responseToConnectionRequest(supabase, {
-        contact_id,
+        id,
         accept,
-        user_id: user?.id!,
+        contact_user_id,
         senderName:
           capitalizeName({ name: user?.fullName! }) ||
           user?.username?.toString()!,
@@ -69,7 +66,7 @@ export const useResponsedToConnectionRequest = () => {
         if (!old) return old;
 
         return old.filter(
-          (contact: any) => contact.id !== variables.contact_id,
+          (contact: any) => contact.id !== variables.id,
         );
       });
 

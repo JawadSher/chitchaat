@@ -1,13 +1,11 @@
 import * as Tabs from "@radix-ui/react-tabs";
 import OutlineButton from "./out-line-button";
-import PersonRow from "./network-pending-person-row";
 import EmptyState from "./network-empty-state";
-import { Person } from "./my-network";
 import { Button } from "./ui/button";
 import { useGetInvitations } from "@/hooks/react-query/query-contact";
 import { NetworkListSkeleton } from "./skeletons/network-skeleton";
 import InvitationPendingPersonRow from "./network-invitation-person-row";
-import { use, useEffect } from "react";
+import { useEffect } from "react";
 import { useResponsedToConnectionRequest } from "@/hooks/react-query/mutation-contact";
 
 function PrimaryButton(
@@ -76,14 +74,26 @@ function NetworkInvitations({
                 <div className="flex flex-col gap-2 sm:flex-row">
                   <PrimaryButton
                     type="button"
-                    onClick={() => responsedToConnectionFn({ contact_id: p.id, accept: true })}
+                    onClick={() =>
+                      responsedToConnectionFn({
+                        id: p.id,
+                        contact_user_id: p.user_id,
+                        accept: true,
+                      })
+                    }
                     disabled={isPending}
                   >
                     Accept
                   </PrimaryButton>
                   <OutlineButton
                     type="button"
-                    onClick={() => responsedToConnectionFn({ contact_id: p.id, accept: false })}
+                    onClick={() =>
+                      responsedToConnectionFn({
+                        id: p.id,
+                        contact_user_id: p.user_id,
+                        accept: false,
+                      })
+                    }
                     disabled={isPending}
                   >
                     Ignore

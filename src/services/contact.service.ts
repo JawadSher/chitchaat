@@ -129,7 +129,7 @@ export async function getContacts(
       .select(
         "*, info: users!contacts_contact_user_id_fkey(avatar_url, full_name)",
       )
-      .eq("user_id", userId)
+      .or(`user_id.eq.${userId}, contact_user_id.eq.${userId}`)
       .eq("status", "accepted")
       .neq("is_deleted", true)
       .order("created_at", { ascending: false });
@@ -190,15 +190,15 @@ export async function withdrawConnectionRequest(
 export async function responseToConnectionRequest(
   supabase: SupabaseClient,
   {
-    contact_id,
+    id,
     accept,
-    user_id,
     senderName,
+    contact_user_id,
   }: {
-    user_id: string;
     senderName: string;
-    contact_id: string;
+    id: string;
     accept: boolean;
+    contact_user_id: string;
   },
 ) {
   try {
@@ -207,7 +207,7 @@ export async function responseToConnectionRequest(
       .update({
         status: accept ? "accepted" : "ignored",
       })
-      .eq("id", contact_id)
+      .eq("id", id)
       .eq("status", "requested")
       .neq("is_deleted", true);
 
@@ -219,7 +219,7 @@ export async function responseToConnectionRequest(
       const { error: notificationError } = await supabase
         .from("notifications")
         .insert({
-          contact_id: user_id,
+          contact_id: contact_user_id,
           notification_type: "connect_request",
           title: `${senderName}`,
           body: `Accepted your invitation`,

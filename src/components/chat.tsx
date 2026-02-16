@@ -10,9 +10,23 @@ import { Tabs } from "./ui/tabs";
 import { useState } from "react";
 import ChatForm from "./chat-form";
 import ChatAreaHeader from "./chat-area-header";
+import { useGetContacts } from "@/hooks/react-query/query-contact";
 
 function Chat() {
   const [activeTab, setActiveTab] = useState<string>("empty");
+  const { data, error } = useGetContacts();
+
+  if (error) {
+    return (
+      <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+        <div className="text-center space-y-2">
+          <h2 className="text-lg font-medium">Failed to load contacts</h2>
+          <p className="text-sm">Please try again later.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <TabsContent value="chat" className="w-full h-full">
       <Tabs
@@ -22,7 +36,7 @@ function Chat() {
         onValueChange={setActiveTab}
       >
         <ResizablePanelGroup direction="horizontal" className="h-full">
-          <ChatTabSidebar />
+          <ChatTabSidebar contacts={data} />
           <ResizableHandle withHandle />
           <ResizablePanel>
             <TabsContent value="empty" className="h-full">
@@ -36,13 +50,13 @@ function Chat() {
               </div>
             </TabsContent>
 
-            {Array.from({ length: 5 }).map((_, index: number) => (
+            {data?.map((contact: any, index: number) => (
               <TabsContent
-                value={`user${index}`}
+                value={contact.id}
                 key={index}
                 className="w-full h-full flex flex-col"
               >
-                <ChatAreaHeader setActiveTab={setActiveTab} />
+                <ChatAreaHeader contact={contact} setActiveTab={setActiveTab} />
 
                 <main className="flex-1 overflow-y-auto p-4">
                   <div className="text-sm text-muted-foreground">

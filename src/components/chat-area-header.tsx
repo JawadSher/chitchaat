@@ -15,11 +15,14 @@ import {
   Video,
 } from "lucide-react";
 import { DropdownMenuSeparator } from "@radix-ui/react-dropdown-menu";
+import Avatar from "./avatar";
 
 function ChatAreaHeader({
+  contact,
   setActiveTab,
 }: {
   setActiveTab: (e: string) => void;
+  contact: any
 }) {
   const handleCloseChat = () => {
     setActiveTab("empty");
@@ -28,8 +31,8 @@ function ChatAreaHeader({
   return (
     <header className="flex items-center justify-between w-full h-16 px-4 bg-accent/40 shrink-0">
       <div className="flex items-center gap-3">
-        <div className="rounded-full w-10 h-10 border" />
-        <span className="font-medium text-sm">John Doe</span>
+        <Avatar src={contact.info.avatar_url} alt="avatar" />
+        <span className="font-medium text-sm">{contact.info.full_name}</span>
       </div>
 
       <div className="flex items-center gap-2">

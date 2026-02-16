@@ -6,8 +6,9 @@ import { Input } from "./ui/input";
 import { TabsList, TabsTrigger } from "./ui/tabs";
 import { useState } from "react";
 import AddFriend from "./add-friend-overlay";
+import Avatar from "./avatar";
 
-function ChatTabSidebar() {
+function ChatTabSidebar({ contacts }: { contacts: any }) {
   const [showOverlay, setShowOverlay] = useState(false);
 
   return (
@@ -51,18 +52,20 @@ function ChatTabSidebar() {
         </div>
         <div className="w-full h-full">
           <TabsList className="flex flex-col justify-start w-full min-h-full bg-transparent gap-1">
-            {Array.from({ length: 5 }).map((_, index: number) => {
+            {contacts?.map((contact: any, index: number) => {
               return (
                 <TabsTrigger
                   key={index}
-                  value={`user${index}`}
+                  value={contact.id}
                   className="flex items-center justify-start gap-2 rounded-md border-none w-full max-h-fit p-2 cursor-pointer
     hover:bg-accent/60 dark:data-[state=active]:bg-accent/60 data-[state=active]:text-foreground transition-colors"
                 >
-                  <div className="rounded-full min-w-10 min-h-10 border"></div>
+                  <Avatar src={contact.info.avatar_url} alt="avatar" />
 
                   <div className="flex flex-col items-start justify-center overflow-hidden min-w-0">
-                    <h2 className="text-sm font-medium">User {index}</h2>
+                    <h2 className="text-sm font-medium">
+                      {contact.info.full_name}
+                    </h2>
                     <span className="text-xs text-muted-foreground">
                       This is the last message we did.
                     </span>

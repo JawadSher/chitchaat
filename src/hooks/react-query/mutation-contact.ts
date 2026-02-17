@@ -1,6 +1,7 @@
 import { capitalizeName } from "@/lib/capitalize-name";
 import { useSupabase } from "@/providers/supabase-provider";
 import {
+  removeContact,
   responseToConnectionRequest,
   sendConnectionToContact,
   withdrawConnectionRequest,
@@ -103,6 +104,39 @@ export const useWithdrawConnectionRequest = () => {
       });
 
       toast.success("Connection request withdrawn successfully.");
+    },
+  });
+};
+
+export const useRemoveContact = () => {
+  const supabase = useSupabase();
+  const client = useQueryClient();
+  const { user } = useUser();
+
+  return useMutation({
+    mutationKey: ["remove-contact"],
+    mutationFn: async ({
+      id,
+    }: {
+      id: string;
+      contact_user_id: string;
+    }) => {
+      return await removeContact(supabase, {
+        id,
+      });
+    },
+
+    onError: (error) => {
+      toast.error(error.message);
+    },
+    onSuccess: (_, variables) => {
+      client.setQueryData(["get-contacts", user?.id], (old: any) => {
+        if (!old) return old;
+
+        return old.filter((contact: any) => contact.id !== variables.id);
+      });
+
+      toast.success("Contact removed successfully.");
     },
   });
 };

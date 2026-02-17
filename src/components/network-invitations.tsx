@@ -44,8 +44,21 @@ function NetworkInvitations({
       setInvitationsLength(invitations.length);
     }
   }, [invitations, isLoading]);
+
   if (isLoading) {
     return <NetworkListSkeleton />;
+  }
+
+  async function handleResponseToConnectionRequest({
+    data,
+  }: {
+    data: { id: string; user_id: string; accept: boolean };
+  }) {
+    responsedToConnectionFn({
+      id: data.id,
+      contact_user_id: data.user_id,
+      accept: data.accept,
+    });
   }
 
   if (error) {
@@ -74,26 +87,18 @@ function NetworkInvitations({
                 <div className="flex flex-col gap-2 sm:flex-row">
                   <PrimaryButton
                     type="button"
-                    onClick={() =>
-                      responsedToConnectionFn({
-                        id: p.id,
-                        contact_user_id: p.user_id,
-                        accept: true,
-                      })
-                    }
+                    onClick={handleResponseToConnectionRequest.bind(null, {
+                      data: { id: p.id, user_id: p.user_id, accept: true },
+                    })}
                     disabled={isPending}
                   >
                     Accept
                   </PrimaryButton>
                   <OutlineButton
                     type="button"
-                    onClick={() =>
-                      responsedToConnectionFn({
-                        id: p.id,
-                        contact_user_id: p.user_id,
-                        accept: false,
-                      })
-                    }
+                    onClick={handleResponseToConnectionRequest.bind(null, {
+                      data: { id: p.id, user_id: p.user_id, accept: false },
+                    })}
                     disabled={isPending}
                   >
                     Ignore

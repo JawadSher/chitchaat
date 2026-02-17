@@ -1,12 +1,11 @@
 import * as Tabs from "@radix-ui/react-tabs";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import EmptyState from "./network-empty-state";
-import PersonRow from "./network-pending-person-row";
 import OutlineButton from "./out-line-button";
-import { Person } from "./my-network";
 import { useGetContacts } from "@/hooks/react-query/query-contact";
 import { NetworkListSkeleton } from "./skeletons/network-skeleton";
 import ConnectionPersonRow from "./network-connections-person-row";
+import { useRemoveContact } from "@/hooks/react-query/mutation-contact";
 
 function NetworkConnections({
   setContactsLength,
@@ -14,6 +13,7 @@ function NetworkConnections({
   setContactsLength: (length: number) => void;
 }) {
   const { data: connections, isLoading, error } = useGetContacts();
+  const { mutate: removeContactFn, isPending } = useRemoveContact();
 
   useEffect(() => {
     if (connections && !isLoading) {
@@ -34,6 +34,12 @@ function NetworkConnections({
     return <NetworkListSkeleton />;
   }
 
+  async function handleRemoveContact({ data }: { data: { id: string } }) {
+    removeContactFn({
+      id: data.id,
+    });
+  }
+
   return (
     <Tabs.Content value="connections" className="outline-none">
       {connections?.length === 0 ? (
@@ -49,8 +55,20 @@ function NetworkConnections({
               person={p}
               right={
                 <div className="flex flex-col gap-2 sm:flex-row">
-                  <OutlineButton type="button">Message</OutlineButton>
-                  <OutlineButton type="button">Remove</OutlineButton>
+                  <OutlineButton type="button" disabled={isPending}>
+                    Message
+                  </OutlineButton>
+                  <OutlineButton
+                    type="button"
+                    disabled={isPending}
+                    onClick={() =>
+                      handleRemoveContact({
+                        data: { id: p.id },
+                      })
+                    }
+                  >
+                    {isPending ? "Removing..." : "Remove"}
+                  </OutlineButton>
                 </div>
               }
             />

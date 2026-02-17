@@ -16,11 +16,10 @@ import {
 } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import SplashScreen from "@/components/splash-screen";
-import { getSupabaseClient } from "@/lib/supabase/createBrowserClient";
 import { RealtimeChannel } from "@supabase/supabase-js";
 import { toast } from "sonner";
-import { ROUTES } from "@/constants/routes";
 import { useQueryClient } from "@tanstack/react-query";
+import { useSupabase } from "@/providers/supabase-provider";
 
 type TabItem = {
   Icon: keyof typeof icons;
@@ -46,11 +45,8 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { user } = useUser();
   const { session } = useSession();
-  const supabase = useMemo(() => getSupabaseClient(), []);
+  const supabase = useSupabase();
   const client = useQueryClient();
-
-  const channelRef = useRef<RealtimeChannel | null>(null);
-
   const currentTab = searchParams.get("tab") || "chat";
 
   const handleTabChange = (value: string) => {
@@ -60,87 +56,56 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    if (!user?.id || !session) return;
+    if (!user?.id) return;
 
-    let isMounted = true;
+    let channel: any = typeof RealtimeChannel;
 
-    const setupRealtime = async () => {
-      try {
-        const token = await session.getToken({ template: "supabase" });
-        if (!isMounted || !token) return;
+    const subscribe = async () => {
+      const token = await session?.getToken({ template: "supabase" });
+      if (!token) return;
 
-        await supabase.realtime.setAuth(token);
+      await supabase.realtime.setAuth(token);
 
-        if (channelRef.current) {
-          await supabase.removeChannel(channelRef.current);
-          channelRef.current = null;
-        }
-
-        const notificationChannel = supabase
-          .channel(`notifications:${user.id}`, {
-            config: {
-              private: true,
-            },
-          })
-          .on("broadcast", { event: "INSERT" }, (payload) => {
-            client.invalidateQueries({
-              queryKey: ["get-invitations", user?.id],
-            });
-            client.invalidateQueries({
-              queryKey: ["notifications", user?.id],
-            });
-            toast(payload.payload.title, {
-              action: {
-                label: "View",
-                onClick: () => router.push(ROUTES.NOTIFICATIONS),
-              },
-              description: payload.payload.body,
-              className:
-                "bg-secondary text-secondary-foreground border-none py-0",
-            });
-          })
-          .subscribe((status) => {
-            if (status === "SUBSCRIBED") {
-              console.log("Successfully subscribed to notifications channel");
-            } else if (status === "CHANNEL_ERROR") {
-              console.error("Error subscribing to channel");
-            } else if (status === "TIMED_OUT") {
-              console.error("Subscription timed out");
-            } else if (status === "CLOSED") {
-              console.log("Channel closed");
-            }
+      channel = supabase
+        .channel(`notifications:${user.id}`, {
+          config: { private: true },
+        })
+        .on("broadcast", { event: "INSERT" }, (payload) => {
+          client.invalidateQueries({
+            queryKey: ["get-invitations", user.id],
+          });
+          
+          client.invalidateQueries({
+            queryKey: ["get-pending-contacts", user.id],
           });
 
-        channelRef.current = notificationChannel;
-      } catch (error) {
-        console.error("Error setting up Realtime:", error);
-      }
+          client.invalidateQueries({
+            queryKey: ["get-contacts", user.id],
+          });
+
+          client.invalidateQueries({
+            queryKey: ["notifications", user.id],
+          });
+
+          toast(payload.payload.title, {
+            description: payload.payload.body,
+          });
+        })
+        .subscribe((status) => {
+          console.log("Realtime status:", status);
+          if (status === "CLOSED") {
+            console.log("Reconnecting...");
+            subscribe();
+          }
+        });
     };
 
-    const refreshAuth = async () => {
-      try {
-        const token = await session.getToken({ template: "supabase" });
-        if (!isMounted || !token) return;
-        await supabase.realtime.setAuth(token);
-      } catch (error) {
-        console.error("Error refreshing auth:", error);
-      }
-    };
-
-    setupRealtime();
-
-    const refreshInterval = setInterval(refreshAuth, 50_000);
+    subscribe();
 
     return () => {
-      isMounted = false;
-      clearInterval(refreshInterval);
-
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
-      }
+      if (channel) supabase.removeChannel(channel);
     };
-  }, [user?.id, session, supabase]);
+  }, [user?.id]);
 
   return (
     <Tabs

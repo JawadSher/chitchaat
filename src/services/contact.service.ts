@@ -63,10 +63,9 @@ export async function sendConnectionToContact(
       if (contactErr.code === "23505") {
         await supabase
           .from("contacts")
-          .update({ status: "requested" })
+          .update({ status: "requested", is_deleted: false })
           .eq("contact_user_id", contact_id)
-          .eq("status", "ignored")
-          .eq("is_deleted", false);
+          .or("status.eq.ignored, status.eq.accepted");
 
         return null;
       }
@@ -129,7 +128,7 @@ export async function getContacts(
       .select(
         "*, info: users!contacts_contact_user_id_fkey(avatar_url, full_name)",
       )
-      .or(`user_id.eq.${userId}, contact_user_id.eq.${userId}`)
+      .or(`user_id.eq.${userId}`)
       .eq("status", "accepted")
       .neq("is_deleted", true)
       .order("created_at", { ascending: false });
@@ -229,6 +228,27 @@ export async function responseToConnectionRequest(
       if (notificationError) {
         throw new Error(notificationError.message);
       }
+    }
+
+    return null;
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
+}
+
+export async function removeContact(
+  supabase: SupabaseClient,
+  { id }: { id: string },
+) {
+  try {
+    const { error } = await supabase
+      .from("contacts")
+      .update({ is_deleted: true })
+      .eq("id", id)
+      .neq("is_deleted", true);
+
+    if (error) {
+      throw new Error(error.message);
     }
 
     return null;

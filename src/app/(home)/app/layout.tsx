@@ -20,6 +20,7 @@ import { RealtimeChannel } from "@supabase/supabase-js";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSupabase } from "@/providers/supabase-provider";
+import { SOUNDS } from "@/constants/sounds";
 
 type TabItem = {
   Icon: keyof typeof icons;
@@ -48,6 +49,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const supabase = useSupabase();
   const client = useQueryClient();
   const currentTab = searchParams.get("tab") || "chat";
+  const notifyAudio = new Audio(SOUNDS.NOTIFICATION);
 
   const handleTabChange = (value: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -74,7 +76,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
           client.invalidateQueries({
             queryKey: ["get-invitations", user.id],
           });
-          
+
           client.invalidateQueries({
             queryKey: ["get-pending-contacts", user.id],
           });
@@ -87,6 +89,8 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
             queryKey: ["notifications", user.id],
           });
 
+          notifyAudio.volume = 1;
+          notifyAudio.play();
           toast(payload.payload.title, {
             description: payload.payload.body,
           });

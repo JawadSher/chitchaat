@@ -39,7 +39,7 @@ export default function RootLayout({
             <SupabaseProvider>
               <QueryProvider>
                 {children}
-                <Toaster position="bottom-right" duration={7000} />
+                <Toaster theme="dark" position="bottom-right" duration={7000} />
               </QueryProvider>
             </SupabaseProvider>
           </ClerkProvider>

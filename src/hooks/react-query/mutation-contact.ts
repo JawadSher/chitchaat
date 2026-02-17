@@ -119,7 +119,6 @@ export const useRemoveContact = () => {
       id,
     }: {
       id: string;
-      contact_user_id: string;
     }) => {
       return await removeContact(supabase, {
         id,

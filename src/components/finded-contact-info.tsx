@@ -56,7 +56,7 @@ function FindedContactInfo({ userInfo }: { userInfo: IContact }) {
             <span>
               {userInfo.contactStatus === "accepted"
                 ? "Connection"
-                : userInfo.contactStatus === "requested"
+                : userInfo.contactStatus === "requested" || isSuccess
                   ? "Pending..."
                   : "Connect"}
             </span>

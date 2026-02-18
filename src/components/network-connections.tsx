@@ -6,12 +6,15 @@ import { useGetContacts } from "@/hooks/react-query/query-contact";
 import { NetworkListSkeleton } from "./skeletons/network-skeleton";
 import ConnectionPersonRow from "./network-connections-person-row";
 import { useRemoveContact } from "@/hooks/react-query/mutation-contact";
+import { ROUTES } from "@/constants/routes";
+import { useRouter } from "next/navigation";
 
 function NetworkConnections({
   setContactsLength,
 }: {
   setContactsLength: (length: number) => void;
 }) {
+  const router = useRouter();
   const { data: connections, isLoading, error } = useGetContacts();
   const { mutate: removeContactFn, isPending } = useRemoveContact();
 
@@ -55,7 +58,7 @@ function NetworkConnections({
               person={p}
               right={
                 <div className="flex flex-col gap-2 sm:flex-row">
-                  <OutlineButton type="button" disabled={isPending}>
+                  <OutlineButton type="button" disabled={isPending} onClick={() => router.push(ROUTES.CHAT)}>
                     Message
                   </OutlineButton>
                   <OutlineButton

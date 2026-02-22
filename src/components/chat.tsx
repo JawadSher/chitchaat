@@ -64,7 +64,7 @@ function Chat() {
                   </div>
                 </main>
 
-                <ChatForm />
+                <ChatForm recipient_id={contact.contact_user_id} />
               </TabsContent>
             ))}
           </ResizablePanel>

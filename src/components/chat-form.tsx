@@ -9,9 +9,10 @@ import { Input } from "./ui/input";
 import z from "zod";
 import { useForm } from "@tanstack/react-form";
 import { FieldError, FieldGroup, Field, FieldLabel } from "./ui/field";
-import EmojiPicker, { Theme, EmojiStyle }  from "emoji-picker-react";
+import EmojiPicker, { Theme, EmojiStyle } from "emoji-picker-react";
 import { useRef, useState } from "react";
 import { Textarea } from "./ui/textarea";
+import { useSendMessage } from "@/hooks/react-query/mutation-message";
 
 const formSchema = z.object({
   message: z
@@ -23,9 +24,10 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-function ChatForm() {
+function ChatForm({ recipient_id }: { recipient_id: string }) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { mutate: sendMessageFn, isPending } = useSendMessage();
 
   const form = useForm({
     defaultValues: { message: "", file: undefined } as FormValues,
@@ -35,6 +37,12 @@ function ChatForm() {
       if (value.file) {
         console.log("Attached file:", value.file.name);
       }
+
+      sendMessageFn({
+        message_type: "text",
+        content: value.message,
+        recipient_id,
+      });
       form.reset();
     },
   });
@@ -142,8 +150,14 @@ function ChatForm() {
                     autoComplete="off"
                     maxLength={7000}
                     minLength={1}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        form.handleSubmit();
+                      }
+                    }}
                   />
-                  
+
                   {isInvalid && <FieldError errors={field.state.meta.errors} />}
                 </Field>
               );

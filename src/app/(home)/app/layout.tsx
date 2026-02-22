@@ -60,7 +60,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!user?.id) return;
 
-    let channel: any = typeof RealtimeChannel;
+    const channels: any[] = [];
 
     const subscribe = async () => {
       const token = await session?.getToken({ template: "supabase" });
@@ -68,7 +68,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
 
       await supabase.realtime.setAuth(token);
 
-      channel = supabase
+      const notificationChannel = supabase
         .channel(`notifications:${user.id}`, {
           config: { private: true },
         })
@@ -96,18 +96,46 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
           });
         })
         .subscribe((status) => {
-          console.log("Realtime status:", status);
+          console.log("Notification Realtime status:", status);
           if (status === "CLOSED") {
             console.log("Reconnecting...");
             subscribe();
           }
         });
+
+      const messageChannel = supabase
+        .channel("message-listner")
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "messages",
+            filter: `recipient_id=eq.${user.id}`,
+          },
+          (payload) => {
+            console.log("--->: ", payload);
+          },
+        )
+        .subscribe((status) => {
+          console.log("Message Realtime status:", status);
+          if (status === "CLOSED") {
+            console.log("Reconnecting...");
+            subscribe();
+          }
+        });
+
+      channels.push(notificationChannel, messageChannel);
     };
 
     subscribe();
 
     return () => {
-      if (channel) supabase.removeChannel(channel);
+      if (channels.length) {
+        channels.map((channel) => {
+          supabase.removeChannel(channel);
+        });
+      }
     };
   }, [user?.id]);
 

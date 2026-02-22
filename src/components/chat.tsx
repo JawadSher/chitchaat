@@ -11,10 +11,13 @@ import { useState } from "react";
 import ChatForm from "./chat-form";
 import ChatAreaHeader from "./chat-area-header";
 import { useGetContacts } from "@/hooks/react-query/query-contact";
+import ChatsMain from "./chats-main";
+import { useUser } from "@clerk/nextjs";
 
 function Chat() {
   const [activeTab, setActiveTab] = useState<string>("empty");
   const { data, error } = useGetContacts();
+  const { user } = useUser();
 
   if (error) {
     return (
@@ -58,11 +61,7 @@ function Chat() {
               >
                 <ChatAreaHeader contact={contact} setActiveTab={setActiveTab} />
 
-                <main className="flex-1 overflow-y-auto p-4">
-                  <div className="text-sm text-muted-foreground">
-                    Nothing yet.
-                  </div>
-                </main>
+                <ChatsMain user_id={user?.id!} recipient_id={contact.contact_user_id}/>
 
                 <ChatForm recipient_id={contact.contact_user_id} />
               </TabsContent>

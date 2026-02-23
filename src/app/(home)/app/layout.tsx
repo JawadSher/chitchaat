@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSupabase } from "@/providers/supabase-provider";
 import { SOUNDS } from "@/constants/sounds";
+import { IMessages } from "@/types/messages";
 
 type TabItem = {
   Icon: keyof typeof icons;
@@ -114,7 +115,42 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
             filter: `recipient_id=eq.${user.id}`,
           },
           (payload) => {
-            console.log("--->: ", payload);
+            if (payload.eventType === "INSERT") {
+              const newMessage = payload.new;
+
+              const incomingMessage: IMessages = {
+                id: newMessage.id,
+                sender_id: newMessage.sender_id,
+                recipient_id: newMessage.recipient_id,
+                message_type: newMessage.message_type,
+                content: newMessage.content,
+                media_url: newMessage.media_url,
+                file_name: newMessage.file_name,
+                file_size: newMessage.file_size,
+                duration: newMessage.duration,
+                reply_to_message_id: newMessage.reply_to_message_id,
+                is_edited: newMessage.is_edited,
+                message_read_status: newMessage.message_read_status,
+                created_at: newMessage.created_at,
+              };
+
+              client.setQueryData<{ data: IMessages[] }>(
+                ["messages", newMessage.sender_id],
+                (old) => {
+                  const existingMessages = old?.data ?? [];
+
+                  const alreadyExists = existingMessages.some(
+                    (msg) => msg.id === newMessage.id,
+                  );
+
+                  if (alreadyExists) return old!;
+
+                  return {
+                    data: [...existingMessages, incomingMessage],
+                  };
+                },
+              );
+            }
           },
         )
         .subscribe((status) => {

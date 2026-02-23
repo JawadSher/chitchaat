@@ -8,10 +8,13 @@ import { MessageBubble } from "./message-bubble";
 
 export function formatTime(iso?: string) {
   if (!iso) return "";
+
   const d = new Date(iso);
+
   return new Intl.DateTimeFormat(undefined, {
     hour: "2-digit",
     minute: "2-digit",
+    hour12: true,
   }).format(d);
 }
 

@@ -12,13 +12,10 @@ import ChatForm from "./chat-form";
 import ChatAreaHeader from "./chat-area-header";
 import { useGetContacts } from "@/hooks/react-query/query-contact";
 import ChatsMain from "./chats-main";
-import { useUser } from "@clerk/nextjs";
 
 function Chat() {
   const [activeTab, setActiveTab] = useState<string>("empty");
   const { data, error } = useGetContacts();
-  const { user } = useUser();
-
   if (error) {
     return (
       <div className="w-full h-full flex items-center justify-center text-muted-foreground">

@@ -104,13 +104,10 @@ export function DayDivider({ label }: { label: string }) {
 
 function ChatsMain({
   recipient_id,
-  user_id,
 }: {
   recipient_id: string;
-  user_id: string;
 }) {
   const { data, error, isLoading } = useGetMessages({ recipient_id });
-
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   const messages = useMemo(() => {

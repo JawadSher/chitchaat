@@ -53,13 +53,15 @@ export async function getMessages(
       .select(
         "id, sender_id, recipient_id, message_type, content, media_url, file_name, file_size, duration, reply_to_message_id, is_edited, message_read_status, created_at",
       )
-      .eq("sender_id", user_id)
-      .eq("recipient_id", recipient_id)
-      .eq("is_deleted", false);
+      .or(
+        `and(sender_id.eq.${user_id},recipient_id.eq.${recipient_id}),and(sender_id.eq.${recipient_id},recipient_id.eq.${user_id})`,
+      )
+      .eq("is_deleted", false)
+      .order("created_at", { ascending: true });
 
     if (error) throw new Error(error.message);
 
-    return { data };
+    return { data: data ?? [] };
   } catch (error: any) {
     throw new Error(error.message);
   }

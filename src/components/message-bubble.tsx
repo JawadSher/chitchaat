@@ -76,10 +76,10 @@ export function MessageBubble({ m, incoming }: { m: IMessages; incoming: boolean
       <div
         className={[
           "flex max-w-[85%] sm:max-w-[72%] md:max-w-[62%]",
-          "rounded-md px-2 gap-2",
+          "px-2 gap-2",
           incoming
-            ? "bg-card border border-border text-foreground"
-            : "bg-primary-foreground border border-primary text-primary",
+            ? "flex rounded-e-md rounded-es-md py-1 bg-card border border-primary text-foreground px-2"
+            : "bg-primary-foreground rounded-s-md rounded-se-md border border-primary",
         ].join(" ")}
       >
         {m.message_type !== "text" ? (
@@ -97,7 +97,7 @@ export function MessageBubble({ m, incoming }: { m: IMessages; incoming: boolean
         <div className={["mt-1 flex items-center justify-end gap-2"].join(" ")}>
           {m.is_edited ? <span className="text-[11px]">edited</span> : null}
           {m.created_at ? (
-            <span className="text-[11px] tabular-nums">
+            <span className="text-[11px] tabular-nums text-primary">
               {formatTime(m.created_at)}
             </span>
           ) : null}

@@ -61,7 +61,7 @@ function Chat() {
               >
                 <ChatAreaHeader contact={contact} setActiveTab={setActiveTab} />
 
-                <ChatsMain user_id={user?.id!} recipient_id={contact.contact_user_id}/>
+                <ChatsMain recipient_id={contact.contact_user_id}/>
 
                 <ChatForm recipient_id={contact.contact_user_id} />
               </TabsContent>

@@ -53,11 +53,11 @@ function MessageAttachment({ m }: { m: IMessages }) {
         <p className="text-sm text-muted-foreground">
           {m.message_type.toUpperCase()} message
         </p>
-        {m.content ? (
-          <p className="mt-1 text-sm text-foreground whitespace-pre-wrap wrap-break-word">
+        {m.content && (
+          <p className="mt-1 text-sm text-foreground whitespace-pre-wrap break-words">
             {m.content}
           </p>
-        ) : null}
+        )}
       </div>
     );
   }
@@ -86,8 +86,16 @@ export function MessageBubble({
           "flex max-w-[85%] sm:max-w-[72%] md:max-w-[62%]",
           "px-2 gap-2 relative",
           incoming
-            ? `flex rounded-e-md rounded-es-md ${showTail ? "rounded-ee-md" : "rounded-e-md"} py-1 bg-primary-foreground/40 text-foreground`
-            : `bg-primary-foreground rounded-s-md rounded-ee-md ${showTail ? "rounded-es-md" : "rounded-e-md"} text-foreground`,
+            ? `flex rounded-e-md rounded-es-md ${
+                showTail ? "rounded-ee-md" : "rounded-e-md"
+              } py-1 
+              bg-primary-foreground/10 dark:bg-primary-foreground/40 
+              text-foreground`
+            : `rounded-s-md rounded-ee-md ${
+                showTail ? "rounded-es-md" : "rounded-e-md"
+              } 
+              bg-primary-foreground dark:bg-primary-foreground 
+              dark:text-foreground text-white`,
         ].join(" ")}
       >
         {showTail && (
@@ -95,8 +103,8 @@ export function MessageBubble({
             className={[
               "absolute w-3 h-3 top-0",
               incoming
-                ? "left-0 -translate-x-full bottom-2 bg-primary-foreground/40 [clip-path:polygon(100%_0,50%_0%,100%_50%)]"
-                : "right-0 translate-x-full bottom-2 bg-primary-foreground  [clip-path:polygon(0_0,50%_0,0_50%)]",
+                ? "left-0 -translate-x-full bottom-2 bg-primary-foreground/10 dark:bg-primary-foreground/40 [clip-path:polygon(100%_0,50%_0,100%_50%)]"
+                : "right-0 translate-x-full bottom-2 bg-primary-foreground dark:bg-primary-foreground [clip-path:polygon(0_0,50%_0,0_50%)]",
             ].join(" ")}
           />
         )}

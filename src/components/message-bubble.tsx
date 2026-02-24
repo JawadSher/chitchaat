@@ -68,51 +68,65 @@ function MessageAttachment({ m }: { m: IMessages }) {
 export function MessageBubble({
   m,
   incoming,
+  showTail,
 }: {
   m: IMessages;
   incoming: boolean;
+  showTail?: boolean;
 }) {
   return (
     <div
       className={[
-        "flex items-end gap-2",
+        "flex items-end gap-2 relative",
         incoming ? "justify-start" : "justify-end",
       ].join(" ")}
     >
       <div
         className={[
           "flex max-w-[85%] sm:max-w-[72%] md:max-w-[62%]",
-          "px-2 gap-2",
+          "px-2 gap-2 relative",
           incoming
-            ? "flex rounded-e-md rounded-es-md py-1 bg-card border border-primary text-foreground px-2"
-            : "bg-primary-foreground rounded-s-md rounded-se-md border border-primary",
+            ? `flex rounded-e-md rounded-es-md ${showTail ? "rounded-ee-md" : "rounded-e-md"} py-1 bg-primary-foreground/40 text-foreground`
+            : `bg-primary-foreground rounded-s-md rounded-ee-md ${showTail ? "rounded-es-md" : "rounded-e-md"} text-foreground`,
         ].join(" ")}
       >
-        {m.message_type !== "text" ? (
+        {showTail && (
+          <div
+            className={[
+              "absolute w-3 h-3 top-0",
+              incoming
+                ? "left-0 -translate-x-full bottom-2 bg-primary-foreground/40 [clip-path:polygon(100%_0,50%_0%,100%_50%)]"
+                : "right-0 translate-x-full bottom-2 bg-primary-foreground  [clip-path:polygon(0_0,50%_0,0_50%)]",
+            ].join(" ")}
+          />
+        )}
+
+        {m.message_type !== "text" && (
           <div className="mb-2">
             <MessageAttachment m={m} />
           </div>
-        ) : null}
+        )}
 
-        {m.content ? (
-          <p className="text-sm whitespace-pre-wrap wrap-break-word">
-            {m.content}
-          </p>
-        ) : null}
+        {m.content && (
+          <p className="text-sm whitespace-pre-wrap break-words">{m.content}</p>
+        )}
 
-        <div className={["mt-1 flex items-center justify-end gap-2"].join(" ")}>
-          {m.is_edited ? <span className="text-[11px]">edited</span> : null}
-          {m.created_at ? (
-            <span className="text-[11px] tabular-nums text-primary">
+        <div className="mt-1 flex items-center justify-end gap-2">
+          {m.is_edited && (
+            <span className="text-[11px] opacity-70">edited</span>
+          )}
+
+          {m.created_at && (
+            <span className="text-[11px] tabular-nums opacity-70">
               {formatTime(m.created_at)}
             </span>
-          ) : null}
+          )}
 
-          {!incoming ? (
+          {!incoming && (
             <span className="translate-y-px">
               <DoubleTick status={m.message_read_status} />
             </span>
-          ) : null}
+          )}
         </div>
       </div>
     </div>

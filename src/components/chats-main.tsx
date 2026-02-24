@@ -2,7 +2,7 @@
 
 import { useGetMessages } from "@/hooks/react-query/query-messages";
 import { IMessages } from "@/types/messages";
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { MessagesSkeleton } from "./skeletons/messages-skeleton";
 import { MessageBubble } from "./message-bubble";
 
@@ -105,13 +105,10 @@ export function DayDivider({ label }: { label: string }) {
   );
 }
 
-function ChatsMain({
-  recipient_id,
-}: {
-  recipient_id: string;
-}) {
+function ChatsMain({ recipient_id }: { recipient_id: string }) {
   const { data, error, isLoading } = useGetMessages({ recipient_id });
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  // const [showTail, setShowTail] = useState<boolean>(true);
 
   const messages = useMemo(() => {
     const d: any = data;
@@ -153,8 +150,8 @@ function ChatsMain({
   }
 
   return (
-    <main className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-4">
-      <div className="mx-auto max-w-3xl">
+    <main className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-4 w-full">
+      <div className="mx-auto">
         {isLoading ? (
           <MessagesSkeleton />
         ) : messages.length === 0 ? (
@@ -169,7 +166,7 @@ function ChatsMain({
             </div>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-1">
             {messages.map((m, idx) => {
               const incoming = m.sender_id === recipient_id;
 
@@ -179,12 +176,18 @@ function ChatsMain({
                 (!prev?.created_at ||
                   formatDay(prev.created_at) !== formatDay(m.created_at));
 
+
+              const showTail = !prev || prev.sender_id !== m.sender_id;
               return (
                 <React.Fragment key={m.id}>
                   {showDay ? (
                     <DayDivider label={formatDay(m.created_at)} />
                   ) : null}
-                  <MessageBubble m={m} incoming={incoming} />
+                  <MessageBubble
+                    showTail={showTail}
+                    m={m}
+                    incoming={incoming}
+                  />
                 </React.Fragment>
               );
             })}

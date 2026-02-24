@@ -7,8 +7,15 @@ import { TabsList, TabsTrigger } from "./ui/tabs";
 import { useState } from "react";
 import AddFriend from "./add-friend-overlay";
 import Avatar from "./avatar";
+import { ContactListSkeleton } from "./skeletons/contacts-skeleton";
 
-function ChatTabSidebar({ contacts }: { contacts: any }) {
+function ChatTabSidebar({
+  contacts,
+  loading,
+}: {
+  contacts: any;
+  loading: boolean;
+}) {
   const [showOverlay, setShowOverlay] = useState(false);
 
   return (
@@ -52,27 +59,31 @@ function ChatTabSidebar({ contacts }: { contacts: any }) {
         </div>
         <div className="w-full h-full">
           <TabsList className="flex flex-col justify-start w-full min-h-full bg-transparent gap-1">
-            {contacts?.map((contact: any, index: number) => {
-              return (
-                <TabsTrigger
-                  key={index}
-                  value={contact.id}
-                  className="flex items-center justify-start gap-2 rounded-md border-none w-full max-h-fit p-2 cursor-pointer
+            {loading ? (
+              <ContactListSkeleton />
+            ) : (
+              contacts?.map((contact: any, index: number) => {
+                return (
+                  <TabsTrigger
+                    key={index}
+                    value={contact.id}
+                    className="flex items-center justify-start gap-2 rounded-md border-none w-full max-h-fit p-2 cursor-pointer
     hover:bg-accent/60 dark:data-[state=active]:bg-accent/60 data-[state=active]:text-foreground transition-colors"
-                >
-                  <Avatar src={contact.info.avatar_url} alt="avatar" />
+                  >
+                    <Avatar src={contact.info.avatar_url} alt="avatar" />
 
-                  <div className="flex flex-col items-start justify-center overflow-hidden min-w-0">
-                    <h2 className="text-sm font-medium">
-                      {contact.info.full_name}
-                    </h2>
-                    <span className="text-xs text-muted-foreground">
-                      This is the last message we did.
-                    </span>
-                  </div>
-                </TabsTrigger>
-              );
-            })}
+                    <div className="flex flex-col items-start justify-center overflow-hidden min-w-0">
+                      <h2 className="text-sm font-medium">
+                        {contact.info.full_name}
+                      </h2>
+                      <span className="text-xs text-muted-foreground italic truncate font-normal">
+                        Click to start conversation
+                      </span>
+                    </div>
+                  </TabsTrigger>
+                );
+              })
+            )}
           </TabsList>
         </div>
       </div>

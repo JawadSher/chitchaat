@@ -65,7 +65,13 @@ function MessageAttachment({ m }: { m: IMessages }) {
   return null;
 }
 
-export function MessageBubble({ m, incoming }: { m: IMessages; incoming: boolean }) {
+export function MessageBubble({
+  m,
+  incoming,
+}: {
+  m: IMessages;
+  incoming: boolean;
+}) {
   return (
     <div
       className={[

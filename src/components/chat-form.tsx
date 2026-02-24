@@ -10,7 +10,7 @@ import z from "zod";
 import { useForm } from "@tanstack/react-form";
 import { FieldError, FieldGroup, Field, FieldLabel } from "./ui/field";
 import EmojiPicker, { Theme, EmojiStyle } from "emoji-picker-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Textarea } from "./ui/textarea";
 import { useSendMessage } from "@/hooks/react-query/mutation-message";
 
@@ -27,7 +27,7 @@ type FormValues = z.infer<typeof formSchema>;
 function ChatForm({ recipient_id }: { recipient_id: string }) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { mutate: sendMessageFn, isPending } = useSendMessage();
+  const { mutate: sendMessageFn } = useSendMessage();
 
   const form = useForm({
     defaultValues: { message: "", file: undefined } as FormValues,

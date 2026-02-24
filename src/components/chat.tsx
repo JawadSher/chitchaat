@@ -15,7 +15,8 @@ import ChatsMain from "./chats-main";
 
 function Chat() {
   const [activeTab, setActiveTab] = useState<string>("empty");
-  const { data, error } = useGetContacts();
+  const { data, error, isLoading } = useGetContacts();
+  
   if (error) {
     return (
       <div className="w-full h-full flex items-center justify-center text-muted-foreground">
@@ -36,7 +37,7 @@ function Chat() {
         onValueChange={setActiveTab}
       >
         <ResizablePanelGroup direction="horizontal" className="h-full">
-          <ChatTabSidebar contacts={data} />
+          <ChatTabSidebar contacts={data} loading={isLoading} />
           <ResizableHandle withHandle />
           <ResizablePanel>
             <TabsContent value="empty" className="h-full">
@@ -60,7 +61,7 @@ function Chat() {
 
                 <ChatsMain recipient_id={contact.contact_user_id}/>
 
-                <ChatForm recipient_id={contact.contact_user_id} />
+                <ChatForm recipient_id={contact.contact_user_id}  />
               </TabsContent>
             ))}
           </ResizablePanel>

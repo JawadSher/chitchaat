@@ -9,5 +9,5 @@ export const IMAGES = {
   ICONS: {
     GOOGLE: "/icons/google.png",
     UNKNOWN_USER: "/icons/unknown-user.png"
-  }
+  },
 };

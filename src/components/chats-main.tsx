@@ -2,7 +2,7 @@
 
 import { useGetMessages } from "@/hooks/react-query/query-messages";
 import { IMessages } from "@/types/messages";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import { MessagesSkeleton } from "./skeletons/messages-skeleton";
 import { MessageBubble } from "./message-bubble";
 
@@ -151,7 +151,7 @@ function ChatsMain({ recipient_id }: { recipient_id: string }) {
 
   return (
     <main className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-4 w-full">
-      <div className="mx-auto">
+      <div className="mx-auto relative z-10">
         {isLoading ? (
           <MessagesSkeleton />
         ) : messages.length === 0 ? (

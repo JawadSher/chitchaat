@@ -15,7 +15,8 @@ import {
   Video,
 } from "lucide-react";
 import { DropdownMenuSeparator } from "@radix-ui/react-dropdown-menu";
-import Avatar from "./avatar";
+import UserAvatar from "./avatar";
+import { useUserOnlineState } from "@/store/use-get-user-online-state";
 
 function ChatAreaHeader({
   contact,
@@ -28,10 +29,12 @@ function ChatAreaHeader({
     setActiveTab("empty");
   };
 
+  const onlineUsers = useUserOnlineState((state) => state.onlineUsers) || [];
+
   return (
     <header className="flex items-center justify-between w-full h-16 px-4 bg-accent/40 shrink-0">
       <div className="flex items-center gap-3">
-        <Avatar src={contact.info.avatar_url} alt="avatar" />
+        <UserAvatar src={contact.info.avatar_url} alt="avatar" isOnline={!!onlineUsers[contact.contact_user_id]} />
         <span className="font-medium text-sm">{contact.info.full_name}</span>
       </div>
 

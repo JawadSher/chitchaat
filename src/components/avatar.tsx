@@ -1,23 +1,20 @@
 import { IMAGES } from "@/constants/images";
-import Image from "next/image";
+import { Avatar, AvatarBadge, AvatarFallback, AvatarImage } from "./ui/avatar";
 
-export default function Avatar({
+export default function UserAvatar({
   src,
   alt,
+  isOnline = false,
 }: {
   src?: string | null;
   alt: string;
+  isOnline?: boolean;
 }) {
   return (
-    <Image
-      src={src ?? IMAGES.ICONS.UNKNOWN_USER}
-      alt={alt}
-      className="size-11 rounded-full object-cover ring-1 ring-border"
-      width={25}
-      height={80}
-      priority={false}
-      loading="lazy"
-      unoptimized
-    />
+    <Avatar className="overflow-visible">
+      <AvatarImage className="rounded-full" src={src ?? IMAGES.ICONS.UNKNOWN_USER} alt={alt} />
+      <AvatarFallback>{alt.substring(0, 2).toUpperCase()}</AvatarFallback>
+      {isOnline && <AvatarBadge className="bg-green-500 dark:bg-green-500 max-w-2 max-h-2" />}
+    </Avatar>
   );
 }

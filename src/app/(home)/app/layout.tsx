@@ -16,12 +16,12 @@ import {
 } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import SplashScreen from "@/components/splash-screen";
-import { RealtimeChannel } from "@supabase/supabase-js";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSupabase } from "@/providers/supabase-provider";
 import { SOUNDS } from "@/constants/sounds";
 import { IMessages } from "@/types/messages";
+import { useUserOnlineState } from "@/store/use-get-user-online-state";
 
 type TabItem = {
   Icon: keyof typeof icons;
@@ -51,6 +51,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const client = useQueryClient();
   const currentTab = searchParams.get("tab") || "chat";
   const notifyAudio = new Audio(SOUNDS.NOTIFICATION);
+  const { setOnlineUsersBulk } = useUserOnlineState();
 
   const handleTabChange = (value: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -99,7 +100,6 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
         .subscribe((status) => {
           console.log("Notification Realtime status:", status);
           if (status === "CLOSED") {
-            console.log("Reconnecting...");
             subscribe();
           }
         });
@@ -154,14 +154,37 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
           },
         )
         .subscribe((status) => {
-          console.log("Message Realtime status:", status);
           if (status === "CLOSED") {
-            console.log("Reconnecting...");
             subscribe();
           }
         });
 
-      channels.push(notificationChannel, messageChannel);
+      const presenceChannel = supabase.channel("online-users", {
+        config: {
+          presence: {
+            key: user.id,
+          },
+        },
+      });
+
+      presenceChannel
+        .on("presence", { event: "sync" }, () => {
+          const state = presenceChannel.presenceState();
+          setOnlineUsersBulk(state);
+        })
+        .subscribe(async (status) => {
+          if (status === "SUBSCRIBED") {
+            await presenceChannel.track({
+              user_id: user.id,
+            });
+          }
+
+          if (status === "CLOSED") {
+            subscribe();
+          }
+        });
+
+      channels.push(notificationChannel, messageChannel, presenceChannel);
     };
 
     subscribe();

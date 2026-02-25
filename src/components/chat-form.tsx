@@ -33,7 +33,6 @@ function ChatForm({ recipient_id }: { recipient_id: string }) {
     defaultValues: { message: "", file: undefined } as FormValues,
     validators: { onSubmit: formSchema },
     onSubmit: async ({ value }: { value: FormValues }) => {
-      console.log("Sent message:", value.message);
       if (value.file) {
         console.log("Attached file:", value.file.name);
       }

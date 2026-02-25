@@ -107,7 +107,7 @@ export function DayDivider({ label }: { label: string }) {
 }
 
 function ChatsMain({ recipient_id }: { recipient_id: string }) {
-  const { data, error, fetchNextPage, hasNextPage } = useGetMessages({
+  const { data, error, isLoading } = useGetMessages({
     recipient_id,
   });
   const bottomRef = useRef<HTMLDivElement | null>(null);
@@ -133,9 +133,8 @@ function ChatsMain({ recipient_id }: { recipient_id: string }) {
     return [] as IMessages[];
   }, [data]);
 
-
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    bottomRef.current?.scrollIntoView({ behavior: "instant", block: "end" });
   }, [messages.length]);
 
   if (error) {
@@ -156,57 +155,49 @@ function ChatsMain({ recipient_id }: { recipient_id: string }) {
       className="flex-1 min-h-0 overflow-y-auto w-full"
       id="scrollableChatMain"
     >
-      <InfiniteScroll
-        next={fetchNextPage}
-        hasMore={hasNextPage}
-        dataLength={messages.length}
-        loader={<MessagesSkeleton />}
-        inverse={false}
-        scrollableTarget="scrollableChatMain"
-        scrollThreshold={0.4}
-      >
-        <div className="px-3 relative z-10">
-          {messages.length === 0 ? (
-            <div className="h-[60vh] flex items-center justify-center">
-              <div className="rounded-2xl border border-border bg-card p-8 text-center">
-                <p className="text-sm font-semibold text-foreground">
-                  No messages yet
-                </p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Send a message to start the conversation.
-                </p>
-              </div>
+      <div className="px-3 relative z-10">
+        {isLoading ? (
+          <MessagesSkeleton />
+        ) : messages.length === 0 ? (
+          <div className="h-[60vh] flex items-center justify-center">
+            <div className="rounded-2xl border border-border bg-card p-8 text-center">
+              <p className="text-sm font-semibold text-foreground">
+                No messages yet
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Send a message to start the conversation.
+              </p>
             </div>
-          ) : (
-            <div className="space-y-1">
-              {messages.map((m, idx) => {
-                const incoming = m.sender_id === recipient_id;
+          </div>
+        ) : (
+          <div className="space-y-1">
+            {messages.map((m, idx) => {
+              const incoming = m.sender_id === recipient_id;
 
-                const prev = messages[idx - 1];
-                const showDay =
-                  !!m.created_at &&
-                  (!prev?.created_at ||
-                    formatDay(prev.created_at) !== formatDay(m.created_at));
+              const prev = messages[idx - 1];
+              const showDay =
+                !!m.created_at &&
+                (!prev?.created_at ||
+                  formatDay(prev.created_at) !== formatDay(m.created_at));
 
-                const showTail = !prev || prev.sender_id !== m.sender_id;
-                return (
-                  <React.Fragment key={m.id}>
-                    {showDay ? (
-                      <DayDivider label={formatDay(m.created_at)} />
-                    ) : null}
-                    <MessageBubble
-                      showTail={showTail}
-                      m={m}
-                      incoming={incoming}
-                    />
-                  </React.Fragment>
-                );
-              })}
-              <div ref={bottomRef} />
-            </div>
-          )}
-        </div>
-      </InfiniteScroll>
+              const showTail = !prev || prev.sender_id !== m.sender_id;
+              return (
+                <React.Fragment key={m.id}>
+                  {showDay ? (
+                    <DayDivider label={formatDay(m.created_at)} />
+                  ) : null}
+                  <MessageBubble
+                    showTail={showTail}
+                    m={m}
+                    incoming={incoming}
+                  />
+                </React.Fragment>
+              );
+            })}
+            <div ref={bottomRef} />
+          </div>
+        )}
+      </div>
     </main>
   );
 }

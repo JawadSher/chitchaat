@@ -20,8 +20,6 @@ function ChatTabSidebar({
   const [showOverlay, setShowOverlay] = useState(false);
   const onlineUsers = useUserOnlineState((state) => state.onlineUsers) || [];
 
-  console.log(onlineUsers);
-
   return (
     <ResizablePanel
       defaultSize={20}

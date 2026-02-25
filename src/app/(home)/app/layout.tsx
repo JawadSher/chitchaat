@@ -98,7 +98,6 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
           });
         })
         .subscribe((status) => {
-          console.log("Notification Realtime status:", status);
           if (status === "CLOSED") {
             subscribe();
           }

@@ -5,6 +5,7 @@ import { IMessages } from "@/types/messages";
 import React, { useEffect, useMemo, useRef } from "react";
 import { MessagesSkeleton } from "./skeletons/messages-skeleton";
 import { MessageBubble } from "./message-bubble";
+import InfiniteScroll from "react-infinite-scroll-component";
 
 export function formatTime(iso?: string) {
   if (!iso) return "";
@@ -106,10 +107,10 @@ export function DayDivider({ label }: { label: string }) {
 }
 
 function ChatsMain({ recipient_id }: { recipient_id: string }) {
-  const { data, error, isLoading } = useGetMessages({ recipient_id });
+  const { data, error, fetchNextPage, hasNextPage } = useGetMessages({
+    recipient_id,
+  });
   const bottomRef = useRef<HTMLDivElement | null>(null);
-  // const [showTail, setShowTail] = useState<boolean>(true);
-
   const messages = useMemo(() => {
     const d: any = data;
 
@@ -132,6 +133,7 @@ function ChatsMain({ recipient_id }: { recipient_id: string }) {
     return [] as IMessages[];
   }, [data]);
 
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages.length]);
@@ -150,51 +152,61 @@ function ChatsMain({ recipient_id }: { recipient_id: string }) {
   }
 
   return (
-    <main className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-4 w-full">
-      <div className="mx-auto relative z-10">
-        {isLoading ? (
-          <MessagesSkeleton />
-        ) : messages.length === 0 ? (
-          <div className="h-[60vh] flex items-center justify-center">
-            <div className="rounded-2xl border border-border bg-card p-8 text-center">
-              <p className="text-sm font-semibold text-foreground">
-                No messages yet
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Send a message to start the conversation.
-              </p>
+    <main
+      className="flex-1 min-h-0 overflow-y-auto w-full"
+      id="scrollableChatMain"
+    >
+      <InfiniteScroll
+        next={fetchNextPage}
+        hasMore={hasNextPage}
+        dataLength={messages.length}
+        loader={<MessagesSkeleton />}
+        inverse={false}
+        scrollableTarget="scrollableChatMain"
+        scrollThreshold={0.4}
+      >
+        <div className="px-3 relative z-10">
+          {messages.length === 0 ? (
+            <div className="h-[60vh] flex items-center justify-center">
+              <div className="rounded-2xl border border-border bg-card p-8 text-center">
+                <p className="text-sm font-semibold text-foreground">
+                  No messages yet
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Send a message to start the conversation.
+                </p>
+              </div>
             </div>
-          </div>
-        ) : (
-          <div className="space-y-1">
-            {messages.map((m, idx) => {
-              const incoming = m.sender_id === recipient_id;
+          ) : (
+            <div className="space-y-1">
+              {messages.map((m, idx) => {
+                const incoming = m.sender_id === recipient_id;
 
-              const prev = messages[idx - 1];
-              const showDay =
-                !!m.created_at &&
-                (!prev?.created_at ||
-                  formatDay(prev.created_at) !== formatDay(m.created_at));
+                const prev = messages[idx - 1];
+                const showDay =
+                  !!m.created_at &&
+                  (!prev?.created_at ||
+                    formatDay(prev.created_at) !== formatDay(m.created_at));
 
-
-              const showTail = !prev || prev.sender_id !== m.sender_id;
-              return (
-                <React.Fragment key={m.id}>
-                  {showDay ? (
-                    <DayDivider label={formatDay(m.created_at)} />
-                  ) : null}
-                  <MessageBubble
-                    showTail={showTail}
-                    m={m}
-                    incoming={incoming}
-                  />
-                </React.Fragment>
-              );
-            })}
-            <div ref={bottomRef} />
-          </div>
-        )}
-      </div>
+                const showTail = !prev || prev.sender_id !== m.sender_id;
+                return (
+                  <React.Fragment key={m.id}>
+                    {showDay ? (
+                      <DayDivider label={formatDay(m.created_at)} />
+                    ) : null}
+                    <MessageBubble
+                      showTail={showTail}
+                      m={m}
+                      incoming={incoming}
+                    />
+                  </React.Fragment>
+                );
+              })}
+              <div ref={bottomRef} />
+            </div>
+          )}
+        </div>
+      </InfiniteScroll>
     </main>
   );
 }

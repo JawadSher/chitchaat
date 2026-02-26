@@ -1,6 +1,21 @@
 import { IMessages } from "@/types/messages";
 import Image from "next/image";
 import { bytesToSize, DoubleTick, formatTime } from "./chats-main";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ChevronDown, Trash } from "lucide-react";
+import { useState } from "react";
+import { useDeleteMessage } from "@/hooks/react-query/mutation-message";
+import { Loader } from "./loader";
+import { getEmojiSize, isOnlyEmoji } from "@/lib/emoji";
 
 function MessageAttachment({ m }: { m: IMessages }) {
   if (m.message_type === "image" && m.media_url) {
@@ -65,6 +80,55 @@ function MessageAttachment({ m }: { m: IMessages }) {
   return null;
 }
 
+export function OptionsMenu({
+  showOptions,
+  m,
+  isOnlyEmoji,
+}: {
+  showOptions: boolean;
+  m: IMessages;
+  isOnlyEmoji: boolean;
+}) {
+  const [open, setOpen] = useState<boolean>(false);
+  const { mutate: deleteMessageFn, isPending } = useDeleteMessage({
+    setOpen,
+    recipient_id: m.recipient_id,
+  });
+  return (
+    <DropdownMenu open={open} onOpenChange={setOpen}>
+      <DropdownMenuTrigger
+        asChild
+        className={[
+          "rounded-full absolute right-1 z-20 bg-primary/50 cursor-pointer",
+          isOnlyEmoji && "top-1",
+          showOptions ? "opacity-100" : "opacity-0 pointer-events-none",
+        ].join(" ")}
+      >
+        <ChevronDown className="size-4.5" strokeWidth={1.89} />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-40" align="start">
+        <DropdownMenuLabel>Message options</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup>
+          <DropdownMenuItem
+            className="flex gap-2 cursor-pointer"
+            variant="destructive"
+            onSelect={(e) => {
+              e.preventDefault();
+              deleteMessageFn({ message_id: m.id });
+            }}
+            disabled={isPending}
+          >
+            <Trash className="size-4" strokeWidth={1.89} />
+            <span>{isPending ? "Deleting..." : "Delete"}</span>
+            {isPending && <Loader />}
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 export function MessageBubble({
   m,
   incoming,
@@ -74,6 +138,11 @@ export function MessageBubble({
   incoming: boolean;
   showTail?: boolean;
 }) {
+  const [showOptions, setShowOptions] = useState<boolean>(false);
+
+  const onlyEmoji = isOnlyEmoji(m.content ?? "");
+  const emojiSize = onlyEmoji ? getEmojiSize(m.content ?? "") : "text-sm";
+
   return (
     <div
       className={[
@@ -85,20 +154,25 @@ export function MessageBubble({
         className={[
           "flex max-w-[85%] sm:max-w-[72%] md:max-w-[62%]",
           "px-2 gap-2 relative",
-          incoming
-            ? `flex rounded-e-md rounded-es-md ${
-                showTail ? "rounded-ee-md" : "rounded-e-md"
-              } py-1 
+
+          onlyEmoji
+            ? "bg-transparent shadow-none p-0 flex-col"
+            : incoming
+              ? `rounded-e-md rounded-es-md ${
+                  showTail ? "rounded-ee-md" : "rounded-e-md"
+                } py-1 
               bg-primary-foreground/10 dark:bg-primary-foreground/40 
               text-foreground`
-            : `rounded-s-md rounded-ee-md ${
-                showTail ? "rounded-es-md" : "rounded-e-md"
-              } 
+              : `rounded-s-md rounded-ee-md ${
+                  showTail ? "rounded-es-md" : "rounded-e-md"
+                } 
               bg-primary-foreground dark:bg-primary-foreground 
               dark:text-foreground text-white`,
         ].join(" ")}
+        onMouseEnter={() => setShowOptions(true)}
+        onMouseLeave={() => setShowOptions(false)}
       >
-        {showTail && (
+        {showTail && !onlyEmoji && (
           <div
             className={[
               "absolute w-3 h-3 top-0",
@@ -116,7 +190,11 @@ export function MessageBubble({
         )}
 
         {m.content && (
-          <p className="text-sm whitespace-pre-wrap break-words">{m.content}</p>
+          <p
+            className={["whitespace-pre-wrap break-words", emojiSize].join(" ")}
+          >
+            {m.content}
+          </p>
         )}
 
         <div className="mt-1 flex items-center justify-end gap-2">
@@ -128,6 +206,14 @@ export function MessageBubble({
             <span className="text-[11px] tabular-nums opacity-70">
               {formatTime(m.created_at)}
             </span>
+          )}
+
+          {!incoming && (
+            <OptionsMenu
+              isOnlyEmoji={onlyEmoji}
+              m={m}
+              showOptions={showOptions}
+            />
           )}
 
           {!incoming && (

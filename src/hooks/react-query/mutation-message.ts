@@ -1,5 +1,5 @@
 import { useSupabase } from "@/providers/supabase-provider";
-import { sendMessage } from "@/services/message.service";
+import { deleteMessage, sendMessage } from "@/services/message.service";
 import { IMessages } from "@/types/messages";
 import { ISendMessageProps } from "@/types/send-message-props";
 import { useUser } from "@clerk/nextjs";
@@ -89,6 +89,42 @@ export const useSendMessage = () => {
       client.invalidateQueries({
         queryKey: ["messages", variables.recipient_id],
       });
+    },
+  });
+};
+
+export const useDeleteMessage = ({
+  setOpen,
+  recipient_id,
+}: {
+  setOpen: (e: boolean) => void;
+  recipient_id: string;
+}) => {
+  const client = useQueryClient();
+  const supabase = useSupabase();
+
+  return useMutation({
+    mutationKey: ["deleteMessage"],
+    mutationFn: async ({ message_id }: { message_id: string }) => {
+      return deleteMessage(supabase, { message_id });
+    },
+    onError: (error) => {
+      toast.error("Failed to delete message", {
+        description: error.message,
+      });
+    },
+    onSuccess: (_, { message_id }) => {
+      client.setQueryData(["messages", recipient_id], (old: any) => {
+        if (!old) return old;
+
+        return {
+          ...old,
+          data: old.data.filter((m: any) => m.id !== message_id),
+        };
+      });
+
+      setOpen(false);
+      toast.success("Message deleted");
     },
   });
 };

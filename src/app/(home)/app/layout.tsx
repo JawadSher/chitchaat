@@ -108,7 +108,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
         .on(
           "postgres_changes",
           {
-            event: "INSERT",
+            event: "*",
             schema: "public",
             table: "messages",
             filter: `recipient_id=eq.${user.id}`,
@@ -149,6 +149,26 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                   };
                 },
               );
+            }
+
+            if (payload.eventType === "UPDATE") {
+              const updatedMessage = payload.new;
+
+              if (updatedMessage.is_deleted) {
+                client.setQueryData(
+                  ["messages", updatedMessage.sender_id],
+                  (old: any) => {
+                    if (!old) return old;
+
+                    return {
+                      ...old,
+                      data: old.data.filter(
+                        (m: any) => m.id !== updatedMessage.id,
+                      ),
+                    };
+                  },
+                );
+              }
             }
           },
         )

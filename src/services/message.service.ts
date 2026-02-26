@@ -1,5 +1,4 @@
 import { IMessages } from "@/types/messages";
-import { PaginationType } from "@/types/pagination";
 import { ISendMessageProps } from "@/types/send-message-props";
 import { SupabaseClient } from "@supabase/supabase-js";
 
@@ -68,6 +67,24 @@ export async function getMessages(
     return {
       data: data ?? [],
     };
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
+}
+
+export async function deleteMessage(
+  supabase: SupabaseClient,
+  { message_id }: { message_id: string },
+) {
+  try {
+    const { data, error } = await supabase
+      .from("messages")
+      .update({ is_deleted: true })
+      .eq("id", message_id);
+
+    if (error) throw new Error(error.message);
+
+    return data;
   } catch (error: any) {
     throw new Error(error.message);
   }

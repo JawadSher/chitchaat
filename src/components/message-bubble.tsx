@@ -159,7 +159,7 @@ export function MessageBubble({
             ? "bg-transparent shadow-none p-0 flex-col"
             : incoming
               ? `rounded-e-md rounded-es-md ${
-                  showTail ? "rounded-ee-md" : "rounded-e-md"
+                  showTail ? "rounded-ee-md" : "rounded-md"
                 } py-1 
               bg-primary-foreground/10 dark:bg-primary-foreground/40 
               text-foreground`

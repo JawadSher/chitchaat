@@ -62,11 +62,25 @@ export const useSendMessage = () => {
         created_at: new Date().toISOString(),
       };
 
-      client.setQueryData<{ data: IMessages[] }>(
+      client.setQueryData(
         ["messages", variables.recipient_id],
-        (old) => ({
-          data: [...(old?.data ?? []), optimisticMessage],
-        }),
+        (oldData: any) => {
+          if (!oldData) return oldData;
+
+          return {
+            ...oldData,
+            pages: oldData.pages.map((page: any, index: number) => {
+              if (index === 0) {
+                return {
+                  ...page,
+                  data: [...page.data, optimisticMessage],
+                };
+              }
+
+              return page;
+            }),
+          };
+        },
       );
 
       return { previousMessages };
@@ -114,12 +128,15 @@ export const useDeleteMessage = ({
       });
     },
     onSuccess: (_, { message_id }) => {
-      client.setQueryData(["messages", recipient_id], (old: any) => {
-        if (!old) return old;
+      client.setQueryData(["messages", recipient_id], (oldData: any) => {
+        if (!oldData) return oldData;
 
         return {
-          ...old,
-          data: old.data.filter((m: any) => m.id !== message_id),
+          ...oldData,
+          pages: oldData.pages.map((page: any) => ({
+            ...page,
+            data: page.data.filter((msg: any) => msg.id !== message_id),
+          })),
         };
       });
 

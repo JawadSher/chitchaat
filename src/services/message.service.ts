@@ -1,4 +1,5 @@
 import { IMessages } from "@/types/messages";
+import { PaginationType } from "@/types/pagination";
 import { ISendMessageProps } from "@/types/send-message-props";
 import { SupabaseClient } from "@supabase/supabase-js";
 
@@ -43,11 +44,20 @@ export async function sendMessage(
 
 export async function getMessages(
   supabase: SupabaseClient,
-  { user_id, recipient_id }: { user_id: string; recipient_id: string },
+  {
+    user_id,
+    recipient_id,
+    limit,
+    page,
+  }: { user_id: string; recipient_id: string; limit: number; page: number },
 ): Promise<{
   data: IMessages[];
+  pagination: PaginationType;
 }> {
   try {
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
     const { data, error, count } = await supabase
       .from("messages")
       .select(
@@ -60,12 +70,24 @@ export async function getMessages(
         `and(sender_id.eq.${user_id},recipient_id.eq.${recipient_id}),and(sender_id.eq.${recipient_id},recipient_id.eq.${user_id})`,
       )
       .eq("is_deleted", false)
-      .order("created_at", { ascending: true });
+      .order("created_at", { ascending: false })
+      .range(from, to)
 
     if (error) throw new Error(error.message);
 
+    const total = count ?? 0;
+    const totalPages = Math.ceil(total / limit);
+
     return {
       data: data ?? [],
+      pagination: {
+        total,
+        totalPages,
+        hasNextPage: totalPages > page,
+        hasPreviousPage: page > 1,
+        page,
+        limit,
+      },
     };
   } catch (error: any) {
     throw new Error(error.message);

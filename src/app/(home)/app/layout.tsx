@@ -133,19 +133,29 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                 created_at: newMessage.created_at,
               };
 
-              client.setQueryData<{ data: IMessages[] }>(
+              client.setQueryData(
                 ["messages", newMessage.sender_id],
-                (old) => {
-                  const existingMessages = old?.data ?? [];
+                (oldData: any) => {
+                  if (!oldData) return oldData;
 
-                  const alreadyExists = existingMessages.some(
-                    (msg) => msg.id === newMessage.id,
+                  const alreadyExists = oldData.pages.some((page: any) =>
+                    page.data.some((msg: any) => msg.id === incomingMessage.id),
                   );
 
-                  if (alreadyExists) return old!;
+                  if (alreadyExists) return oldData;
 
                   return {
-                    data: [...existingMessages, incomingMessage],
+                    ...oldData,
+                    pages: oldData.pages.map((page: any, index: any) => {
+                      if (index === 0) {
+                        return {
+                          ...page,
+                          data: [incomingMessage, ...page.data],
+                        };
+                      }
+
+                      return page;
+                    }),
                   };
                 },
               );
@@ -157,14 +167,17 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
               if (updatedMessage.is_deleted) {
                 client.setQueryData(
                   ["messages", updatedMessage.sender_id],
-                  (old: any) => {
-                    if (!old) return old;
+                  (oldData: any) => {
+                    if (!oldData) return oldData;
 
                     return {
-                      ...old,
-                      data: old.data.filter(
-                        (m: any) => m.id !== updatedMessage.id,
-                      ),
+                      ...oldData,
+                      pages: oldData.pages.map((page: any) => ({
+                        ...page,
+                        data: page.data.filter(
+                          (msg: any) => msg.id !== updatedMessage.id,
+                        ),
+                      })),
                     };
                   },
                 );

@@ -5,7 +5,7 @@ import { IMessages } from "@/types/messages";
 import React, { useEffect, useMemo, useRef } from "react";
 import { MessagesSkeleton } from "./skeletons/messages-skeleton";
 import { MessageBubble } from "./message-bubble";
-import InfiniteScroll from "react-infinite-scroll-component";
+import { useInView } from "react-intersection-observer";
 
 export function formatTime(iso?: string) {
   if (!iso) return "";
@@ -107,13 +107,22 @@ export function DayDivider({ label }: { label: string }) {
 }
 
 function ChatsMain({ recipient_id }: { recipient_id: string }) {
-  const { data, error, isLoading } = useGetMessages({
+  const {
+    data,
+    error,
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useGetMessages({
     recipient_id,
   });
+
+  const { ref: topRef, inView } = useInView();
+  const containerRef = useRef(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const messages = useMemo(() => {
     const d: any = data;
-
     if (Array.isArray(d)) return d as IMessages[];
 
     if (Array.isArray(d?.data)) return d.data as IMessages[];
@@ -133,9 +142,21 @@ function ChatsMain({ recipient_id }: { recipient_id: string }) {
     return [] as IMessages[];
   }, [data]);
 
+  const orderedMessages = useMemo(() => {
+    return [...messages].reverse();
+  }, [messages]);
+
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "instant", block: "end" });
-  }, [messages.length]);
+    if (inView && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [inView]);
+
+  useEffect(() => {
+    if (data?.pages?.length === 1) {
+      bottomRef.current?.scrollIntoView({ behavior: "instant", block: "end" });
+    }
+  }, [orderedMessages.length]);
 
   if (error) {
     return (
@@ -151,14 +172,12 @@ function ChatsMain({ recipient_id }: { recipient_id: string }) {
   }
 
   return (
-    <main
-      className="flex-1 min-h-0 overflow-y-auto w-full"
-      id="scrollableChatMain"
-    >
+    <main className=" flex-1 min-h-0 overflow-y-auto w-full" ref={containerRef}>
+      <div ref={topRef} />
       <div className="px-3 relative z-10">
-        {isLoading ? (
+        {isLoading || isFetchingNextPage ? (
           <MessagesSkeleton />
-        ) : messages.length === 0 ? (
+        ) : orderedMessages.length === 0 ? (
           <div className="h-[60vh] flex items-center justify-center">
             <div className="rounded-2xl border border-border bg-card p-8 text-center">
               <p className="text-sm font-semibold text-foreground">
@@ -171,27 +190,26 @@ function ChatsMain({ recipient_id }: { recipient_id: string }) {
           </div>
         ) : (
           <div className="space-y-1">
-            {messages.map((m, idx) => {
+            {orderedMessages.map((m, idx) => {
               const incoming = m.sender_id === recipient_id;
+              const prev = orderedMessages[idx - 1];
 
-              const prev = messages[idx - 1];
               const showDay =
                 !!m.created_at &&
                 (!prev?.created_at ||
                   formatDay(prev.created_at) !== formatDay(m.created_at));
 
               const showTail = !prev || prev.sender_id !== m.sender_id;
+
               return (
-                <React.Fragment key={m.id}>
-                  {showDay ? (
-                    <DayDivider label={formatDay(m.created_at)} />
-                  ) : null}
+                <div key={m.id}>
+                  {showDay && <DayDivider label={formatDay(m.created_at)} />}
                   <MessageBubble
                     showTail={showTail}
                     m={m}
                     incoming={incoming}
                   />
-                </React.Fragment>
+                </div>
               );
             })}
             <div ref={bottomRef} />

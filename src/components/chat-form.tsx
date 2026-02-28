@@ -10,7 +10,7 @@ import z from "zod";
 import { useForm } from "@tanstack/react-form";
 import { FieldError, FieldGroup, Field, FieldLabel } from "./ui/field";
 import EmojiPicker, { Theme, EmojiStyle } from "emoji-picker-react";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Textarea } from "./ui/textarea";
 import { useSendMessage } from "@/hooks/react-query/mutation-message";
 

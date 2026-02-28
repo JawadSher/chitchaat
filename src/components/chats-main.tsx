@@ -172,7 +172,7 @@ function ChatsMain({ recipient_id }: { recipient_id: string }) {
   }
 
   return (
-    <main className=" flex-1 min-h-0 overflow-y-auto w-full" ref={containerRef}>
+    <main className=" flex-1 min-h-0 overflow-y-auto w-full px-2" ref={containerRef}>
       <div ref={topRef} />
       <div className="px-3 relative z-10">
         {isLoading || isFetchingNextPage ? (

@@ -17,8 +17,11 @@ export function getEmojiSize(text: string) {
   const count = emojis.length;
 
   if (count === 1) return "text-4xl leading-none";
-  if (count === 2) return "text-3xl leading-none";
-  if (count === 3) return "text-2xl leading-none";
 
-  return "text-3xl leading-none";
+  return "text-light";
+}
+
+export function getEmojiCount(text: string) {
+  const emojis = [...text.matchAll(/\p{Extended_Pictographic}/gu)];
+  return emojis.length;
 }

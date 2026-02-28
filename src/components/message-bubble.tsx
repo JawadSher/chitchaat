@@ -15,7 +15,7 @@ import { ChevronDown, Trash } from "lucide-react";
 import { useState } from "react";
 import { useDeleteMessage } from "@/hooks/react-query/mutation-message";
 import { Loader } from "./loader";
-import { getEmojiSize, isOnlyEmoji } from "@/lib/emoji";
+import { getEmojiCount, getEmojiSize, isOnlyEmoji } from "@/lib/emoji";
 
 function MessageAttachment({ m }: { m: IMessages }) {
   if (m.message_type === "image" && m.media_url) {
@@ -99,7 +99,7 @@ export function OptionsMenu({
       <DropdownMenuTrigger
         asChild
         className={[
-          "rounded-full absolute right-1 z-20 bg-primary/50 cursor-pointer",
+          "rounded-full absolute right-1 top-2 z-20 bg-primary/50 cursor-pointer",
           isOnlyEmoji && "top-1",
           showOptions ? "opacity-100" : "opacity-0 pointer-events-none",
         ].join(" ")}
@@ -142,6 +142,7 @@ export function MessageBubble({
 
   const onlyEmoji = isOnlyEmoji(m.content ?? "");
   const emojiSize = onlyEmoji ? getEmojiSize(m.content ?? "") : "text-sm";
+  const emojiCount = onlyEmoji ? getEmojiCount(m.content ?? "") : 0;
 
   return (
     <div
@@ -152,15 +153,14 @@ export function MessageBubble({
     >
       <div
         className={[
-          "flex max-w-[85%] sm:max-w-[72%] md:max-w-[62%]",
-          "px-2 gap-2 relative",
+          "flex max-w-[85%] sm:max-w-[72%] md:max-w-[62%] px-2 gap-2 relative",
 
-          onlyEmoji
-            ? "bg-transparent shadow-none p-0 flex-col"
+          emojiCount < 2 && onlyEmoji
+            ? "flex-col items-center"
             : incoming
               ? `rounded-e-md rounded-es-md ${
                   showTail ? "rounded-ee-md" : "rounded-md"
-                } py-1 
+                }
               bg-primary-foreground/10 dark:bg-primary-foreground/40 
               text-foreground`
               : `rounded-s-md rounded-ee-md ${
@@ -175,7 +175,7 @@ export function MessageBubble({
         {showTail && !onlyEmoji && (
           <div
             className={[
-              "absolute w-3 h-3 top-0",
+              "absolute w-4 h-4 top-0",
               incoming
                 ? "left-0 -translate-x-full bottom-2 bg-primary-foreground/10 dark:bg-primary-foreground/40 [clip-path:polygon(100%_0,50%_0,100%_50%)]"
                 : "right-0 translate-x-full bottom-2 bg-primary-foreground dark:bg-primary-foreground [clip-path:polygon(0_0,50%_0,0_50%)]",
@@ -189,38 +189,47 @@ export function MessageBubble({
           </div>
         )}
 
-        {m.content && (
-          <p
-            className={["whitespace-pre-wrap break-words", emojiSize].join(" ")}
+        <div className="flex items-start pb-2">
+          {m.content && (
+            <p
+              className={[
+                "whitespace-pre-wrap wrap-break-word",
+                emojiSize,
+              ].join(" ")}
+            >
+              {m.content}
+            </p>
+          )}
+        </div>
+
+        <div className="flex items-end pb-px">
+          <div
+            className={`flex items-center justify-center gap-1 h-4 ${onlyEmoji && emojiCount < 2 && "bg-primary-foreground rounded-md px-2 py-3 "}`}
           >
-            {m.content}
-          </p>
-        )}
+            {m.is_edited && (
+              <span className="text-[11px] opacity-70">edited</span>
+            )}
 
-        <div className="mt-1 flex items-center justify-end gap-2">
-          {m.is_edited && (
-            <span className="text-[11px] opacity-70">edited</span>
-          )}
+            {m.created_at && (
+              <span className="text-[11px] tabular-nums opacity-70">
+                {formatTime(m.created_at)}
+              </span>
+            )}
 
-          {m.created_at && (
-            <span className="text-[11px] tabular-nums opacity-70">
-              {formatTime(m.created_at)}
-            </span>
-          )}
+            {!incoming && (
+              <OptionsMenu
+                isOnlyEmoji={onlyEmoji}
+                m={m}
+                showOptions={showOptions}
+              />
+            )}
 
-          {!incoming && (
-            <OptionsMenu
-              isOnlyEmoji={onlyEmoji}
-              m={m}
-              showOptions={showOptions}
-            />
-          )}
-
-          {!incoming && (
-            <span className="translate-y-px">
-              <DoubleTick status={m.message_read_status} />
-            </span>
-          )}
+            {!incoming && (
+              <span className="translate-y-px">
+                <DoubleTick status={m.message_read_status} />
+              </span>
+            )}
+          </div>
         </div>
       </div>
     </div>

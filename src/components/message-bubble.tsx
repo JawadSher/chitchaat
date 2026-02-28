@@ -194,6 +194,7 @@ export function MessageBubble({
             <p
               className={[
                 "whitespace-pre-wrap wrap-break-word",
+                onlyEmoji && "tracking-[-4px]",
                 emojiSize,
               ].join(" ")}
             >

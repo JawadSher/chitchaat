@@ -1,9 +1,21 @@
-import { Mic, Plus, Send, SmilePlus, X } from "lucide-react";
+import {
+  Camera,
+  Clapperboard,
+  FileText,
+  Headphones,
+  Image,
+  Mic,
+  Plus,
+  Send,
+  SmilePlus,
+  X,
+} from "lucide-react";
 import { Button } from "./ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
+  DropdownMenuItem,
 } from "./ui/dropdown-menu";
 import { Input } from "./ui/input";
 import z from "zod";
@@ -26,8 +38,8 @@ type FormValues = z.infer<typeof formSchema>;
 
 function ChatForm({ recipient_id }: { recipient_id: string }) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const { mutate: sendMessageFn } = useSendMessage();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm({
     defaultValues: { message: "", file: undefined } as FormValues,
@@ -71,14 +83,71 @@ function ChatForm({ recipient_id }: { recipient_id: string }) {
       >
         <div className="flex items-center justify-center px-4 gap-4">
           <FieldGroup className="relative flex items-center justify-center">
-            <Button
-              className="absolute rounded-full 
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  className="absolute rounded-full 
           cursor-pointer bg-transparent w-7 h-7 text-white"
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <Plus className=" size-5 " strokeWidth={1.89} />
-            </Button>
+                  type="button"
+                >
+                  <Plus className=" size-5 " strokeWidth={1.89} />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="font-semibold">
+                <DropdownMenuItem
+                  className="flex items-center justify-start gap-2"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <FileText
+                    className="size-5"
+                    strokeWidth={1.89}
+                    color="#934bec"
+                  />
+                  <span>Document</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="flex items-center justify-start gap-2"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Image
+                    color="#0869e7"
+                    className="size-5"
+                    strokeWidth={1.89}
+                  />
+                  <span>Photos</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="flex items-center justify-start gap-2"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Clapperboard
+                    color="#5392e4"
+                    className="size-5"
+                    strokeWidth={1.89}
+                  />
+                  <span>Videos</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="flex items-center justify-start gap-2"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Headphones
+                    color="#f08000"
+                    className="size-5"
+                    strokeWidth={1.89}
+                  />
+                  <span>Audio</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="flex items-center justify-start gap-2">
+                  <Camera
+                    color="#ff0095"
+                    className="size-5"
+                    strokeWidth={1.89}
+                  />
+                  <span>Camera</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <form.Field name="file">
               {(field) => {
                 const isInvalid =
@@ -102,7 +171,6 @@ function ChatForm({ recipient_id }: { recipient_id: string }) {
             </form.Field>
           </FieldGroup>
 
-          {/* Emoji button */}
           <DropdownMenu
             open={isOpen}
             onOpenChange={() => setIsOpen((prev) => !prev)}

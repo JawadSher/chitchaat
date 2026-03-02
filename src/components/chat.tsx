@@ -12,11 +12,14 @@ import ChatForm from "./chat-form";
 import ChatAreaHeader from "./chat-area-header";
 import { useGetContacts } from "@/hooks/react-query/query-contact";
 import ChatsMain from "./chats-main";
+import SendFileAttachementDialog from "./send-file-attachment-dialog";
 
 function Chat() {
+  const [open, setOpen] = useState<boolean>(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [activeTab, setActiveTab] = useState<string>("empty");
   const { data, error, isLoading } = useGetContacts();
-  
+
   if (error) {
     return (
       <div className="w-full h-full flex items-center justify-center text-muted-foreground">
@@ -59,9 +62,13 @@ function Chat() {
               >
                 <ChatAreaHeader contact={contact} setActiveTab={setActiveTab} />
 
-                <ChatsMain recipient_id={contact.contact_user_id}/>
+                {open ? (
+                  <SendFileAttachementDialog selectFile={selectedFile} setOpen={setOpen} />
+                ) : (
+                  <ChatsMain recipient_id={contact.contact_user_id} />
+                )}
 
-                <ChatForm recipient_id={contact.contact_user_id}  />
+                <ChatForm setSelectedFile={setSelectedFile} setOpen={setOpen} recipient_id={contact.contact_user_id} />
               </TabsContent>
             ))}
           </ResizablePanel>

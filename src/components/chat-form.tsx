@@ -8,7 +8,6 @@ import {
   Plus,
   Send,
   SmilePlus,
-  X,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import {
@@ -36,7 +35,15 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-function ChatForm({ recipient_id }: { recipient_id: string }) {
+function ChatForm({
+  recipient_id,
+  setOpen,
+  setSelectedFile,
+}: {
+  recipient_id: string;
+  setOpen: (open: boolean) => void;
+  setSelectedFile: (file: File | null) => void;
+}) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const { mutate: sendMessageFn } = useSendMessage();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -62,13 +69,6 @@ function ChatForm({ recipient_id }: { recipient_id: string }) {
     const currentMessage = form.getFieldValue("message") || "";
     form.setFieldValue("message", currentMessage + emoji);
     setIsOpen(false);
-  };
-
-  const handleRemoveFile = () => {
-    form.setFieldValue("file", undefined);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
   };
 
   return (
@@ -159,8 +159,13 @@ function ChatForm({ recipient_id }: { recipient_id: string }) {
                       ref={fileInputRef}
                       type="file"
                       onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.files?.[0])}
+                      onChange={(e) => {
+                        field.handleChange(e.target.files?.[0]);
+                        setSelectedFile(e.target.files?.[0] || null);
+                        setOpen(true);
+                      }}
                       className="hidden"
+                      accept="image/*, application/*"
                     />
                     {isInvalid && (
                       <FieldError errors={field.state.meta.errors} />

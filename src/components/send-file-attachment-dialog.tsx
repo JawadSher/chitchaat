@@ -11,12 +11,39 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { AlertTriangle } from "lucide-react";
+import { toast } from "sonner";
+import FilePreview from "reactjs-file-preview";
 
 function SendFileAttachementDialog({
   setOpen,
+  selectFile,
 }: {
   setOpen: (open: boolean) => void;
+  selectFile: File | null;
 }) {
+  if (!selectFile || selectFile.size === 0) {
+    toast.error("No file selected or file is empty.");
+    setOpen(false);
+    return null;
+  }
+
+  const previewURL = URL.createObjectURL(selectFile);
+
+  const getPreviewClass = () => {
+    const base = "w-full mx-auto h-[50vh]";
+
+    if (selectFile.type.startsWith("image")) return `${base} max-w-2xl`;
+
+    if (selectFile.type.startsWith("video")) return `${base} max-w-4xl`;
+
+    if (selectFile.type === "application/pdf") return `${base} max-w-4xl`;
+
+    if (selectFile.type.startsWith("audio"))
+      return `${base} max-w-xl flex items-center justify-center`;
+
+    return `${base} max-w-3xl`;
+  };
+
   return (
     <div className="w-full h-full relative z-10 px-3">
       <Dialog>
@@ -57,7 +84,9 @@ function SendFileAttachementDialog({
       </Dialog>
       <div className="flex flex-col w-full h-full">
         <div className="h-full w-full flex items-center justify-center">
-          No preview yet
+          <div className={getPreviewClass()}>
+            <FilePreview preview={previewURL} />
+          </div>
         </div>
         <div className="h-20 flex items-center justify-center gap-3 border-t border-border">
           <Button className="h-13 w-13">1</Button>

@@ -2,12 +2,10 @@
 
 import { useGetMessages } from "@/hooks/react-query/query-messages";
 import { IMessages } from "@/types/messages";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { MessagesSkeleton } from "./skeletons/messages-skeleton";
 import { MessageBubble } from "./message-bubble";
 import { useInView } from "react-intersection-observer";
-import SendTextFileAttachementDialog from "./send-file-attachment-dialog";
-import SendFileAttachementDialog from "./send-file-attachment-dialog";
 
 export function formatTime(iso?: string) {
   if (!iso) return "";
@@ -108,7 +106,7 @@ export function DayDivider({ label }: { label: string }) {
   );
 }
 
-function ChatsMain({ recipient_id }: { recipient_id: string }) {
+function ChatsMain({ recipient_id,  }: { recipient_id: string}) {
   const {
     data,
     error,
@@ -120,7 +118,6 @@ function ChatsMain({ recipient_id }: { recipient_id: string }) {
     recipient_id,
   });
 
-  const [open, setOpen] = useState<boolean>(true);
   const { ref: topRef, inView } = useInView();
   const containerRef = useRef(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
@@ -172,10 +169,6 @@ function ChatsMain({ recipient_id }: { recipient_id: string }) {
         </div>
       </main>
     );
-  }
-
-  if (open) {
-    return <SendFileAttachementDialog setOpen={setOpen} />;
   }
 
   return (

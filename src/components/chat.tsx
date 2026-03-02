@@ -62,6 +62,7 @@ function Chat() {
                 <ChatAreaHeader contact={contact} setActiveTab={setActiveTab} />
 
                 <ChatsMain
+                setSelectedFiles={setSelectedFiles}
                   open={open}
                   selectedFiles={selectedFiles}
                   setOpen={setOpen}

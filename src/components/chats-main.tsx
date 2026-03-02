@@ -112,9 +112,11 @@ function ChatsMain({
   selectedFiles,
   setOpen,
   open,
+  setSelectedFiles
 }: {
   recipient_id: string;
   selectedFiles: File[] | null;
+  setSelectedFiles: (e: File[] | null) => void;
   setOpen: (e: boolean) => void;
   open: boolean;
 }) {
@@ -184,7 +186,7 @@ function ChatsMain({
 
   if (open) {
     return (
-      <SendFileAttachementDialog selectFiles={selectedFiles} setOpen={setOpen} />
+      <SendFileAttachementDialog setSelectedFiles={setSelectedFiles} selectedFiles={selectedFiles} setOpen={setOpen} />
     );
   }
 

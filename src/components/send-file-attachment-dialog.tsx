@@ -16,32 +16,35 @@ import FilePreview from "reactjs-file-preview";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Image from "next/image";
 import { IMAGES } from "@/constants/images";
+import { useRef } from "react";
+import { Input } from "./ui/input";
 
 function SendFileAttachementDialog({
   setOpen,
-  selectFiles,
+  selectedFiles,
+  setSelectedFiles,
 }: {
   setOpen: (open: boolean) => void;
-  selectFiles: File[] | null;
+  selectedFiles: File[] | null;
+  setSelectedFiles: (e: File[] | null) => void;
 }) {
-  if (!selectFiles || selectFiles.length === 0) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  if (!selectedFiles || selectedFiles.length === 0) {
     toast.error("No file selected or file is empty.");
     setOpen(false);
     return null;
   }
 
-  const previewURL = URL.createObjectURL(selectFiles[0]);
-
-  const getPreviewClass = () => {
+  const getPreviewClass = (file: File) => {
     const base = "w-full mx-auto h-[50vh]";
 
-    if (selectFiles[0].type.startsWith("image")) return `${base} max-w-2xl`;
+    if (file.type.startsWith("image")) return `${base} max-w-2xl`;
 
-    if (selectFiles[0].type.startsWith("video")) return `${base} max-w-4xl`;
+    if (file.type.startsWith("video")) return `${base} max-w-4xl`;
 
-    if (selectFiles[0].type === "application/pdf") return `${base} max-w-4xl`;
+    if (file.type === "application/pdf") return `${base} max-w-4xl`;
 
-    if (selectFiles[0].type.startsWith("audio"))
+    if (file.type.startsWith("audio"))
       return `${base} max-w-xl flex items-center justify-center`;
 
     return `${base} max-w-3xl`;
@@ -85,36 +88,81 @@ function SendFileAttachementDialog({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      <Tabs defaultValue={selectedFiles?.[0]?.name || undefined} className="w-full h-full">
+        {selectedFiles?.map((file: File) => {
+          const previewURL = URL.createObjectURL(file);
 
-      <Tabs defaultValue={selectFiles[0].name} className="w-full h-full">
-        <TabsContent value={selectFiles[0].name} className="w-full h-full">
-          <div className="flex flex-col w-full h-full justify-center items-center">
-            <div className="h-full w-fit flex items-center justify-center">
-              <div className={[getPreviewClass()].join(" ")}>
-                <FilePreview preview={previewURL} />
-                <p className="absolute text-center top-4 left-0 text-md font-normal w-full">
-                  {selectFiles[0].name}
-                </p>
+          console.log(file);
+
+          return (
+            <TabsContent
+              key={file.name}
+              value={file.name}
+              className="w-full h-full"
+            >
+              <div className="flex flex-col w-full h-full justify-center items-center ">
+                <div className="h-full w-fit flex items-center justify-center">
+                  <div className={[getPreviewClass(file)].join(" ")}>
+                    <FilePreview preview={previewURL} />
+                    <p className="absolute text-center top-4 left-0 text-md font-normal w-full">
+                      {file.name}
+                    </p>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        </TabsContent>
-        <TabsList className="w-full min-h-fit bg-transparent border-t border-border p-2">
-          <TabsTrigger
-            value={selectFiles[0].name}
-            className="relative max-w-13 min-h-13 overflow-hidden rounded-md"
-          >
-            <Image
-              src={
-                selectFiles[0].type === "application/pdf"
-                  ? IMAGES.ICONS.PDF
-                  : previewURL
-              }
-              alt="image"
-              fill
-              className="object-cover p-1 rounded-md"
+            </TabsContent>
+          );
+        })}
+        <TabsList className="w-full min-h-fit bg-transparent border-t border-border p-2 gap-2">
+          {selectedFiles.map((file: File) => {
+            const previewURL = URL.createObjectURL(file);
+
+            return (
+              <TabsTrigger
+                key={file.name}
+                value={file.name}
+                className="relative max-w-13 min-h-13 overflow-hidden rounded-md"
+              >
+                <Image
+                  src={
+                    file.type === "application/pdf"
+                      ? IMAGES.ICONS.PDF
+                      : previewURL
+                  }
+                  alt="image"
+                  fill
+                  className="object-cover p-1 rounded-md"
+                />
+              </TabsTrigger>
+            );
+          })}
+          <div className="w-fit h-fit">
+            <Button
+              type="button"
+              variant={"outline"}
+              className="w-13 h-13 rounded-md text-2xl cursor-pointer"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              +
+            </Button>
+            <Input
+              ref={fileInputRef}
+              type="file"
+              onChange={(e) => {
+                const file = e.target.files;
+
+                if (!file || file.length === 0) {
+                  toast.error("No file selected or file is empty.");
+                  return;
+                }
+
+                setSelectedFiles([...selectedFiles, ...Array.from(file)]);
+              }}
+              className="hidden"
+              accept="image/*, application/*"
             />
-          </TabsTrigger>
+          </div>
         </TabsList>
       </Tabs>
     </div>

@@ -13,32 +13,35 @@ import {
 import { AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import FilePreview from "reactjs-file-preview";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import Image from "next/image";
+import { IMAGES } from "@/constants/images";
 
 function SendFileAttachementDialog({
   setOpen,
-  selectFile,
+  selectFiles,
 }: {
   setOpen: (open: boolean) => void;
-  selectFile: File | null;
+  selectFiles: File[] | null;
 }) {
-  if (!selectFile || selectFile.size === 0) {
+  if (!selectFiles || selectFiles.length === 0) {
     toast.error("No file selected or file is empty.");
     setOpen(false);
     return null;
   }
 
-  const previewURL = URL.createObjectURL(selectFile);
+  const previewURL = URL.createObjectURL(selectFiles[0]);
 
   const getPreviewClass = () => {
     const base = "w-full mx-auto h-[50vh]";
 
-    if (selectFile.type.startsWith("image")) return `${base} max-w-2xl`;
+    if (selectFiles[0].type.startsWith("image")) return `${base} max-w-2xl`;
 
-    if (selectFile.type.startsWith("video")) return `${base} max-w-4xl`;
+    if (selectFiles[0].type.startsWith("video")) return `${base} max-w-4xl`;
 
-    if (selectFile.type === "application/pdf") return `${base} max-w-4xl`;
+    if (selectFiles[0].type === "application/pdf") return `${base} max-w-4xl`;
 
-    if (selectFile.type.startsWith("audio"))
+    if (selectFiles[0].type.startsWith("audio"))
       return `${base} max-w-xl flex items-center justify-center`;
 
     return `${base} max-w-3xl`;
@@ -50,7 +53,7 @@ function SendFileAttachementDialog({
         <DialogTrigger asChild>
           <Button
             variant={"secondary"}
-            className="absolute cursor-pointer w-9 h-9 top-2 right-2 rounded-full bg-transparent"
+            className="absolute cursor-pointer w-9 h-9 top-2 right-2 rounded-full bg-transparent z-10"
           >
             <X className="size-5" strokeWidth={1.89} />
           </Button>
@@ -82,18 +85,38 @@ function SendFileAttachementDialog({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <div className="flex flex-col w-full h-full">
-        <div className="h-full w-full flex items-center justify-center">
-          <div className={getPreviewClass()}>
-            <FilePreview preview={previewURL} />
+
+      <Tabs defaultValue={selectFiles[0].name} className="w-full h-full">
+        <TabsContent value={selectFiles[0].name} className="w-full h-full">
+          <div className="flex flex-col w-full h-full justify-center items-center">
+            <div className="h-full w-fit flex items-center justify-center">
+              <div className={[getPreviewClass()].join(" ")}>
+                <FilePreview preview={previewURL} />
+                <p className="absolute text-center top-4 left-0 text-md font-normal w-full">
+                  {selectFiles[0].name}
+                </p>
+              </div>
+            </div>
           </div>
-        </div>
-        <div className="h-20 flex items-center justify-center gap-3 border-t border-border">
-          <Button className="h-13 w-13">1</Button>
-          <Button className="h-13 w-13">2</Button>
-          <Button className="h-13 w-13">+</Button>
-        </div>
-      </div>
+        </TabsContent>
+        <TabsList className="w-full min-h-fit bg-transparent border-t border-border p-2">
+          <TabsTrigger
+            value={selectFiles[0].name}
+            className="relative max-w-13 min-h-13 overflow-hidden rounded-md"
+          >
+            <Image
+              src={
+                selectFiles[0].type === "application/pdf"
+                  ? IMAGES.ICONS.PDF
+                  : previewURL
+              }
+              alt="image"
+              fill
+              className="object-cover p-1 rounded-md"
+            />
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
     </div>
   );
 }

@@ -8,6 +8,7 @@ export const IMAGES = {
   },
   ICONS: {
     GOOGLE: "/icons/google.png",
-    UNKNOWN_USER: "/icons/unknown-user.png"
+    UNKNOWN_USER: "/icons/unknown-user.png",
+    PDF: "/icons/pdf-icon.png"
   },
 };

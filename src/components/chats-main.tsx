@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { MessagesSkeleton } from "./skeletons/messages-skeleton";
 import { MessageBubble } from "./message-bubble";
 import { useInView } from "react-intersection-observer";
+import SendFileAttachementDialog from "./send-file-attachment-dialog";
 
 export function formatTime(iso?: string) {
   if (!iso) return "";
@@ -106,7 +107,17 @@ export function DayDivider({ label }: { label: string }) {
   );
 }
 
-function ChatsMain({ recipient_id,  }: { recipient_id: string}) {
+function ChatsMain({
+  recipient_id,
+  selectedFiles,
+  setOpen,
+  open,
+}: {
+  recipient_id: string;
+  selectedFiles: File[] | null;
+  setOpen: (e: boolean) => void;
+  open: boolean;
+}) {
   const {
     data,
     error,
@@ -168,6 +179,12 @@ function ChatsMain({ recipient_id,  }: { recipient_id: string}) {
           <p className="mt-1 text-sm text-muted-foreground">{error.message}</p>
         </div>
       </main>
+    );
+  }
+
+  if (open) {
+    return (
+      <SendFileAttachementDialog selectFiles={selectedFiles} setOpen={setOpen} />
     );
   }
 

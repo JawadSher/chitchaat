@@ -21,7 +21,7 @@ import z from "zod";
 import { useForm } from "@tanstack/react-form";
 import { FieldError, FieldGroup, Field, FieldLabel } from "./ui/field";
 import EmojiPicker, { Theme, EmojiStyle } from "emoji-picker-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Textarea } from "./ui/textarea";
 import { useSendMessage } from "@/hooks/react-query/mutation-message";
 
@@ -38,11 +38,13 @@ type FormValues = z.infer<typeof formSchema>;
 function ChatForm({
   recipient_id,
   setOpen,
-  setSelectedFile,
+  setSelectedFiles,
+  open,
 }: {
   recipient_id: string;
   setOpen: (open: boolean) => void;
-  setSelectedFile: (file: File | null) => void;
+  open: boolean;
+  setSelectedFiles: (files: File[] | null) => void;
 }) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const { mutate: sendMessageFn } = useSendMessage();
@@ -64,6 +66,12 @@ function ChatForm({
       form.reset();
     },
   });
+
+  useEffect(() => {
+    if (!open) {
+      form.reset();
+    }
+  }, [open]);
 
   const handleEmojiClick = (emoji: string) => {
     const currentMessage = form.getFieldValue("message") || "";
@@ -161,7 +169,9 @@ function ChatForm({
                       onBlur={field.handleBlur}
                       onChange={(e) => {
                         field.handleChange(e.target.files?.[0]);
-                        setSelectedFile(e.target.files?.[0] || null);
+                        setSelectedFiles(
+                          e.target.files ? Array.from(e.target.files) : null,
+                        );
                         setOpen(true);
                       }}
                       className="hidden"

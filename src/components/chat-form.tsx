@@ -24,6 +24,7 @@ import EmojiPicker, { Theme, EmojiStyle } from "emoji-picker-react";
 import { useEffect, useRef, useState } from "react";
 import { Textarea } from "./ui/textarea";
 import { useSendMessage } from "@/hooks/react-query/mutation-message";
+import { toast } from "sonner";
 
 const formSchema = z.object({
   message: z
@@ -40,10 +41,12 @@ function ChatForm({
   setOpen,
   setSelectedFiles,
   open,
+  selectedFiles,
 }: {
   recipient_id: string;
   setOpen: (open: boolean) => void;
   open: boolean;
+  selectedFiles: File[] | null;
   setSelectedFiles: (files: File[] | null) => void;
 }) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -169,10 +172,32 @@ function ChatForm({
                       onBlur={field.handleBlur}
                       onChange={(e) => {
                         field.handleChange(e.target.files?.[0]);
-                        setSelectedFiles(
-                          e.target.files ? Array.from(e.target.files) : null,
+
+                        const files = e.target.files;
+
+                        if (!files || files.length === 0) {
+                          toast.error("No file selected or file is empty.");
+                          return;
+                        }
+
+                        const newFiles = Array.from(files);
+                        const duplicates = newFiles.some((file) =>
+                          selectedFiles?.some(
+                            (selected) => selected.name === file.name,
+                          ),
                         );
+
+                        if (duplicates) {
+                          toast.error("This file is already imported.");
+                          return;
+                        }
+
+                        setSelectedFiles([
+                          ...(selectedFiles || []),
+                          ...newFiles,
+                        ]);
                         setOpen(true);
+                        e.target.value = "";
                       }}
                       className="hidden"
                       accept="image/*, application/*"

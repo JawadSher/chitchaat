@@ -74,6 +74,7 @@ function Chat() {
                   setSelectedFiles={setSelectedFiles}
                   setOpen={setOpen}
                   recipient_id={contact.contact_user_id}
+                  selectedFiles={selectedFiles}
                 />
               </TabsContent>
             ))}

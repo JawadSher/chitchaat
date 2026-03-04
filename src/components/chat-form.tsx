@@ -25,14 +25,26 @@ import { useEffect, useRef, useState } from "react";
 import { Textarea } from "./ui/textarea";
 import { useSendMessage } from "@/hooks/react-query/mutation-message";
 import { toast } from "sonner";
+import { uploadFile } from "@/lib/supabase/upload-file";
+import { useSession } from "@clerk/nextjs";
 
-const formSchema = z.object({
-  message: z
-    .string()
-    .min(1, "Message must be at least 1 character.")
-    .max(7000, "Message must be at most 7000 characters."),
-  file: z.instanceof(File).optional(),
-});
+const formSchema = z
+  .object({
+    message: z.string().max(7000, "Message must be at most 7000 characters."),
+    file: z.instanceof(File).optional(),
+  })
+  .refine(
+    (data) => {
+      const hasMessage = data.message?.trim().length > 0;
+      const hasFile = !!data.file;
+
+      return hasMessage || hasFile;
+    },
+    {
+      message: "Message or file is required.",
+      path: ["message"],
+    },
+  );
 
 type FormValues = z.infer<typeof formSchema>;
 
@@ -52,13 +64,18 @@ function ChatForm({
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const { mutate: sendMessageFn } = useSendMessage();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { session } = useSession();
 
   const form = useForm({
     defaultValues: { message: "", file: undefined } as FormValues,
     validators: { onSubmit: formSchema },
     onSubmit: async ({ value }: { value: FormValues }) => {
-      if (value.file) {
-        console.log("Attached file:", value.file.name);
+      if (selectedFiles && selectedFiles.length > 0) {
+        const response = await uploadFile({ file: selectedFiles[0], session });
+
+        console.log(response);
+
+        return;
       }
 
       sendMessageFn({
@@ -98,7 +115,7 @@ function ChatForm({
               <DropdownMenuTrigger asChild>
                 <Button
                   className="absolute rounded-full 
-          cursor-pointer bg-transparent w-7 h-7 text-white"
+          cursor-pointer bg-transparent w-7 h-7 dark:text-white"
                   type="button"
                 >
                   <Plus className=" size-5 " strokeWidth={1.89} />
@@ -220,7 +237,10 @@ function ChatForm({
                 className="cursor-pointer w-7 h-7 bg-transparent rounded-full"
                 type="button"
               >
-                <SmilePlus strokeWidth={1.89} className="size-5 text-white" />
+                <SmilePlus
+                  strokeWidth={1.89}
+                  className="size-5 dark:text-white"
+                />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
@@ -278,7 +298,7 @@ function ChatForm({
               className="rounded-full h-10 w-10 flex items-center justify-center"
               type="submit"
             >
-              {messageValue ? (
+              {selectedFiles?.length || messageValue ? (
                 <Send className="size-5" strokeWidth={1.89} />
               ) : (
                 <Mic className="size-5" strokeWidth={1.89} />

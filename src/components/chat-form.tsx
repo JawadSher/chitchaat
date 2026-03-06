@@ -27,6 +27,7 @@ import { useSendMessage } from "@/hooks/react-query/mutation-message";
 import { toast } from "sonner";
 import { uploadFile } from "@/lib/supabase/upload-file";
 import { useSession } from "@clerk/nextjs";
+import { useSupabase } from "@/providers/supabase-provider";
 
 const formSchema = z
   .object({
@@ -65,15 +66,22 @@ function ChatForm({
   const { mutate: sendMessageFn } = useSendMessage();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { session } = useSession();
-
+  // const supabase = useSupabase();
   const form = useForm({
     defaultValues: { message: "", file: undefined } as FormValues,
     validators: { onSubmit: formSchema },
     onSubmit: async ({ value }: { value: FormValues }) => {
       if (selectedFiles && selectedFiles.length > 0) {
-        const response = await uploadFile({ file: selectedFiles[0], session });
+        // const response = await supabase.storage.from("chitchaat-storage").upload(selectedFiles[0].name, selectedFiles[0], {
+        //   cacheControl: "3600",
+        //   contentType: selectedFiles[0].type,
+        //   upsert: false,
+        // });
 
-        console.log(response);
+        // console.log(response);
+        // const response = await uploadFile({ file: selectedFiles[0], session });
+
+        // console.log(response);
 
         return;
       }

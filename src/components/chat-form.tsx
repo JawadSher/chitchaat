@@ -27,7 +27,6 @@ import { useSendMessage } from "@/hooks/react-query/mutation-message";
 import { toast } from "sonner";
 import { uploadFile } from "@/lib/supabase/upload-file";
 import { useSession } from "@clerk/nextjs";
-import { useSupabase } from "@/providers/supabase-provider";
 
 const formSchema = z
   .object({
@@ -55,42 +54,38 @@ function ChatForm({
   setSelectedFiles,
   open,
   selectedFiles,
+  setPercentage,
 }: {
   recipient_id: string;
   setOpen: (open: boolean) => void;
   open: boolean;
   selectedFiles: File[] | null;
   setSelectedFiles: (files: File[] | null) => void;
+  setPercentage: (fileName: string, percentage: number) => void;
 }) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const { mutate: sendMessageFn } = useSendMessage();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { session } = useSession();
-  // const supabase = useSupabase();
+  const [filesNames, setFilesNames] = useState<string[]>([]);
   const form = useForm({
     defaultValues: { message: "", file: undefined } as FormValues,
     validators: { onSubmit: formSchema },
     onSubmit: async ({ value }: { value: FormValues }) => {
-      if (selectedFiles && selectedFiles.length > 0) {
-        // const response = await supabase.storage.from("chitchaat-storage").upload(selectedFiles[0].name, selectedFiles[0], {
-        //   cacheControl: "3600",
-        //   contentType: selectedFiles[0].type,
-        //   upsert: false,
-        // });
-
-        // console.log(response);
-        // const response = await uploadFile({ file: selectedFiles[0], session });
-
-        // console.log(response);
-
-        return;
+      if (selectedFiles) {
+        for (const file of selectedFiles) {
+          await uploadFile({ file, session, setPercentage, setFilesNames });
+        }
       }
 
       sendMessageFn({
         message_type: "text",
         content: value.message,
         recipient_id,
+        file_name: [...filesNames],
+        file_size: [...(selectedFiles?.map((file: any) => file.size) || [])],
       });
+      setOpen(false);
       form.reset();
     },
   });

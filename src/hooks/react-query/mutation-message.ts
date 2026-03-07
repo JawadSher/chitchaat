@@ -16,7 +16,6 @@ export const useSendMessage = () => {
     mutationFn: async ({
       message_type,
       content,
-      media_url,
       file_name,
       file_size,
       duration,
@@ -27,7 +26,6 @@ export const useSendMessage = () => {
         sender_id: user?.id!,
         message_type,
         content,
-        media_url,
         file_name,
         file_size,
         duration,
@@ -52,7 +50,6 @@ export const useSendMessage = () => {
         recipient_id: variables.recipient_id!,
         message_type: variables.message_type,
         content: variables.content ?? "",
-        media_url: variables.media_url,
         file_name: variables.file_name,
         file_size: variables.file_size,
         duration: variables.duration,

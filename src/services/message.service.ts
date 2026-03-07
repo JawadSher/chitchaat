@@ -9,7 +9,6 @@ export async function sendMessage(
     sender_id,
     message_type,
     content,
-    media_url,
     file_name,
     file_size,
     duration,
@@ -23,7 +22,6 @@ export async function sendMessage(
         sender_id,
         message_type,
         content,
-        media_url,
         file_name,
         file_size,
         duration,
@@ -61,7 +59,7 @@ export async function getMessages(
     const { data, error, count } = await supabase
       .from("messages")
       .select(
-        "id, sender_id, recipient_id, message_type, content, media_url, file_name, file_size, duration, reply_to_message_id, is_edited, message_read_status, created_at",
+        "id, sender_id, recipient_id, message_type, content, file_name, file_size, duration, reply_to_message_id, is_edited, message_read_status, created_at",
         {
           count: "exact",
         },

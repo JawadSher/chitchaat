@@ -18,6 +18,9 @@ function Chat() {
   const [selectedFiles, setSelectedFiles] = useState<File[] | null>(null);
   const [activeTab, setActiveTab] = useState<string>("empty");
   const { data, error, isLoading } = useGetContacts();
+  const [percentage, setPercentage] = useState<
+    [{ fileName: string; percentage: number }] | []
+  >([]);
 
   if (error) {
     return (
@@ -62,7 +65,7 @@ function Chat() {
                 <ChatAreaHeader contact={contact} setActiveTab={setActiveTab} />
 
                 <ChatsMain
-                setSelectedFiles={setSelectedFiles}
+                  setSelectedFiles={setSelectedFiles}
                   open={open}
                   selectedFiles={selectedFiles}
                   setOpen={setOpen}
@@ -70,6 +73,9 @@ function Chat() {
                 />
 
                 <ChatForm
+                  setPercentage={(fileName: string, percentage: number) =>
+                    setPercentage([{ fileName, percentage }])
+                  }
                   open={open}
                   setSelectedFiles={setSelectedFiles}
                   setOpen={setOpen}

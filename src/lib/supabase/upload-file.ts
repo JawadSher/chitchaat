@@ -4,9 +4,13 @@ import * as tus from "tus-js-client";
 export async function uploadFile({
   file,
   session,
+  setPercentage,
+  setFilesNames,
 }: {
   file: File;
   session: any;
+  setPercentage: (fileName: string, percentage: number) => void;
+  setFilesNames: React.Dispatch<React.SetStateAction<string[]>>;
 }) {
   return new Promise(async (resolve, reject) => {
     const token = await session.getToken({ template: "supabase" });
@@ -16,19 +20,21 @@ export async function uploadFile({
       throw new Error("Unauthorized Request");
     }
 
+    const fileName = `${Date.now()}-${file.name}`;
+    setFilesNames((prev) => [...prev, fileName]);
     const upload = new tus.Upload(file, {
       endpoint: `https://${ENV.SUPABASE.PROJECT_ID}.storage.supabase.co/storage/v1/upload/resumable`,
       retryDelays: [0, 3000, 5000, 10000, 20000],
       headers: {
         authorization: `Bearer ${token}`,
         "x-upsert": "false",
-        "Access-Control-Allow-Origin": "true"
+        "Access-Control-Allow-Origin": "true",
       },
       uploadDataDuringCreation: true,
       removeFingerprintOnSuccess: true,
       metadata: {
         bucketName: ENV.SUPABASE.STORAGE_BUCKET_NAME,
-        objectName: file.name,
+        objectName: `${session.user.id}/${fileName}`,
         contentType: file.type,
         cacheControl: "3600",
         metadata: JSON.stringify({
@@ -44,11 +50,9 @@ export async function uploadFile({
       },
       onProgress: function (bytesUploaded, bytesTotal) {
         const percentage = ((bytesUploaded / bytesTotal) * 100).toFixed(2);
-        console.log(bytesUploaded, bytesTotal, percentage + "%");
+        setPercentage(fileName, Number(percentage));
       },
-      onSuccess: function (res) {
-        console.log("Download %s from %s", file.name, upload.url);
-        console.log("res: ", res);
+      onSuccess: function () {
         resolve(true);
       },
     });

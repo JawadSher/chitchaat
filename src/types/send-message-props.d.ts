@@ -14,7 +14,6 @@ export interface ISendMessageProps {
     | "image-file"
     | "voice_note";
   content: string;
-  media_url?: string[];
   file_name?: string[];
   file_size?: string[];
   duration?: number;

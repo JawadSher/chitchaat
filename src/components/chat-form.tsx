@@ -27,6 +27,7 @@ import { useSendMessage } from "@/hooks/react-query/mutation-message";
 import { toast } from "sonner";
 import { uploadFile } from "@/lib/supabase/upload-file";
 import { useSession } from "@clerk/nextjs";
+import { getMessageType } from "@/lib/get-message-type";
 
 const formSchema = z
   .object({
@@ -67,25 +68,28 @@ function ChatForm({
   const { mutate: sendMessageFn } = useSendMessage();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { session } = useSession();
-  const [filesNames, setFilesNames] = useState<string[]>([]);
+
   const form = useForm({
     defaultValues: { message: "", file: undefined } as FormValues,
     validators: { onSubmit: formSchema },
     onSubmit: async ({ value }: { value: FormValues }) => {
+      const uploadedFiles: string[] = [];
       if (selectedFiles) {
         for (const file of selectedFiles) {
-          await uploadFile({ file, session, setPercentage, setFilesNames });
+          const res = await uploadFile({ file, session, setPercentage });
+          uploadedFiles.push(res as string);
         }
       }
 
       sendMessageFn({
-        message_type: "text",
-        content: value.message,
+        message_type: getMessageType(value.message, uploadedFiles),
+        content: value.message ?? null,
         recipient_id,
-        file_name: [...filesNames],
+        file_name: uploadedFiles,
         file_size: [...(selectedFiles?.map((file: any) => file.size) || [])],
       });
       setOpen(false);
+      setSelectedFiles(null);
       form.reset();
     },
   });

@@ -16,68 +16,76 @@ import { useState } from "react";
 import { useDeleteMessage } from "@/hooks/react-query/mutation-message";
 import { Loader } from "./loader";
 import { getEmojiCount, getEmojiSize, isOnlyEmoji } from "@/lib/emoji";
+import { IMAGES } from "@/constants/images";
+import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
+
+const getFileIcon = (fileName: string) => {
+  if (!fileName) return IMAGES.ICONS.FILE;
+
+  const extension = fileName.split(".").pop()?.toLowerCase();
+
+  switch (extension) {
+    case "doc":
+    case "docx":
+      return IMAGES.ICONS.WORD;
+
+    case "xls":
+    case "xlsx":
+      return IMAGES.ICONS.EXCEL;
+
+    case "ppt":
+    case "pptx":
+      return IMAGES.ICONS.PPT;
+
+    case "zip":
+    case "rar":
+      return IMAGES.ICONS.ZIP;
+
+    case "txt":
+      return IMAGES.ICONS.FILE;
+
+    case "mp4":
+      return IMAGES.ICONS.VIDEO;
+
+    case "mp3":
+      return IMAGES.ICONS.AUDIO;
+
+    default:
+      return IMAGES.ICONS.FILE;
+  }
+};
 
 function MessageAttachment({ m }: { m: IMessages }) {
-  if (m.message_type === "image" && m.media_url) {
-    return (
-      <a
-        href={m.media_url}
-        target="_blank"
-        rel="noreferrer"
-        className="block overflow-hidden rounded-xl border border-border bg-background"
-      >
-        <Image
-          src={m.media_url}
-          alt={m.file_name ?? "Image"}
-          width={900}
-          height={900}
-          className="h-auto w-full max-w-[320px] object-cover"
-        />
-      </a>
-    );
-  }
+  const files = m.file_name || [];
+  const visibleFiles = files.slice(0, 4);
+  const remaining = files.length - 4;
 
-  if (m.message_type === "file") {
-    return (
-      <a
-        href={m.media_url || "#"}
-        target="_blank"
-        rel="noreferrer"
-        className="block rounded-xl border border-border bg-background p-3 hover:bg-accent transition-colors"
+  const getGrid = () => {
+    if (visibleFiles.length === 1) return "grid-cols-1";
+    if (visibleFiles.length === 2) return "grid-cols-2";
+    return "grid-cols-2";
+  };
+
+  return (
+    <Dialog>
+      <DialogTrigger
+        className={`w-full h-full grid gap-1 border overflow-hidden rounded-lg ${getGrid()}`}
       >
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="truncate text-sm font-medium text-foreground">
-              {m.file_name ?? "File"}
-            </p>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              {bytesToSize(m.file_size) || "Download"}
-            </p>
+        {visibleFiles.map((file: string, index: number) => (
+          <div key={index} className="aspect-square w-full h-full">
+            <Image
+              src={IMAGES.ICONS.IMAGE}
+              alt="attachment"
+              fill
+              className="object-cover"
+            />
           </div>
-          <span className="shrink-0 rounded-full border border-border bg-card px-2 py-1 text-xs text-muted-foreground">
-            File
-          </span>
-        </div>
-      </a>
-    );
-  }
+        ))}
+      </DialogTrigger>
 
-  if (m.message_type !== "text") {
-    return (
-      <div className="rounded-xl border border-border bg-background p-3">
-        <p className="text-sm text-muted-foreground">
-          {m.message_type.toUpperCase()} message
-        </p>
-        {m.content && (
-          <p className="mt-1 text-sm text-foreground whitespace-pre-wrap break-words">
-            {m.content}
-          </p>
-        )}
-      </div>
-    );
-  }
-
-  return null;
+      <DialogContent></DialogContent>
+    </Dialog>
+  );
 }
 
 export function OptionsMenu({
@@ -184,7 +192,7 @@ export function MessageBubble({
         )}
 
         {m.message_type !== "text" && (
-          <div className="mb-2">
+          <div className="w-50 h-50">
             <MessageAttachment m={m} />
           </div>
         )}
@@ -203,35 +211,37 @@ export function MessageBubble({
           )}
         </div>
 
-        <div className="flex items-end pb-px">
-          <div
-            className={`flex items-center justify-center gap-1 h-4 ${onlyEmoji && emojiCount < 2 && "bg-primary-foreground rounded-md px-2 py-3 "}`}
-          >
-            {m.is_edited && (
-              <span className="text-[11px] opacity-70">edited</span>
-            )}
+        {m.message_type === "text" && (
+          <div className="flex items-end pb-px">
+            <div
+              className={`flex items-center justify-center gap-1 h-4 ${onlyEmoji && emojiCount < 2 && "bg-primary-foreground rounded-md px-2 py-3 "}`}
+            >
+              {m.is_edited && (
+                <span className="text-[11px] opacity-70">edited</span>
+              )}
 
-            {m.created_at && (
-              <span className="text-[11px] tabular-nums opacity-70">
-                {formatTime(m.created_at)}
-              </span>
-            )}
+              {m.created_at && (
+                <span className="text-[11px] tabular-nums opacity-70">
+                  {formatTime(m.created_at)}
+                </span>
+              )}
 
-            {!incoming && (
-              <OptionsMenu
-                isOnlyEmoji={onlyEmoji}
-                m={m}
-                showOptions={showOptions}
-              />
-            )}
+              {!incoming && (
+                <OptionsMenu
+                  isOnlyEmoji={onlyEmoji}
+                  m={m}
+                  showOptions={showOptions}
+                />
+              )}
 
-            {!incoming && (
-              <span className="translate-y-px">
-                <DoubleTick status={m.message_read_status} />
-              </span>
-            )}
+              {!incoming && (
+                <span className="translate-y-px">
+                  <DoubleTick status={m.message_read_status} />
+                </span>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

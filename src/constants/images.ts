@@ -17,5 +17,6 @@ export const IMAGES = {
     EXCEL: "/icons/excel-icon.png",
     PPT: "/icons/ppt-icon.png",
     ZIP: "/icons/zip-icon.png",
+    IMAGE: "/icons/image-icon.png"
   },
 };

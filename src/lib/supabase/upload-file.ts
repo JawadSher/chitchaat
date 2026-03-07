@@ -5,12 +5,10 @@ export async function uploadFile({
   file,
   session,
   setPercentage,
-  setFilesNames,
 }: {
   file: File;
   session: any;
   setPercentage: (fileName: string, percentage: number) => void;
-  setFilesNames: React.Dispatch<React.SetStateAction<string[]>>;
 }) {
   return new Promise(async (resolve, reject) => {
     const token = await session.getToken({ template: "supabase" });
@@ -21,7 +19,6 @@ export async function uploadFile({
     }
 
     const fileName = `${Date.now()}-${file.name}`;
-    setFilesNames((prev) => [...prev, fileName]);
     const upload = new tus.Upload(file, {
       endpoint: `https://${ENV.SUPABASE.PROJECT_ID}.storage.supabase.co/storage/v1/upload/resumable`,
       retryDelays: [0, 3000, 5000, 10000, 20000],
@@ -53,7 +50,7 @@ export async function uploadFile({
         setPercentage(fileName, Number(percentage));
       },
       onSuccess: function () {
-        resolve(true);
+        resolve(fileName);
       },
     });
 

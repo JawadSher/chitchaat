@@ -16,7 +16,7 @@ import FilePreview from "reactjs-file-preview";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Image from "next/image";
 import { IMAGES } from "@/constants/images";
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import { Input } from "./ui/input";
 
 const getFilePreviewForTrigger = (file: File | null, previewURL: string) => {

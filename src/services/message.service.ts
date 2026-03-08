@@ -69,7 +69,7 @@ export async function getMessages(
       )
       .eq("is_deleted", false)
       .order("created_at", { ascending: false })
-      .range(from, to)
+      .range(from, to);
 
     if (error) throw new Error(error.message);
 
@@ -101,6 +101,23 @@ export async function deleteMessage(
       .from("messages")
       .update({ is_deleted: true })
       .eq("id", message_id);
+
+    if (error) throw new Error(error.message);
+
+    return data;
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
+}
+
+export async function previewAttachement(
+  supabase: SupabaseClient,
+  { path }: { path: string[] },
+) {
+  try {
+    const { data, error } = await supabase.storage
+      .from("chitchaat-bucket")
+      .createSignedUrls(path, 3600);
 
     if (error) throw new Error(error.message);
 

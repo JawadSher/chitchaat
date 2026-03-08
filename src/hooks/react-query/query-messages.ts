@@ -1,7 +1,7 @@
 import { useSupabase } from "@/providers/supabase-provider";
-import { getMessages } from "@/services/message.service";
+import { getMessages, previewAttachement } from "@/services/message.service";
 import { useUser } from "@clerk/nextjs";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 
 export const useGetMessages = ({
   recipient_id,
@@ -32,5 +32,17 @@ export const useGetMessages = ({
     },
     enabled: !!user?.id && !!recipient_id,
     staleTime: 1000 * 60,
+  });
+};
+
+export const usePreviewAttachement = ({ path }: { path: string[] }) => {
+  const supabase = useSupabase();
+  return useQuery({
+    queryKey: ["preview-attachement"],
+    queryFn: async ({}) => {
+      return await previewAttachement(supabase, { path });
+    },
+    staleTime: 60_000,
+    enabled: !!path.length,
   });
 };

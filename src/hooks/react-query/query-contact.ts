@@ -1,5 +1,10 @@
 import { useSupabase } from "@/providers/supabase-provider";
-import { findContact, getContacts, getInvitations, getPendingContacts } from "@/services/contact.service";
+import {
+  findContact,
+  getContacts,
+  getInvitations,
+  getPendingContacts,
+} from "@/services/contact.service";
 import { useUser } from "@clerk/nextjs";
 import { useQuery } from "@tanstack/react-query";
 

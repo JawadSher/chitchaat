@@ -1,7 +1,6 @@
 import { IMessages } from "@/types/messages";
 import Image from "next/image";
-import { bytesToSize, DoubleTick, formatTime } from "./chats-main";
-import { Button } from "@/components/ui/button";
+import { DoubleTick, formatTime } from "./chats-main";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,12 +11,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown, Trash } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDeleteMessage } from "@/hooks/react-query/mutation-message";
 import { Loader } from "./loader";
 import { getEmojiCount, getEmojiSize, isOnlyEmoji } from "@/lib/emoji";
 import { IMAGES } from "@/constants/images";
-import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "./ui/dialog";
+import { usePreviewAttachement } from "@/hooks/react-query/query-messages";
+import { toast } from "sonner";
 
 const getFileIcon = (fileName: string) => {
   if (!fileName) return IMAGES.ICONS.FILE;
@@ -25,29 +26,63 @@ const getFileIcon = (fileName: string) => {
   const extension = fileName.split(".").pop()?.toLowerCase();
 
   switch (extension) {
+    // Documents
     case "doc":
     case "docx":
       return IMAGES.ICONS.WORD;
 
     case "xls":
     case "xlsx":
+    case "csv":
       return IMAGES.ICONS.EXCEL;
 
     case "ppt":
     case "pptx":
       return IMAGES.ICONS.PPT;
 
+    // Archives
     case "zip":
     case "rar":
+    case "7z":
+    case "tar":
+    case "gz":
       return IMAGES.ICONS.ZIP;
 
+    // Text
     case "txt":
+    case "md":
+    case "pdf":
       return IMAGES.ICONS.FILE;
 
+    // Images
+    case "png":
+    case "jpg":
+    case "jpeg":
+    case "gif":
+    case "webp":
+    case "svg":
+    case "bmp":
+    case "ico":
+    case "tiff":
+    case "avif":
+      return IMAGES.ICONS.IMAGE;
+
+    // Video
     case "mp4":
+    case "mov":
+    case "avi":
+    case "mkv":
+    case "webm":
+    case "flv":
       return IMAGES.ICONS.VIDEO;
 
+    // Audio
     case "mp3":
+    case "wav":
+    case "ogg":
+    case "aac":
+    case "flac":
+    case "m4a":
       return IMAGES.ICONS.AUDIO;
 
     default:
@@ -55,35 +90,75 @@ const getFileIcon = (fileName: string) => {
   }
 };
 
-function MessageAttachment({ m }: { m: IMessages }) {
+function MessageAttachment({
+  m,
+  data,
+}: {
+  m: IMessages;
+  data: any[];
+  error: any;
+}) {
   const files = m.file_name || [];
   const visibleFiles = files.slice(0, 4);
   const remaining = files.length - 4;
 
-  const getGrid = () => {
+  const getGridClass = () => {
     if (visibleFiles.length === 1) return "grid-cols-1";
     if (visibleFiles.length === 2) return "grid-cols-2";
     return "grid-cols-2";
   };
 
+  const getItemHeight = (index: number) => {
+    if (visibleFiles.length === 1) return "h-30";
+    if (visibleFiles.length === 2) return "h-25";
+    if (visibleFiles.length === 3 && index === 0) return "col-span-2 h-40";
+    return "h-36";
+  };
+
   return (
     <Dialog>
-      <DialogTrigger
-        className={`w-full h-full grid gap-1 border overflow-hidden rounded-lg ${getGrid()}`}
-      >
-        {visibleFiles.map((file: string, index: number) => (
-          <div key={index} className="aspect-square w-full h-full">
-            <Image
-              src={IMAGES.ICONS.IMAGE}
-              alt="attachment"
-              fill
-              className="object-cover"
-            />
-          </div>
-        ))}
+      <DialogTrigger asChild>
+        <div
+          className={`grid gap-0.5 overflow-hidden border h-fit cursor-pointer w-full ${getGridClass()}`}
+        >
+          {visibleFiles.map((file: string, index: number) => {
+            const isLastVisible = index === visibleFiles.length - 1;
+            const showOverlay = isLastVisible && remaining > 0;
+
+            return (
+              <div
+                key={index}
+                className={`relative overflow-hidden group  ${data.length && "bg-primary-foreground rounded-md aspect-square"} ${getItemHeight(index)}`}
+              >
+                <Image
+                  src={data.length ? data[index].signedUrl : getFileIcon(file)}
+                  alt={`attachment-${index + 1}`}
+                  fill
+                  className="object-cover transition-transform duration-200 group-hover:scale-105"
+                  sizes="(max-width: 640px) 50vw, 200px"
+                />
+
+                {!showOverlay && (
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-200" />
+                )}
+
+                {showOverlay && (
+                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                    <span className="text-white text-xl font-semibold tracking-tight">
+                      +{remaining}
+                    </span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </DialogTrigger>
 
-      <DialogContent></DialogContent>
+      <DialogContent className="w-full p-2 border-none">
+        <DialogTitle>Attachments</DialogTitle>
+        <div className="w-full h-full overflow-auto"></div>
+      </DialogContent>
     </Dialog>
   );
 }
@@ -147,10 +222,17 @@ export function MessageBubble({
   showTail?: boolean;
 }) {
   const [showOptions, setShowOptions] = useState<boolean>(false);
-
   const onlyEmoji = isOnlyEmoji(m.content ?? "");
   const emojiSize = onlyEmoji ? getEmojiSize(m.content ?? "") : "text-sm";
   const emojiCount = onlyEmoji ? getEmojiCount(m.content ?? "") : 0;
+
+  const { data: AttachementsData, error } = usePreviewAttachement({
+    path: incoming
+      ? (m.file_name?.map((name: string) => `${m.sender_id}/${name}`) ?? [])
+      : [],
+  });
+
+  if (error) toast.error(error.message);
 
   return (
     <div
@@ -176,6 +258,7 @@ export function MessageBubble({
                 } 
               bg-primary-foreground dark:bg-primary-foreground 
               dark:text-foreground text-white`,
+          m.message_type !== "text" && "flex-col py-1",
         ].join(" ")}
         onMouseEnter={() => setShowOptions(true)}
         onMouseLeave={() => setShowOptions(false)}
@@ -192,8 +275,8 @@ export function MessageBubble({
         )}
 
         {m.message_type !== "text" && (
-          <div className="w-50 h-50">
-            <MessageAttachment m={m} />
+          <div className="flex h-fit">
+            <MessageAttachment m={m} data={AttachementsData ?? []} error={error} />
           </div>
         )}
 
@@ -211,37 +294,40 @@ export function MessageBubble({
           )}
         </div>
 
-        {m.message_type === "text" && (
-          <div className="flex items-end pb-px">
-            <div
-              className={`flex items-center justify-center gap-1 h-4 ${onlyEmoji && emojiCount < 2 && "bg-primary-foreground rounded-md px-2 py-3 "}`}
-            >
-              {m.is_edited && (
-                <span className="text-[11px] opacity-70">edited</span>
-              )}
+        <div
+          className={[
+            "flex items-end pb-px",
+            m.message_type !== "text" && "justify-end",
+          ].join(" ")}
+        >
+          <div
+            className={`flex items-center justify-center gap-1 h-4 ${onlyEmoji && emojiCount < 2 && "bg-primary-foreground rounded-md px-2 py-3 "}`}
+          >
+            {m.is_edited && (
+              <span className="text-[11px] opacity-70">edited</span>
+            )}
 
-              {m.created_at && (
-                <span className="text-[11px] tabular-nums opacity-70">
-                  {formatTime(m.created_at)}
-                </span>
-              )}
+            {m.created_at && (
+              <span className="text-[11px] tabular-nums opacity-70">
+                {formatTime(m.created_at)}
+              </span>
+            )}
 
-              {!incoming && (
-                <OptionsMenu
-                  isOnlyEmoji={onlyEmoji}
-                  m={m}
-                  showOptions={showOptions}
-                />
-              )}
+            {!incoming && (
+              <OptionsMenu
+                isOnlyEmoji={onlyEmoji}
+                m={m}
+                showOptions={showOptions}
+              />
+            )}
 
-              {!incoming && (
-                <span className="translate-y-px">
-                  <DoubleTick status={m.message_read_status} />
-                </span>
-              )}
-            </div>
+            {!incoming && (
+              <span className="translate-y-px">
+                <DoubleTick status={m.message_read_status} />
+              </span>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

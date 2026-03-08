@@ -93,10 +93,12 @@ const getFileIcon = (fileName: string) => {
 function MessageAttachment({
   m,
   data,
+  incoming,
 }: {
   m: IMessages;
   data: any[];
   error: any;
+  incoming: boolean;
 }) {
   const files = m.file_name || [];
   const visibleFiles = files.slice(0, 4);
@@ -119,7 +121,7 @@ function MessageAttachment({
     <Dialog>
       <DialogTrigger asChild>
         <div
-          className={`grid gap-0.5 overflow-hidden border h-fit cursor-pointer w-full ${getGridClass()}`}
+          className={`grid gap-0.5 overflow-hidden h-fit cursor-pointer w-full ${getGridClass()}`}
         >
           {visibleFiles.map((file: string, index: number) => {
             const isLastVisible = index === visibleFiles.length - 1;
@@ -128,7 +130,7 @@ function MessageAttachment({
             return (
               <div
                 key={index}
-                className={`relative overflow-hidden group  ${data.length && "bg-primary-foreground rounded-md aspect-square"} ${getItemHeight(index)}`}
+                className={`relative overflow-hidden group rounded-md aspect-square  ${data.length && incoming && "bg-primary-foreground "} ${data.length && !incoming && "bg-[#331e0b]"} ${getItemHeight(index)}`}
               >
                 <Image
                   src={data.length ? data[index].signedUrl : getFileIcon(file)}
@@ -227,9 +229,7 @@ export function MessageBubble({
   const emojiCount = onlyEmoji ? getEmojiCount(m.content ?? "") : 0;
 
   const { data: AttachementsData, error } = usePreviewAttachement({
-    path: incoming
-      ? (m.file_name?.map((name: string) => `${m.sender_id}/${name}`) ?? [])
-      : [],
+    path: m.file_name?.map((name: string) => `${m.sender_id}/${name}`) ?? [],
   });
 
   if (error) toast.error(error.message);
@@ -276,7 +276,12 @@ export function MessageBubble({
 
         {m.message_type !== "text" && (
           <div className="flex h-fit">
-            <MessageAttachment m={m} data={AttachementsData ?? []} error={error} />
+            <MessageAttachment
+              m={m}
+              data={AttachementsData ?? []}
+              error={error}
+              incoming={incoming}
+            />
           </div>
         )}
 

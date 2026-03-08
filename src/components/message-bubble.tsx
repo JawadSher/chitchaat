@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, Trash } from "lucide-react";
+import { ChevronDown, DownloadCloud, Trash } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useDeleteMessage } from "@/hooks/react-query/mutation-message";
 import { Loader } from "./loader";
@@ -19,6 +19,7 @@ import { IMAGES } from "@/constants/images";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { usePreviewAttachement } from "@/hooks/react-query/query-messages";
 import { toast } from "sonner";
+import { Button } from "./ui/button";
 
 const getFileIcon = (fileName: string) => {
   if (!fileName) return IMAGES.ICONS.FILE;
@@ -157,9 +158,33 @@ function MessageAttachment({
         </div>
       </DialogTrigger>
 
-      <DialogContent className="w-full p-2 border-none">
+      <DialogContent className="aspect-square p-2 border-none h-[80%] overflow-auto flex flex-col">
         <DialogTitle>Attachments</DialogTitle>
-        <div className="w-full h-full overflow-auto"></div>
+        {m?.file_name?.map((f_name: any, index: number) => {
+          return (
+            <div
+              key={f_name}
+              className="relative w-full h-full bg-primary-foreground hover:bg-primary-foreground/80 rounded-md cursor-pointer"
+            >
+              <Image
+                src={data.length ? data[index].signedUrl : getFileIcon(f_name)}
+                loading="eager"
+                alt={`attachment-${index + 1}`}
+                fill
+                className="object-contain transition-transform duration-200 group-hover:scale-105"
+                sizes="(max-width: 640px) 50vw, 200px"
+              />
+            </div>
+          );
+        })}
+
+        <Button
+          type="button"
+          variant={"outline"}
+          className="w-fit h-fit p-1 px-2 rounded-md cursor-pointer absolute top-2 right-10"
+        >
+          Download All
+        </Button>
       </DialogContent>
     </Dialog>
   );

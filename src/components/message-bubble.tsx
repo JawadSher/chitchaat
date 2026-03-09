@@ -10,14 +10,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, DownloadCloud, Trash } from "lucide-react";
+import { ChevronDown, Download, Trash } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useDeleteMessage } from "@/hooks/react-query/mutation-message";
 import { Loader } from "./loader";
 import { getEmojiCount, getEmojiSize, isOnlyEmoji } from "@/lib/emoji";
 import { IMAGES } from "@/constants/images";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "./ui/dialog";
-import { usePreviewAttachement } from "@/hooks/react-query/query-messages";
+import {
+  useDownloadAttachement,
+  usePreviewAttachement,
+} from "@/hooks/react-query/query-messages";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
 
@@ -101,6 +104,12 @@ function MessageAttachment({
   error: any;
   incoming: boolean;
 }) {
+  const [downFName, setDownFName] = useState<string | null>(null);
+  const { mutate: downloadFn, isPending } = useDownloadAttachement({
+    setDownFName,
+    downFName,
+  });
+
   const files = m.file_name || [];
   const visibleFiles = files.slice(0, 4);
   const remaining = files.length - 4;
@@ -117,6 +126,17 @@ function MessageAttachment({
     if (visibleFiles.length === 3 && index === 0) return "col-span-2 h-40";
     return "h-36";
   };
+
+  async function handleAttachementDownload({
+    path,
+    f_name,
+  }: {
+    path: string;
+    f_name: string;
+  }) {
+    setDownFName(f_name);
+    downloadFn({ path });
+  }
 
   return (
     <Dialog>
@@ -139,6 +159,7 @@ function MessageAttachment({
                   fill
                   className="object-cover transition-transform duration-200 group-hover:scale-105"
                   sizes="(max-width: 640px) 50vw, 200px"
+                  loading="eager"
                 />
 
                 {!showOverlay && (
@@ -174,6 +195,24 @@ function MessageAttachment({
                 className="object-contain transition-transform duration-200 group-hover:scale-105"
                 sizes="(max-width: 640px) 50vw, 200px"
               />
+              <Button
+                type="button"
+                variant={"outline"}
+                className="w-fit h-fit p-1 cursor-pointer absolute top-2 right-2"
+                onClick={() =>
+                  handleAttachementDownload({
+                    path: `${m.sender_id}/${f_name}`,
+                    f_name,
+                  })
+                }
+                disabled={isPending}
+              >
+                {isPending && f_name == downFName ? (
+                  <Loader className="size-4" />
+                ) : (
+                  <Download strokeWidth={1.89} className="size-4" />
+                )}
+              </Button>
             </div>
           );
         })}

@@ -1,7 +1,13 @@
 import { useSupabase } from "@/providers/supabase-provider";
-import { getMessages, previewAttachement } from "@/services/message.service";
+import {
+  downloadAttachements,
+  getMessages,
+  previewAttachement,
+} from "@/services/message.service";
 import { useUser } from "@clerk/nextjs";
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { toastManager } from "@/components/ui/toast";
 
 export const useGetMessages = ({
   recipient_id,
@@ -44,5 +50,41 @@ export const usePreviewAttachement = ({ path }: { path: string[] }) => {
     },
     staleTime: 60_000,
     enabled: !!path.length,
+  });
+};
+
+export const useDownloadAttachement = ({
+  setDownFName,
+  downFName,
+}: {
+  setDownFName: (e: string | null) => void;
+  downFName: string | null;
+}) => {
+  const supabase = useSupabase();
+
+  return useMutation({
+    mutationKey: ["download-attachement"],
+    mutationFn: async ({ path }: { path: string }) => {
+      return await downloadAttachements(supabase, { path });
+    },
+    onSuccess: (blob) => {
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", downFName || Date.now().toString());
+      document.body.appendChild(link);
+      link.click();
+      link?.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      toast.success("Attachement Downloading Completed");
+      setDownFName(null);
+    },
+    onError: (error) => {
+      toast.error(
+        error.message ||
+          "Something went wrong while downloading attachement yet",
+      );
+      setDownFName(null);
+    },
   });
 };

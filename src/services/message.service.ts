@@ -126,3 +126,20 @@ export async function previewAttachement(
     throw new Error(error.message);
   }
 }
+
+export async function downloadAttachements(
+  supabase: SupabaseClient,
+  { path }: { path: string },
+) {
+  try {
+    const { data, error } = await supabase.storage
+      .from("chitchaat-bucket")
+      .download(path);
+
+    if (error) throw new Error(error.message);
+
+    return data;
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
+}

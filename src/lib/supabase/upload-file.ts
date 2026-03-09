@@ -1,4 +1,5 @@
 import { ENV } from "@/constants/env-exports";
+import { FILE_SEPARATOR } from "@/constants/special-chars";
 import * as tus from "tus-js-client";
 
 export async function uploadFile({
@@ -18,7 +19,7 @@ export async function uploadFile({
       throw new Error("Unauthorized Request");
     }
 
-    const fileName = `${Date.now()}-${file.name}`;
+    const fileName = `${Date.now()}${FILE_SEPARATOR}${file.name}`;
     const upload = new tus.Upload(file, {
       endpoint: `https://${ENV.SUPABASE.PROJECT_ID}.storage.supabase.co/storage/v1/upload/resumable`,
       retryDelays: [0, 3000, 5000, 10000, 20000],

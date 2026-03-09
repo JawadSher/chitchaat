@@ -117,7 +117,7 @@ export async function previewAttachement(
   try {
     const { data, error } = await supabase.storage
       .from("chitchaat-bucket")
-      .createSignedUrls(path, 3600);
+      .createSignedUrls(path, 86400);
 
     if (error) throw new Error(error.message);
 

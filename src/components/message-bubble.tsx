@@ -23,6 +23,7 @@ import {
 } from "@/hooks/react-query/query-messages";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
+import { FILE_SEPARATOR } from "@/constants/special-chars";
 
 const getFileIcon = (fileName: string) => {
   if (!fileName) return IMAGES.ICONS.FILE;
@@ -98,11 +99,13 @@ function MessageAttachment({
   m,
   data,
   incoming,
+  percentage,
 }: {
   m: IMessages;
   data: any[];
   error: any;
   incoming: boolean;
+  percentage: { fileName: string; percentage: number }[];
 }) {
   const [downFName, setDownFName] = useState<string | null>(null);
   const { mutate: downloadFn, isPending } = useDownloadAttachement({
@@ -160,6 +163,7 @@ function MessageAttachment({
                   className="object-cover transition-transform duration-200 group-hover:scale-105"
                   sizes="(max-width: 640px) 50vw, 200px"
                   loading="eager"
+                  unoptimized
                 />
 
                 {!showOverlay && (
@@ -194,6 +198,7 @@ function MessageAttachment({
                 fill
                 className="object-contain transition-transform duration-200 group-hover:scale-105"
                 sizes="(max-width: 640px) 50vw, 200px"
+                unoptimized
               />
               <Button
                 type="button"
@@ -213,17 +218,13 @@ function MessageAttachment({
                   <Download strokeWidth={1.89} className="size-4" />
                 )}
               </Button>
+
+              <span className="absolute bottom-0 right-0 rounded-ss-md text-xs p-1 bg-accent/50">
+                {f_name.split(FILE_SEPARATOR)[1]}
+              </span>
             </div>
           );
         })}
-
-        <Button
-          type="button"
-          variant={"outline"}
-          className="w-fit h-fit p-1 px-2 rounded-md cursor-pointer absolute top-2 right-10"
-        >
-          Download All
-        </Button>
       </DialogContent>
     </Dialog>
   );
@@ -282,10 +283,12 @@ export function MessageBubble({
   m,
   incoming,
   showTail,
+  percentage,
 }: {
   m: IMessages;
   incoming: boolean;
   showTail?: boolean;
+  percentage: { fileName: string; percentage: number }[];
 }) {
   const [showOptions, setShowOptions] = useState<boolean>(false);
   const onlyEmoji = isOnlyEmoji(m.content ?? "");
@@ -345,6 +348,7 @@ export function MessageBubble({
               data={AttachementsData ?? []}
               error={error}
               incoming={incoming}
+              percentage={percentage}
             />
           </div>
         )}

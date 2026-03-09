@@ -7,8 +7,6 @@ import { MessagesSkeleton } from "./skeletons/messages-skeleton";
 import { MessageBubble } from "./message-bubble";
 import { useInView } from "react-intersection-observer";
 import SendFileAttachementDialog from "./send-file-attachment-dialog";
-import Image from "next/image";
-import { ENV } from "@/constants/env-exports";
 
 export function formatTime(iso?: string) {
   if (!iso) return "";
@@ -114,13 +112,15 @@ function ChatsMain({
   selectedFiles,
   setOpen,
   open,
-  setSelectedFiles
+  setSelectedFiles,
+  percentage,
 }: {
   recipient_id: string;
   selectedFiles: File[] | null;
   setSelectedFiles: (e: File[] | null) => void;
   setOpen: (e: boolean) => void;
   open: boolean;
+  percentage: { fileName: string; percentage: number }[];
 }) {
   const {
     data,
@@ -188,7 +188,11 @@ function ChatsMain({
 
   if (open) {
     return (
-      <SendFileAttachementDialog setSelectedFiles={setSelectedFiles} selectedFiles={selectedFiles} setOpen={setOpen} />
+      <SendFileAttachementDialog
+        setSelectedFiles={setSelectedFiles}
+        selectedFiles={selectedFiles}
+        setOpen={setOpen}
+      />
     );
   }
 
@@ -232,6 +236,7 @@ function ChatsMain({
                     showTail={showTail}
                     m={m}
                     incoming={incoming}
+                    percentage={percentage}
                   />
                 </div>
               );

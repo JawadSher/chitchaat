@@ -70,6 +70,7 @@ function Chat() {
                   selectedFiles={selectedFiles}
                   setOpen={setOpen}
                   recipient_id={contact.contact_user_id}
+                  percentage={percentage}
                 />
 
                 <ChatForm

@@ -25,6 +25,8 @@ import { toast } from "sonner";
 import { Button } from "./ui/button";
 import { FILE_SEPARATOR } from "@/constants/special-chars";
 
+const isLocalFile = (file: File | string): file is File => file instanceof File;
+
 const getFileIcon = (fileName: string) => {
   if (!fileName) return IMAGES.ICONS.FILE;
 
@@ -95,6 +97,31 @@ const getFileIcon = (fileName: string) => {
   }
 };
 
+function AttachmentImage({ url, alt }: { url: string; alt: string }) {
+  const [loading, setLoading] = useState(true);
+
+  return (
+    <div className="relative w-full h-full">
+      {loading && (
+        <div className="absolute inset-0 animate-pulse bg-gray-200 rounded-md" />
+      )}
+
+      <Image
+        src={url}
+        alt={alt}
+        fill
+        className={`object-cover transition-transform duration-200 group-hover:scale-105 ${
+          loading ? "opacity-0" : "opacity-100"
+        }`}
+        sizes="(max-width: 640px) 50vw, 200px"
+        loading="lazy"
+        unoptimized
+        onLoad={() => setLoading(false)}
+      />
+    </div>
+  );
+}
+
 function MessageAttachment({
   m,
   data,
@@ -147,24 +174,23 @@ function MessageAttachment({
         <div
           className={`grid gap-0.5 overflow-hidden h-fit cursor-pointer w-full ${getGridClass()}`}
         >
-          {visibleFiles.map((file: string, index: number) => {
+          {visibleFiles.map((file: File | string, index: number) => {
             const isLastVisible = index === visibleFiles.length - 1;
             const showOverlay = isLastVisible && remaining > 0;
+            const fileName = isLocalFile(file) ? file.name : file;
+
+            const url = isLocalFile(file)
+              ? URL.createObjectURL(file)
+              : data.length
+                ? data[index].signedUrl
+                : getFileIcon(fileName);
 
             return (
               <div
                 key={index}
                 className={`relative overflow-hidden group rounded-md aspect-square  ${data.length && incoming && "bg-primary-foreground "} ${data.length && !incoming && "bg-[#331e0b]"} ${getItemHeight(index)}`}
               >
-                <Image
-                  src={data.length ? data[index].signedUrl : getFileIcon(file)}
-                  alt={`attachment-${index + 1}`}
-                  fill
-                  className="object-cover transition-transform duration-200 group-hover:scale-105"
-                  sizes="(max-width: 640px) 50vw, 200px"
-                  loading="eager"
-                  unoptimized
-                />
+                <AttachmentImage alt="Image" url={url} />
 
                 {!showOverlay && (
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-200" />
@@ -186,20 +212,23 @@ function MessageAttachment({
       <DialogContent className="aspect-square p-2 border-none h-[80%] overflow-auto flex flex-col">
         <DialogTitle>Attachments</DialogTitle>
         {m?.file_name?.map((f_name: any, index: number) => {
+          const fileName = isLocalFile(f_name) ? f_name.name : f_name;
+
+          const showFName = isLocalFile(f_name)
+            ? f_name.name
+            : f_name.split(FILE_SEPARATOR)[1];
+
+          const url = isLocalFile(f_name)
+            ? URL.createObjectURL(f_name)
+            : data.length
+              ? data[index].signedUrl
+              : getFileIcon(fileName);
           return (
             <div
               key={f_name}
               className="relative w-full h-full bg-primary-foreground hover:bg-primary-foreground/80 rounded-md cursor-pointer"
             >
-              <Image
-                src={data.length ? data[index].signedUrl : getFileIcon(f_name)}
-                loading="eager"
-                alt={`attachment-${index + 1}`}
-                fill
-                className="object-contain transition-transform duration-200 group-hover:scale-105"
-                sizes="(max-width: 640px) 50vw, 200px"
-                unoptimized
-              />
+              <AttachmentImage alt="Image" url={url} />
               <Button
                 type="button"
                 variant={"outline"}
@@ -220,7 +249,7 @@ function MessageAttachment({
               </Button>
 
               <span className="absolute bottom-0 right-0 rounded-ss-md text-xs p-1 bg-accent/50">
-                {f_name.split(FILE_SEPARATOR)[1]}
+                {showFName}
               </span>
             </div>
           );
@@ -296,7 +325,9 @@ export function MessageBubble({
   const emojiCount = onlyEmoji ? getEmojiCount(m.content ?? "") : 0;
 
   const { data: AttachementsData, error } = usePreviewAttachement({
-    path: m.file_name?.map((name: string) => `${m.sender_id}/${name}`) ?? [],
+    path:
+      m.file_name?.map((name: string | File) => `${m.sender_id}/${name}`) ?? [],
+    isEnabled: !m.file_name?.some((file) => file instanceof File),
   });
 
   if (error) toast.error(error.message);

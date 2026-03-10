@@ -65,28 +65,17 @@ function ChatForm({
   setPercentage: (fileName: string, percentage: number) => void;
 }) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const { mutate: sendMessageFn } = useSendMessage();
+  const { mutate: sendMessageFn } = useSendMessage({ setPercentage });
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { session } = useSession();
 
   const form = useForm({
     defaultValues: { message: "", file: undefined } as FormValues,
     validators: { onSubmit: formSchema },
     onSubmit: async ({ value }: { value: FormValues }) => {
-      const uploadedFiles: string[] = [];
-      if (selectedFiles) {
-        for (const file of selectedFiles) {
-          const res = await uploadFile({ file, session, setPercentage });
-          uploadedFiles.push(res as string);
-        }
-      }
-
       sendMessageFn({
-        message_type: getMessageType(value.message, uploadedFiles),
         content: value.message ?? null,
         recipient_id,
-        file_name: uploadedFiles,
-        file_size: [...(selectedFiles?.map((file: any) => file.size) || [])],
+        selectedFiles,
       });
       setOpen(false);
       setSelectedFiles(null);

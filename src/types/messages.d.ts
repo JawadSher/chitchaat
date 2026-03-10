@@ -16,7 +16,7 @@ export interface IMessages {
     | "image-file"
     | "voice_note";
   content: string;
-  file_name?: string[];
+  file_name?: string[] | File[];
   file_size?: string[];
   duration?: number;
   reply_to_message_id?: string;

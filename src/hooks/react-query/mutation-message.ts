@@ -1,33 +1,46 @@
+import { getMessageType } from "@/lib/get-message-type";
+import { uploadFile } from "@/lib/supabase/upload-file";
 import { useSupabase } from "@/providers/supabase-provider";
 import { deleteMessage, sendMessage } from "@/services/message.service";
 import { IMessages } from "@/types/messages";
 import { ISendMessageProps } from "@/types/send-message-props";
-import { useUser } from "@clerk/nextjs";
+import { useSession, useUser } from "@clerk/nextjs";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-export const useSendMessage = () => {
+export const useSendMessage = ({
+  setPercentage,
+}: {
+  setPercentage: (fileName: string, percentage: number) => void;
+}) => {
   const supabase = useSupabase();
   const { user } = useUser();
   const client = useQueryClient();
+  const { session } = useSession();
 
   return useMutation({
     mutationKey: ["sendMessage"],
     mutationFn: async ({
-      message_type,
       content,
-      file_name,
-      file_size,
       duration,
       reply_to_message_id,
       recipient_id,
+      selectedFiles,
     }: ISendMessageProps) => {
+      const uploadedFiles: string[] = [];
+      if (selectedFiles) {
+        for (const file of selectedFiles) {
+          const res = await uploadFile({ file, session, setPercentage });
+          uploadedFiles.push(res as string);
+        }
+      }
+
       return sendMessage(supabase, {
         sender_id: user?.id!,
-        message_type,
+        message_type: getMessageType(content, uploadedFiles),
         content,
-        file_name,
-        file_size,
+        file_name: uploadedFiles,
+        file_size: [...(selectedFiles?.map((file: any) => file.size) || [])],
         duration,
         reply_to_message_id,
         recipient_id,
@@ -44,13 +57,15 @@ export const useSendMessage = () => {
         variables.recipient_id,
       ]);
 
+      const uploadedFiles = variables.selectedFiles?.map((f) => f.name) ?? [];
+
       const optimisticMessage: IMessages = {
         id: crypto.randomUUID(),
         sender_id: user?.id!,
         recipient_id: variables.recipient_id!,
-        message_type: variables.message_type,
+        message_type: getMessageType(variables.content, uploadedFiles),
         content: variables.content ?? "",
-        file_name: variables.file_name,
+        file_name: variables.selectedFiles ?? undefined,
         file_size: variables.file_size,
         duration: variables.duration,
         reply_to_message_id: variables.reply_to_message_id,

@@ -1,6 +1,6 @@
 export interface ISendMessageProps {
   sender_id?: string;
-  message_type:
+  message_type?:
     | "text"
     | "image"
     | "video"
@@ -19,4 +19,5 @@ export interface ISendMessageProps {
   duration?: number;
   reply_to_message_id?: string;
   recipient_id?: string;
+  selectedFiles?: File[] | null;
 }

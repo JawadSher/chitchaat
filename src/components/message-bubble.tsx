@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown, Download, Trash } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useDeleteMessage } from "@/hooks/react-query/mutation-message";
 import { Loader } from "./loader";
 import { getEmojiCount, getEmojiSize, isOnlyEmoji } from "@/lib/emoji";
@@ -203,6 +203,9 @@ function MessageAttachment({
               : data.length
                 ? data[index].signedUrl
                 : getFileIcon(fileName);
+
+            console.log("----> URL", url);
+            console.log('-------> M', m);
 
             return (
               <div
@@ -466,7 +469,7 @@ export function MessageBubble({
               </span>
             )}
 
-            {!incoming || (
+            {!incoming && (
               <OptionsMenu
                 isOnlyEmoji={onlyEmoji}
                 m={m}

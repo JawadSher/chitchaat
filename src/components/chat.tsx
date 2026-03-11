@@ -18,9 +18,7 @@ function Chat() {
   const [selectedFiles, setSelectedFiles] = useState<File[] | null>(null);
   const [activeTab, setActiveTab] = useState<string>("empty");
   const { data, error, isLoading } = useGetContacts();
-  const [percentage, setPercentage] = useState<
-    [{ fileName: string; percentage: number }] | []
-  >([]);
+  const [percentage, setPercentage] = useState<any>(null);
 
   if (error) {
     return (

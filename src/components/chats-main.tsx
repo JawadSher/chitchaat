@@ -120,7 +120,7 @@ function ChatsMain({
   setSelectedFiles: (e: File[] | null) => void;
   setOpen: (e: boolean) => void;
   open: boolean;
-  percentage: { fileName: string; percentage: number }[];
+  percentage: any;
 }) {
   const {
     data,

@@ -24,6 +24,7 @@ import {
 import { toast } from "sonner";
 import { Button } from "./ui/button";
 import { FILE_SEPARATOR } from "@/constants/special-chars";
+import { CircularProgress } from "./cercular-progress";
 
 const isLocalFile = (file: File | string): file is File => file instanceof File;
 
@@ -97,7 +98,19 @@ const getFileIcon = (fileName: string) => {
   }
 };
 
-function AttachmentImage({ url, alt }: { url: string; alt: string }) {
+function AttachmentImage({
+  url,
+  alt,
+  percentage,
+  totalLength,
+  isOpen,
+}: {
+  url: string;
+  alt: string;
+  totalLength: number;
+  percentage: number;
+  isOpen: boolean;
+}) {
   const [loading, setLoading] = useState(true);
 
   return (
@@ -118,6 +131,11 @@ function AttachmentImage({ url, alt }: { url: string; alt: string }) {
         unoptimized
         onLoad={() => setLoading(false)}
       />
+
+      {isOpen && percentage > 0 && <CircularProgress value={percentage} />}
+      {!isOpen && percentage > 0 && totalLength < 3 && (
+        <CircularProgress value={percentage} />
+      )}
     </div>
   );
 }
@@ -139,6 +157,7 @@ function MessageAttachment({
     setDownFName,
     downFName,
   });
+  const [open, setOpen] = useState<boolean>(false);
 
   const files = m.file_name || [];
   const visibleFiles = files.slice(0, 4);
@@ -169,7 +188,7 @@ function MessageAttachment({
   }
 
   return (
-    <Dialog>
+    <Dialog onOpenChange={setOpen} open={open}>
       <DialogTrigger asChild>
         <div
           className={`grid gap-0.5 overflow-hidden h-fit cursor-pointer w-full ${getGridClass()}`}
@@ -190,7 +209,19 @@ function MessageAttachment({
                 key={index}
                 className={`relative overflow-hidden group rounded-md aspect-square  ${data.length && incoming && "bg-primary-foreground "} ${data.length && !incoming && "bg-[#331e0b]"} ${getItemHeight(index)}`}
               >
-                <AttachmentImage alt="Image" url={url} />
+                <AttachmentImage
+                  alt="Image"
+                  url={url}
+                  totalLength={visibleFiles.length}
+                  percentage={
+                    percentage?.find(
+                      (p) =>
+                        p.fileName ===
+                        (file instanceof File ? file.name : file),
+                    )?.percentage ?? 0
+                  }
+                  isOpen={open}
+                />
 
                 {!showOverlay && (
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-200" />
@@ -201,6 +232,12 @@ function MessageAttachment({
                     <span className="text-white text-xl font-semibold tracking-tight">
                       +{remaining}
                     </span>
+                  </div>
+                )}
+
+                {percentage && percentage.length && visibleFiles.length > 2 && (
+                  <div className="absolute top-50 right-50 p-2 bg-primary-foreground rounded-full">
+                    <Loader className="size-5" />
                   </div>
                 )}
               </div>
@@ -228,7 +265,19 @@ function MessageAttachment({
               key={f_name}
               className="relative w-full h-full bg-primary-foreground hover:bg-primary-foreground/80 rounded-md cursor-pointer"
             >
-              <AttachmentImage alt="Image" url={url} />
+              <AttachmentImage
+                alt="Image"
+                url={url}
+                totalLength={visibleFiles.length}
+                percentage={
+                  percentage?.find(
+                    (p) =>
+                      p.fileName ===
+                      (f_name instanceof File ? f_name.name : f_name),
+                  )?.percentage ?? 0
+                }
+                isOpen={open}
+              />
               <Button
                 type="button"
                 variant={"outline"}
@@ -417,7 +466,7 @@ export function MessageBubble({
               </span>
             )}
 
-            {!incoming && (
+            {!incoming || (
               <OptionsMenu
                 isOnlyEmoji={onlyEmoji}
                 m={m}

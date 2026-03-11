@@ -11,7 +11,7 @@ import { toast } from "sonner";
 export const useSendMessage = ({
   setPercentage,
 }: {
-  setPercentage: (fileName: string, percentage: number) => void;
+  setPercentage: any;
 }) => {
   const supabase = useSupabase();
   const { user } = useUser();
@@ -115,6 +115,10 @@ export const useSendMessage = ({
       client.invalidateQueries({
         queryKey: ["messages", variables.recipient_id],
       });
+    },
+
+    onSuccess: () => {
+      setPercentage(null)
     },
   });
 };

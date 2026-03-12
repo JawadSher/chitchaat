@@ -84,41 +84,29 @@ const getFileIcon = (fileName: string) => {
   }
 };
 
-function useBlobUrls(files: (File | string)[]): string[] {
+function useBlobUrls(files: (File | string)[]) {
   const mapRef = useRef<Map<File, string>>(new Map());
 
-  const urls = useMemo(() => {
-    return files.map((file) => {
-      if (!isLocalFile(file)) return file;
-      if (!mapRef.current.has(file)) {
-        mapRef.current.set(file, window.URL.createObjectURL(file));
-      }
-      return mapRef.current.get(file)!;
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [files]);
+  const getUrl = (file: File | string) => {
+    if (!(file instanceof File)) return file;
 
-  useEffect(() => {
-    const currentFiles = new Set(files.filter(isLocalFile));
-    for (const [file, url] of mapRef.current.entries()) {
-      if (!currentFiles.has(file)) {
-        window.URL.revokeObjectURL(url);
-        mapRef.current.delete(file);
-      }
+    if (!mapRef.current.has(file)) {
+      mapRef.current.set(file, URL.createObjectURL(file));
     }
-  }, [files]);
+
+    return mapRef.current.get(file)!;
+  };
 
   useEffect(() => {
-    const map = mapRef.current;
     return () => {
-      for (const url of map.values()) {
+      for (const url of mapRef.current.values()) {
         URL.revokeObjectURL(url);
       }
-      map.clear();
+      mapRef.current.clear();
     };
   }, []);
 
-  return urls;
+  return getUrl;
 }
 
 function AttachmentImage({
@@ -127,12 +115,14 @@ function AttachmentImage({
   percentage,
   totalLength,
   isOpen,
+  isWaiting,
 }: {
   url: string;
   alt: string;
   totalLength: number;
   percentage: number;
   isOpen: boolean;
+  isWaiting: boolean;
 }) {
   return (
     <div className="relative w-full h-full">
@@ -146,9 +136,11 @@ function AttachmentImage({
         unoptimized
       />
 
-      {isOpen && percentage > 0 && <CircularProgress value={percentage} />}
+      {isOpen && percentage > 0 && (
+        <CircularProgress isWaiting={isWaiting} value={percentage} />
+      )}
       {!isOpen && percentage > 0 && totalLength < 3 && (
-        <CircularProgress value={percentage} />
+        <CircularProgress value={percentage} isWaiting={isWaiting} />
       )}
     </div>
   );
@@ -174,8 +166,6 @@ function MessageAttachment({
   const [open, setOpen] = useState<boolean>(false);
 
   const files = m.file_name || [];
-
-  const blobUrls = useBlobUrls(files as (File | string)[]);
 
   const visibleFiles = files.slice(0, 4);
   const remaining = files.length - 4;
@@ -204,6 +194,8 @@ function MessageAttachment({
     downloadFn({ path });
   }
 
+  const getBlobUrl = useBlobUrls(files as (File | string)[]);
+
   return (
     <Dialog onOpenChange={setOpen} open={open}>
       <DialogTrigger asChild>
@@ -216,7 +208,7 @@ function MessageAttachment({
             const fileName = isLocalFile(file) ? file.name : file;
 
             const url = isLocalFile(file)
-              ? blobUrls[index]
+              ? getBlobUrl(file)
               : data.length
                 ? data[index].signedUrl
                 : getFileIcon(fileName);
@@ -224,16 +216,23 @@ function MessageAttachment({
             const percent =
               percentage?.find((p) => p.fileName === fileName)?.percentage || 0;
 
+            const isWaiting =
+              isLocalFile(file) &&
+              percentage &&
+              percentage.length > 0 &&
+              !percentage.find((p) => p.fileName === fileName);
+
             return (
               <div
                 key={index}
                 className={`relative overflow-hidden group rounded-md aspect-square  ${data.length && incoming && "bg-primary-foreground "} ${data.length && !incoming && "bg-[#331e0b]"} ${getItemHeight(index)}`}
               >
                 <AttachmentImage
+                  isWaiting={isWaiting}
                   alt="Image"
                   url={url}
                   totalLength={visibleFiles.length}
-                  percentage={percent}
+                  percentage={isWaiting ? 1 : percent}
                   isOpen={open}
                 />
 
@@ -270,7 +269,7 @@ function MessageAttachment({
             : f_name.split(FILE_SEPARATOR)[1];
 
           const url = isLocalFile(f_name)
-            ? blobUrls[index]
+            ? getBlobUrl(f_name)
             : data.length
               ? data[index].signedUrl
               : getFileIcon(fileName);
@@ -278,16 +277,23 @@ function MessageAttachment({
           const percent =
             percentage?.find((p) => p.fileName === fileName)?.percentage || 0;
 
+          const isWaiting =
+            isLocalFile(f_name) &&
+            percentage &&
+            percentage.length > 0 &&
+            !percentage.find((p) => p.fileName === fileName);
+
           return (
             <div
               key={index}
               className="relative w-full h-full bg-primary-foreground hover:bg-primary-foreground/80 rounded-md cursor-pointer"
             >
               <AttachmentImage
+                isWaiting={isWaiting}
                 alt="Image"
                 url={url}
                 totalLength={visibleFiles.length}
-                percentage={percent || 0}
+                percentage={isWaiting ? 1 : percent}
                 isOpen={open}
               />
               <Button

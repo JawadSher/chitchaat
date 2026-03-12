@@ -8,11 +8,7 @@ import { useSession, useUser } from "@clerk/nextjs";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-export const useSendMessage = ({
-  setPercentage,
-}: {
-  setPercentage: any;
-}) => {
+export const useSendMessage = ({ setPercentage }: { setPercentage: any }) => {
   const supabase = useSupabase();
   const { user } = useUser();
   const client = useQueryClient();
@@ -30,7 +26,11 @@ export const useSendMessage = ({
       const uploadedFiles: string[] = [];
       if (selectedFiles) {
         for (const file of selectedFiles) {
-          const res = await uploadFile({ file, session, setPercentage });
+          const res = await uploadFile({
+            file,
+            session,
+            setPercentage,
+          });
           uploadedFiles.push(res as string);
         }
       }
@@ -85,7 +85,7 @@ export const useSendMessage = ({
               if (index === 0) {
                 return {
                   ...page,
-                  data: [...page.data, optimisticMessage],
+                  data: [optimisticMessage, ...page.data],
                 };
               }
 
@@ -118,7 +118,7 @@ export const useSendMessage = ({
     },
 
     onSuccess: () => {
-      setPercentage(null)
+      setPercentage(null);
     },
   });
 };

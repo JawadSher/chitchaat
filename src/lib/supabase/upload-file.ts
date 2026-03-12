@@ -9,7 +9,7 @@ export async function uploadFile({
 }: {
   file: File;
   session: any;
-  setPercentage: (fileName: string, percentage: number) => void;
+  setPercentage: any;
 }) {
   return new Promise(async (resolve, reject) => {
     const token = await session.getToken({ template: "supabase" });
@@ -47,10 +47,13 @@ export async function uploadFile({
         );
       },
       onProgress: function (bytesUploaded, bytesTotal) {
-        const percentage = ((bytesUploaded / bytesTotal) * 100).toFixed(2);
-        setPercentage(fileName.split(FILE_SEPARATOR)[1], Number(percentage));
+        const percentage = Math.round((bytesUploaded / bytesTotal) * 100);
+        const cleanName = fileName.split(FILE_SEPARATOR)[1];
+
+        setPercentage(cleanName, Number(percentage));
       },
       onSuccess: function () {
+        setPercentage(null)
         resolve(fileName);
       },
     });

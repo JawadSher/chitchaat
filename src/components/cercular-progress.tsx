@@ -1,12 +1,28 @@
-export function CircularProgress({ value }: { value: number }) {
+import { Loader } from "./loader";
+
+export function CircularProgress({
+  value,
+  isWaiting,
+}: {
+  value: number;
+  isWaiting: boolean;
+}) {
   const radius = 45;
   const stroke = 4;
   const normalizedRadius = radius - stroke;
   const circumference = normalizedRadius * 2 * Math.PI;
   const strokeDashoffset = circumference - (value / 100) * circumference;
 
+  if (isWaiting) {
+    return (
+      <div className="relative w-full h-full flex items-center justify-center bg-background/50">
+        <Loader className="size-6" />
+      </div>
+    );
+  }
+
   return (
-    <div className="relative w-full h-full flex items-center justify-center bg-primary-foreground/50">
+    <div className="relative w-full h-full flex items-center justify-center bg-background/50">
       <svg
         viewBox={`0 0 ${radius * 2} ${radius * 2}`}
         className="max-w-20 max-h-20"

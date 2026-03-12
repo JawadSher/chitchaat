@@ -13,12 +13,17 @@ import ChatAreaHeader from "./chat-area-header";
 import { useGetContacts } from "@/hooks/react-query/query-contact";
 import ChatsMain from "./chats-main";
 
+export type UploadProgress = {
+  fileName: string;
+  percentage: number;
+};
+
 function Chat() {
   const [open, setOpen] = useState<boolean>(false);
   const [selectedFiles, setSelectedFiles] = useState<File[] | null>(null);
   const [activeTab, setActiveTab] = useState<string>("empty");
   const { data, error, isLoading } = useGetContacts();
-  const [percentage, setPercentage] = useState<any>(null);
+  const [percentage, setPercentage] = useState<UploadProgress[] | null>(null);
 
   if (error) {
     return (

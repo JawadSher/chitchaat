@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown, Download, Trash } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useDeleteMessage } from "@/hooks/react-query/mutation-message";
 import { Loader } from "./loader";
 import { getEmojiCount, getEmojiSize, isOnlyEmoji } from "@/lib/emoji";
@@ -34,35 +34,26 @@ const getFileIcon = (fileName: string) => {
   const extension = fileName.split(".").pop()?.toLowerCase();
 
   switch (extension) {
-    // Documents
     case "doc":
     case "docx":
       return IMAGES.ICONS.WORD;
-
     case "xls":
     case "xlsx":
     case "csv":
       return IMAGES.ICONS.EXCEL;
-
     case "ppt":
     case "pptx":
       return IMAGES.ICONS.PPT;
-
-    // Archives
     case "zip":
     case "rar":
     case "7z":
     case "tar":
     case "gz":
       return IMAGES.ICONS.ZIP;
-
-    // Text
     case "txt":
     case "md":
     case "pdf":
       return IMAGES.ICONS.FILE;
-
-    // Images
     case "png":
     case "jpg":
     case "jpeg":
@@ -74,8 +65,6 @@ const getFileIcon = (fileName: string) => {
     case "tiff":
     case "avif":
       return IMAGES.ICONS.IMAGE;
-
-    // Video
     case "mp4":
     case "mov":
     case "avi":
@@ -83,8 +72,6 @@ const getFileIcon = (fileName: string) => {
     case "webm":
     case "flv":
       return IMAGES.ICONS.VIDEO;
-
-    // Audio
     case "mp3":
     case "wav":
     case "ogg":
@@ -92,11 +79,47 @@ const getFileIcon = (fileName: string) => {
     case "flac":
     case "m4a":
       return IMAGES.ICONS.AUDIO;
-
     default:
       return IMAGES.ICONS.FILE;
   }
 };
+
+function useBlobUrls(files: (File | string)[]): string[] {
+  const mapRef = useRef<Map<File, string>>(new Map());
+
+  const urls = useMemo(() => {
+    return files.map((file) => {
+      if (!isLocalFile(file)) return file;
+      if (!mapRef.current.has(file)) {
+        mapRef.current.set(file, window.URL.createObjectURL(file));
+      }
+      return mapRef.current.get(file)!;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [files]);
+
+  useEffect(() => {
+    const currentFiles = new Set(files.filter(isLocalFile));
+    for (const [file, url] of mapRef.current.entries()) {
+      if (!currentFiles.has(file)) {
+        window.URL.revokeObjectURL(url);
+        mapRef.current.delete(file);
+      }
+    }
+  }, [files]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    return () => {
+      for (const url of map.values()) {
+        URL.revokeObjectURL(url);
+      }
+      map.clear();
+    };
+  }, []);
+
+  return urls;
+}
 
 function AttachmentImage({
   url,
@@ -111,25 +134,16 @@ function AttachmentImage({
   percentage: number;
   isOpen: boolean;
 }) {
-  const [loading, setLoading] = useState(true);
-
   return (
     <div className="relative w-full h-full">
-      {loading && (
-        <div className="absolute inset-0 animate-pulse bg-gray-200 rounded-md" />
-      )}
-
       <Image
         src={url}
         alt={alt}
         fill
-        className={`object-cover transition-transform duration-200 group-hover:scale-105 ${
-          loading ? "opacity-0" : "opacity-100"
-        }`}
+        className={`object-cover`}
         sizes="(max-width: 640px) 50vw, 200px"
         loading="lazy"
         unoptimized
-        onLoad={() => setLoading(false)}
       />
 
       {isOpen && percentage > 0 && <CircularProgress value={percentage} />}
@@ -160,6 +174,9 @@ function MessageAttachment({
   const [open, setOpen] = useState<boolean>(false);
 
   const files = m.file_name || [];
+
+  const blobUrls = useBlobUrls(files as (File | string)[]);
+
   const visibleFiles = files.slice(0, 4);
   const remaining = files.length - 4;
 
@@ -199,13 +216,13 @@ function MessageAttachment({
             const fileName = isLocalFile(file) ? file.name : file;
 
             const url = isLocalFile(file)
-              ? URL.createObjectURL(file)
+              ? blobUrls[index]
               : data.length
                 ? data[index].signedUrl
                 : getFileIcon(fileName);
 
-            console.log("----> URL", url);
-            console.log('-------> M', m);
+            const percent =
+              percentage?.find((p) => p.fileName === fileName)?.percentage || 0;
 
             return (
               <div
@@ -216,13 +233,7 @@ function MessageAttachment({
                   alt="Image"
                   url={url}
                   totalLength={visibleFiles.length}
-                  percentage={
-                    percentage?.find(
-                      (p) =>
-                        p.fileName ===
-                        (file instanceof File ? file.name : file),
-                    )?.percentage ?? 0
-                  }
+                  percentage={percent}
                   isOpen={open}
                 />
 
@@ -259,26 +270,24 @@ function MessageAttachment({
             : f_name.split(FILE_SEPARATOR)[1];
 
           const url = isLocalFile(f_name)
-            ? URL.createObjectURL(f_name)
+            ? blobUrls[index]
             : data.length
               ? data[index].signedUrl
               : getFileIcon(fileName);
+
+          const percent =
+            percentage?.find((p) => p.fileName === fileName)?.percentage || 0;
+
           return (
             <div
-              key={f_name}
+              key={index}
               className="relative w-full h-full bg-primary-foreground hover:bg-primary-foreground/80 rounded-md cursor-pointer"
             >
               <AttachmentImage
                 alt="Image"
                 url={url}
                 totalLength={visibleFiles.length}
-                percentage={
-                  percentage?.find(
-                    (p) =>
-                      p.fileName ===
-                      (f_name instanceof File ? f_name.name : f_name),
-                  )?.percentage ?? 0
-                }
+                percentage={percent || 0}
                 isOpen={open}
               />
               <Button
@@ -376,10 +385,15 @@ export function MessageBubble({
   const emojiSize = onlyEmoji ? getEmojiSize(m.content ?? "") : "text-sm";
   const emojiCount = onlyEmoji ? getEmojiCount(m.content ?? "") : 0;
 
+  const hasLocalFiles =
+    m.file_name?.some((file) => file instanceof File) ?? false;
+
   const { data: AttachementsData, error } = usePreviewAttachement({
-    path:
-      m.file_name?.map((name: string | File) => `${m.sender_id}/${name}`) ?? [],
-    isEnabled: !m.file_name?.some((file) => file instanceof File),
+    path: !hasLocalFiles
+      ? (m.file_name?.map((name: string | File) => `${m.sender_id}/${name}`) ??
+        [])
+      : [],
+    isEnabled: !hasLocalFiles && (m.file_name?.length ?? 0) > 0,
   });
 
   if (error) toast.error(error.message);

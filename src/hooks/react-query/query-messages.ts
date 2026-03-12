@@ -7,7 +7,6 @@ import {
 import { useUser } from "@clerk/nextjs";
 import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { toastManager } from "@/components/ui/toast";
 
 export const useGetMessages = ({
   recipient_id,

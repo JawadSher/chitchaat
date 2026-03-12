@@ -48,7 +48,7 @@ export async function uploadFile({
       },
       onProgress: function (bytesUploaded, bytesTotal) {
         const percentage = ((bytesUploaded / bytesTotal) * 100).toFixed(2);
-        setPercentage(fileName, Number(percentage));
+        setPercentage(fileName.split(FILE_SEPARATOR)[1], Number(percentage));
       },
       onSuccess: function () {
         resolve(fileName);

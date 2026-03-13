@@ -15,14 +15,14 @@ export function CircularProgress({
 
   if (isWaiting) {
     return (
-      <div className="relative w-full h-full flex items-center justify-center bg-background/50">
+      <div className="absolute inset-0 flex items-center justify-center bg-background/50 z-20">
         <Loader className="size-6" />
       </div>
     );
   }
 
   return (
-    <div className="relative w-full h-full flex items-center justify-center bg-background/50">
+    <div className="absolute inset-0 flex items-center justify-center bg-background/50 z-20">
       <svg
         viewBox={`0 0 ${radius * 2} ${radius * 2}`}
         className="max-w-20 max-h-20"

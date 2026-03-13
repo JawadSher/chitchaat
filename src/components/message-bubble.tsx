@@ -1,5 +1,4 @@
 import { IMessages } from "@/types/messages";
-import Image from "next/image";
 import { DoubleTick, formatTime } from "./chats-main";
 import {
   DropdownMenu,
@@ -11,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown, Download, Trash } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDeleteMessage } from "@/hooks/react-query/mutation-message";
 import { Loader } from "./loader";
 import { getEmojiCount, getEmojiSize, isOnlyEmoji } from "@/lib/emoji";
@@ -25,6 +24,8 @@ import { toast } from "sonner";
 import { Button } from "./ui/button";
 import { FILE_SEPARATOR } from "@/constants/special-chars";
 import { CircularProgress } from "./cercular-progress";
+import FilePreview from "reactjs-file-preview";
+import Image from "next/image";
 
 const isLocalFile = (file: File | string): file is File => file instanceof File;
 
@@ -84,7 +85,7 @@ const getFileIcon = (fileName: string) => {
   }
 };
 
-function useBlobUrls(files: (File | string)[]) {
+function useBlobUrls() {
   const mapRef = useRef<Map<File, string>>(new Map());
 
   const getUrl = (file: File | string) => {
@@ -109,13 +110,46 @@ function useBlobUrls(files: (File | string)[]) {
   return getUrl;
 }
 
-function AttachmentImage({
+function NoPreview({
+  fileName,
+  isOpen,
+}: {
+  fileName: string;
+  isOpen: boolean;
+}) {
+  const iconSrc = getFileIcon(fileName);
+
+  if (!isOpen) {
+    return (
+      <Image
+        src={iconSrc}
+        alt={fileName}
+        width={100}
+        height={100}
+        className="flex items-center justify-center  w-full h-full p-4"
+        loading="lazy"
+      />
+    );
+  }
+
+  return (
+    <div className="flex flex-col items-center justify-center w-full h-full p-4">
+      <Image src={iconSrc} alt={fileName} width={130} height={130} />
+
+      <p className="text-center text-base sm:text-lg md:text-xl font-semibold text-accent-foreground">
+        No preview available
+      </p>
+    </div>
+  );
+}
+
+function PreviewAttachement({
   url,
-  alt,
   percentage,
   totalLength,
   isOpen,
   isWaiting,
+  fileName,
 }: {
   url: string;
   alt: string;
@@ -123,18 +157,60 @@ function AttachmentImage({
   percentage: number;
   isOpen: boolean;
   isWaiting: boolean;
+  fileName: string;
 }) {
+  const previewExt = [
+    "png",
+    "jpg",
+    "jpeg",
+    "gif",
+    "webp",
+    "bmp",
+    "svg",
+    "ico",
+    "tiff",
+    "tif",
+    "avif",
+    "heic",
+    "heif",
+    "mp4",
+    "webm",
+    "ogg",
+    "mov",
+    "avi",
+    "mkv",
+    "flv",
+    "wmv",
+    "m4v",
+    "3gp",
+    "3g2",
+    "mp3",
+    "wav",
+    "ogg",
+    "aac",
+    "flac",
+    "m4a",
+    "wma",
+    "opus",
+    "amr",
+    "aiff",
+    "pdf",
+  ];
+  const extension = fileName?.split(".")[1];
+
   return (
     <div className="relative w-full h-full">
-      <Image
-        src={url}
-        alt={alt}
-        fill
-        className={`object-cover`}
-        sizes="(max-width: 640px) 50vw, 200px"
-        loading="lazy"
-        unoptimized
-      />
+      {previewExt.includes(extension) ? (
+        <div className="w-full h-full">
+          <FilePreview
+            preview={url}
+            placeHolderImage={url}
+            errorImage="No preview available yet."
+          />
+        </div>
+      ) : (
+        <NoPreview isOpen={isOpen} fileName={fileName} />
+      )}
 
       {isOpen && percentage > 0 && (
         <CircularProgress isWaiting={isWaiting} value={percentage} />
@@ -194,7 +270,7 @@ function MessageAttachment({
     downloadFn({ path });
   }
 
-  const getBlobUrl = useBlobUrls(files as (File | string)[]);
+  const getBlobUrl = useBlobUrls();
 
   return (
     <Dialog onOpenChange={setOpen} open={open}>
@@ -227,13 +303,14 @@ function MessageAttachment({
                 key={index}
                 className={`relative overflow-hidden group rounded-md aspect-square  ${data.length && incoming && "bg-primary-foreground "} ${data.length && !incoming && "bg-[#331e0b]"} ${getItemHeight(index)}`}
               >
-                <AttachmentImage
+                <PreviewAttachement
                   isWaiting={isWaiting}
-                  alt="Image"
+                  alt={m.message_type}
                   url={url}
                   totalLength={visibleFiles.length}
                   percentage={isWaiting ? 1 : percent}
                   isOpen={open}
+                  fileName={fileName}
                 />
 
                 {!showOverlay && (
@@ -288,13 +365,14 @@ function MessageAttachment({
               key={index}
               className="relative w-full h-full bg-primary-foreground hover:bg-primary-foreground/80 rounded-md cursor-pointer"
             >
-              <AttachmentImage
+              <PreviewAttachement
                 isWaiting={isWaiting}
-                alt="Image"
+                alt={m.message_type}
                 url={url}
                 totalLength={visibleFiles.length}
                 percentage={isWaiting ? 1 : percent}
                 isOpen={open}
+                fileName={fileName}
               />
               <Button
                 type="button"

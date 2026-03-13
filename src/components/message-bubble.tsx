@@ -173,17 +173,6 @@ function PreviewAttachement({
     "avif",
     "heic",
     "heif",
-    "mp4",
-    "webm",
-    "ogg",
-    "mov",
-    "avi",
-    "mkv",
-    "flv",
-    "wmv",
-    "m4v",
-    "3gp",
-    "3g2",
     "mp3",
     "wav",
     "ogg",
@@ -334,6 +323,7 @@ function MessageAttachment({
             );
           })}
         </div>
+
       </DialogTrigger>
 
       <DialogContent className="aspect-square p-2 border-none h-[80%] overflow-auto flex flex-col">

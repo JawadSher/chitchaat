@@ -81,22 +81,48 @@ const getFileIcon = (file: File | null) => {
     case "doc":
     case "docx":
       return IMAGES.ICONS.WORD;
-
     case "xls":
     case "xlsx":
+    case "csv":
       return IMAGES.ICONS.EXCEL;
-
     case "ppt":
     case "pptx":
       return IMAGES.ICONS.PPT;
-
     case "zip":
     case "rar":
+    case "7z":
+    case "tar":
+    case "gz":
       return IMAGES.ICONS.ZIP;
-
     case "txt":
+    case "md":
+    case "pdf":
       return IMAGES.ICONS.FILE;
-
+    case "png":
+    case "jpg":
+    case "jpeg":
+    case "gif":
+    case "webp":
+    case "svg":
+    case "bmp":
+    case "ico":
+    case "tiff":
+    case "avif":
+      return IMAGES.ICONS.IMAGE;
+    case "mp4":
+    case "mov":
+    case "avi":
+    case "mkv":
+    case "webm":
+    case "flv":
+      return IMAGES.ICONS.VIDEO;
+    case "mp3":
+    case "wav":
+    case "ogg":
+    case "aac":
+    case "flac":
+    case "m4a":
+      return IMAGES.ICONS.AUDIO;
     default:
       return IMAGES.ICONS.FILE;
   }
@@ -285,7 +311,7 @@ function SendFileAttachementDialog({
                 <div className="h-full w-fit flex items-center justify-center">
                   <div className={[getPreviewClass(file)].join(" ")}>
                     {file.type.startsWith("image/") ||
-                    file.type.startsWith("video/") ||
+                    // file.type.startsWith("video/") ||
                     file.type.startsWith("audio/") ||
                     file.type === "application/pdf" ? (
                       <FilePreview preview={getFilePreview(file, previewURL)} />

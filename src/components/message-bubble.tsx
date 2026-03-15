@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, Download, Trash } from "lucide-react";
+import { ChevronDown, Download, Play, Trash } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useDeleteMessage } from "@/hooks/react-query/mutation-message";
 import { Loader } from "./loader";
@@ -26,6 +26,21 @@ import { FILE_SEPARATOR } from "@/constants/special-chars";
 import { CircularProgress } from "./cercular-progress";
 import FilePreview from "reactjs-file-preview";
 import Image from "next/image";
+import { useVoiceVisualizer, VoiceVisualizer } from "react-voice-visualizer";
+import VoiceNoteBubbleSkeleton from "./skeletons/voice-note-bubble-skeleton";
+import UserAvatar from "./avatar";
+
+const FileAttachementType = [
+  "image",
+  "video",
+  "file",
+  "text-image",
+  "text-video",
+  "text-file",
+  "text-image-file",
+  "text-audio",
+  "image-file",
+];
 
 const isLocalFile = (file: File | string): file is File => file instanceof File;
 
@@ -323,7 +338,6 @@ function MessageAttachment({
             );
           })}
         </div>
-
       </DialogTrigger>
 
       <DialogContent className="aspect-square p-2 border-none h-[80%] overflow-auto flex flex-col">
@@ -393,6 +407,97 @@ function MessageAttachment({
     </Dialog>
   );
 }
+function VoiceNote({
+  m,
+  data,
+  incoming,
+  error,
+}: {
+  m: IMessages;
+  incoming: boolean;
+  error: Error | null;
+  data: any;
+}) {
+  const controls = useVoiceVisualizer();
+  const { setPreloadedAudioBlob, togglePauseResume, formattedDuration,  } =
+    controls;
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const audio = m?.file_name?.[0];
+    if (!audio || !data) return;
+
+    async function loadAudio() {
+      setIsLoading(true);
+      try {
+        if (audio instanceof File) {
+          setPreloadedAudioBlob(audio);
+        } else {
+          const res = await fetch(data[0].signedUrl);
+          const blob = await res.blob();
+          setPreloadedAudioBlob(blob);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadAudio();
+  }, [m?.file_name, data]);
+
+  if (error) {
+    return <div className="flex text-sm text-destructive">{error.message}</div>;
+  }
+
+  return (
+    <div
+      className={`flex items-start justify-center gap-2 ${incoming && "flex-row-reverse"}`}
+    >
+      {isLoading ? (
+        <VoiceNoteBubbleSkeleton incomming={isLoading} />
+      ) : (
+        <>
+          <Button
+            variant={"outline"}
+            onClick={togglePauseResume}
+            className="border-none rounded-full cursor-pointer w-10 h-10 flex items-center justify-center"
+          >
+            <Play fill="white" strokeWidth={1.89} className="size-4" />
+          </Button>
+
+          <div className="flex flex-col items-start pt-2 gap-2">
+            <style>
+              {`.custom-waveform {
+                  width: 12px;
+                  height: 12px;
+                  border-radius: 50%;
+                  background-color: white;
+                  top: 50%;
+                  transform: translate(-50%, -50%);
+              }`}
+            </style>
+            <VoiceVisualizer
+              controls={controls}
+              height={20}
+              width={180}
+              isControlPanelShown={false}
+              isProgressIndicatorTimeShown={false}
+              progressIndicatorClassName="custom-waveform"
+              secondaryBarColor="#f0b000"
+            />
+            <span className="text-[11px] tabular-nums opacity-70">
+              {formattedDuration}
+            </span>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+export default VoiceNote;
 
 export function OptionsMenu({
   showOptions,
@@ -462,11 +567,16 @@ export function MessageBubble({
   const hasLocalFiles =
     m.file_name?.some((file) => file instanceof File) ?? false;
 
-  const { data: AttachementsData, error } = usePreviewAttachement({
+  const {
+    data: AttachementsData,
+    error,
+    isLoading,
+  } = usePreviewAttachement({
     path: !hasLocalFiles
       ? (m.file_name?.map((name: string | File) => `${m.sender_id}/${name}`) ??
         [])
       : [],
+    type: m.message_type,
     isEnabled: !hasLocalFiles && (m.file_name?.length ?? 0) > 0,
   });
 
@@ -512,7 +622,7 @@ export function MessageBubble({
           />
         )}
 
-        {m.message_type !== "text" && (
+        {FileAttachementType.includes(m.message_type) && (
           <div className="flex h-fit">
             <MessageAttachment
               m={m}
@@ -524,19 +634,35 @@ export function MessageBubble({
           </div>
         )}
 
-        <div className="flex items-start pb-2">
-          {m.content && (
-            <p
-              className={[
-                "whitespace-pre-wrap wrap-break-word",
-                onlyEmoji && "tracking-[-4px]",
-                emojiSize,
-              ].join(" ")}
-            >
-              {m.content}
-            </p>
-          )}
-        </div>
+        {m.message_type === "voice_note" &&
+          (!isLoading ? (
+            <div className="flex h-fit">
+              <VoiceNote
+                m={m}
+                data={AttachementsData ?? []}
+                error={error}
+                incoming={incoming}
+              />
+            </div>
+          ) : (
+            <VoiceNoteBubbleSkeleton incomming={isLoading} />
+          ))}
+
+        {m.message_type !== "voice_note" && (
+          <div className="flex items-start pb-2">
+            {m.content && (
+              <p
+                className={[
+                  "whitespace-pre-wrap wrap-break-word",
+                  onlyEmoji && "tracking-[-4px]",
+                  emojiSize,
+                ].join(" ")}
+              >
+                {m.content}
+              </p>
+            )}
+          </div>
+        )}
 
         <div
           className={[

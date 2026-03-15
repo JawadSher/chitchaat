@@ -1,3 +1,4 @@
+import { ENV } from "@/constants/env-exports";
 import { IMessages } from "@/types/messages";
 import { PaginationType } from "@/types/pagination";
 import { ISendMessageProps } from "@/types/send-message-props";
@@ -112,11 +113,16 @@ export async function deleteMessage(
 
 export async function previewAttachement(
   supabase: SupabaseClient,
-  { path }: { path: string[] },
+  { path, type }: { path: string[]; type: string },
 ) {
   try {
+    const bucket =
+      type === "voice_note"
+        ? ENV.SUPABASE.STORAGE_VOICE_NOTE_BUCKET_NAME
+        : ENV.SUPABASE.STORAGE_BUCKET_NAME;
+
     const { data, error } = await supabase.storage
-      .from("chitchaat-bucket")
+      .from(bucket)
       .createSignedUrls(path, 86400);
 
     if (error) throw new Error(error.message);

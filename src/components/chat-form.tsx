@@ -80,6 +80,8 @@ function ChatForm({
     togglePauseResume,
     isPausedRecording,
     duration,
+    clearCanvas,
+    formattedDuration
   } = recorderControls;
 
   const form = useForm({
@@ -89,7 +91,6 @@ function ChatForm({
       sendMessageFn({
         content: value.message ?? null,
         recipient_id,
-        selectedFiles,
       });
       setOpen(false);
       setSelectedFiles(null);
@@ -121,6 +122,27 @@ function ChatForm({
   if (error) {
     toast.error(error.message || "Browser doesn't support speech recognition");
   }
+
+  useEffect(() => {
+    if (!recordedBlob) return;
+
+    const audioFile = new File(
+      [recordedBlob],
+      `${Date.now()}-${recipient_id}.webm`,
+      {
+        type: "audio/webm",
+      },
+    );
+
+    sendMessageFn({
+      content: null,
+      recipient_id,
+      voice_note: audioFile,
+      duration: Number(formattedDuration)
+    });
+
+    clearCanvas();
+  }, [recordedBlob, clearCanvas]);
 
   return (
     <footer className="shrink-0 w-full p-2 flex items-center bg-accent/10">
@@ -289,7 +311,10 @@ function ChatForm({
                shadow-sm hover:shadow-md"
               type="button"
               variant={"ghost"}
-              onClick={() => stopRecording()}
+              onClick={() => {
+                stopRecording();
+                clearCanvas();
+              }}
             >
               <Trash2
                 className="size-5 text-red-600 animate-pulse"
@@ -354,10 +379,19 @@ function ChatForm({
 
         <form.Subscribe selector={(state) => state.values.message}>
           {(messageValue) =>
-            selectedFiles?.length || messageValue ? (
+            selectedFiles?.length ||
+            messageValue ||
+            isRecordingInProgress ||
+            isPausedRecording ||
+            recordedBlob ? (
               <Button
                 className="rounded-full h-10 w-10 flex items-center justify-center cursor-pointer"
-                type="submit"
+                type={recordedBlob ? "button" : "submit"}
+                onClick={() => {
+                  if (isPausedRecording || isRecordingInProgress) {
+                    stopRecording();
+                  }
+                }}
               >
                 <Send className="size-5" strokeWidth={1.89} />
               </Button>

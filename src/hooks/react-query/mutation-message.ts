@@ -1,5 +1,5 @@
 import { getMessageType } from "@/lib/get-message-type";
-import { uploadFile } from "@/lib/supabase/upload-file";
+import { uploadFile, uploadVoiceNote } from "@/lib/supabase/upload-file";
 import { useSupabase } from "@/providers/supabase-provider";
 import { deleteMessage, sendMessage } from "@/services/message.service";
 import { IMessages } from "@/types/messages";
@@ -22,7 +22,23 @@ export const useSendMessage = ({ setPercentage }: { setPercentage: any }) => {
       reply_to_message_id,
       recipient_id,
       selectedFiles,
+      voice_note,
     }: ISendMessageProps) => {
+      if (voice_note) {
+        await uploadVoiceNote({ file: voice_note, session });
+
+        return sendMessage(supabase, {
+          sender_id: user?.id!,
+          message_type: "voice_note",
+          content,
+          file_name: [voice_note.name],
+          file_size: [String(voice_note.size)],
+          duration,
+          reply_to_message_id,
+          recipient_id,
+        });
+      }
+
       const uploadedFiles: string[] = [];
       if (selectedFiles) {
         for (const file of selectedFiles) {
@@ -63,10 +79,16 @@ export const useSendMessage = ({ setPercentage }: { setPercentage: any }) => {
         id: crypto.randomUUID(),
         sender_id: user?.id!,
         recipient_id: variables.recipient_id!,
-        message_type: getMessageType(variables.content, uploadedFiles),
+        message_type: variables.voice_note
+          ? "voice_note"
+          : getMessageType(variables.content, uploadedFiles),
         content: variables.content ?? "",
-        file_name: variables.selectedFiles ?? undefined,
-        file_size: variables.file_size,
+        file_name: variables.voice_note
+          ? [variables.voice_note]
+          : (variables.selectedFiles ?? undefined),
+        file_size: variables.voice_note
+          ? [String(variables.voice_note.size)]
+          : variables.file_size,
         duration: variables.duration,
         reply_to_message_id: variables.reply_to_message_id,
         is_edited: false,

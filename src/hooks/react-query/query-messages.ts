@@ -43,16 +43,18 @@ export const useGetMessages = ({
 export const usePreviewAttachement = ({
   path,
   isEnabled,
+  type
 }: {
   path: string[];
   isEnabled: boolean;
+  type: string;
 }) => {
   const supabase = useSupabase();
 
   return useQuery({
     queryKey: ["preview-attachement", path],
     queryFn: async () => {
-      return await previewAttachement(supabase, { path });
+      return await previewAttachement(supabase, { path, type });
     },
     staleTime: 60_000,
     enabled: path.length > 0 && isEnabled,

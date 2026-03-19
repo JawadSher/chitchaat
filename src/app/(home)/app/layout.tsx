@@ -1,7 +1,7 @@
 "use client";
 
 import MainHeader from "@/components/main-header";
-import React, { Suspense, useEffect, useMemo, useRef } from "react";
+import React, { Suspense, useEffect } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BellRing, MessageSquareText, Phone, UsersRound } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -123,7 +123,6 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                 recipient_id: newMessage.recipient_id,
                 message_type: newMessage.message_type,
                 content: newMessage.content,
-                media_url: newMessage.media_url,
                 file_name: newMessage.file_name,
                 file_size: newMessage.file_size,
                 duration: newMessage.duration,

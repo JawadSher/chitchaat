@@ -57,8 +57,8 @@ function ChatAreaHeader({
             className="min-w-70 flex flex-col gap-2"
           >
             <DropdownMenuGroup className="flex items-center gap-3">
-              <div className="rounded-full w-8 h-8 border" />
-              <span>John Doe</span>
+              <UserAvatar src={contact.info.avatar_url} alt="avatar" isOnline={!!onlineUsers[contact.contact_user_id]} />
+              <span className="font-medium text-sm">{contact.info.full_name}</span>
             </DropdownMenuGroup>
             <DropdownMenuSeparator className="h-px bg-accent" />
             <DropdownMenuGroup className="flex gap-2">

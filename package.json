@@ -40,6 +40,7 @@
     "react-infinite-scroll-component": "^6.1.1",
     "react-intersection-observer": "^10.0.3",
     "react-resizable-panels": "^3.0.6",
+    "react-rnd": "^10.5.3",
     "react-top-loading-bar": "^3.0.2",
     "react-voice-visualizer": "^2.0.8",
     "reactjs-file-preview": "^1.0.11",

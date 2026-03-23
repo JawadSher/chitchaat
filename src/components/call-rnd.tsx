@@ -2,6 +2,7 @@ import { Rnd } from "react-rnd";
 import { Button } from "./ui/button";
 import { Mic, Minus, Phone, ScreenShare, Square, Video, X } from "lucide-react";
 import { RefObject, useRef, useState } from "react";
+import { useCallRNDState } from "@/store/use-call-rnd";
 
 function RNDHeader({
   rndRef,
@@ -11,6 +12,7 @@ function RNDHeader({
   setMinimized: (e: boolean) => void;
 }) {
   const [isMaximized, setIsMaximized] = useState(false);
+  const setDisableCallRND = useCallRNDState().setDisableCallRND;
 
   const handleMaximize = () => {
     if (!rndRef.current) return;
@@ -76,6 +78,7 @@ function RNDHeader({
           variant={"ghost"}
           className="text-muted-foreground hover:text-foreground cursor-pointer w-fit h-fit"
           type="button"
+          onClick={setDisableCallRND}
         >
           <X className="size-4" strokeWidth={1.89} />
         </Button>
@@ -84,6 +87,7 @@ function RNDHeader({
   );
 }
 function RNDFooter() {
+  const setDisableCallRND = useCallRNDState().setDisableCallRND;
   return (
     <div className="flex items-center justify-center gap-2 p-1">
       <Button
@@ -111,6 +115,7 @@ function RNDFooter() {
         className="cursor-pointer bg-red-500  text-white hover:bg-destructive rounded-full w-25"
         type="button"
         variant={"default"}
+        onClick={setDisableCallRND}
       >
         <Phone className="size-5 rotate-135" strokeWidth={1.89} />
       </Button>
@@ -122,16 +127,19 @@ function CallRND() {
   const rndRef = useRef(null);
   const [minimized, setMinimized] = useState<boolean>(false);
 
+  const width = window.innerWidth - 500;
+  const height = window.innerHeight - 150;
+
   return (
     <Rnd
-      default={{ x: 100, y: 100, width: 320, height: 520 }}
+      default={{ x: 300, y: 100, width, height }}
       minWidth={360}
       minHeight={minimized ? 70 : 400}
       ref={rndRef}
       onDrag={() => setMinimized(false)}
       onResize={() => setMinimized(false)}
       bounds="window"
-      className="bg-card text-card-foreground border border-border rounded-lg shadow-xl overflow-hidden"
+      className="bg-card text-card-foreground border border-border rounded-lg shadow-xl overflow-hidden z-60"
     >
       <div className="flex flex-col h-full w-full">
         <RNDHeader rndRef={rndRef} setMinimized={setMinimized} />

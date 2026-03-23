@@ -22,6 +22,8 @@ import { useSupabase } from "@/providers/supabase-provider";
 import { SOUNDS } from "@/constants/sounds";
 import { IMessages } from "@/types/messages";
 import { useUserOnlineState } from "@/store/use-get-user-online-state";
+import { useCallRNDState } from "@/store/use-call-rnd";
+import CallRND from "@/components/call-rnd";
 
 type TabItem = {
   Icon: keyof typeof icons;
@@ -282,6 +284,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   const { isLoaded } = useUser();
+  const isShowCallRND = useCallRNDState().isShowCallRND;
 
   if (!isLoaded) {
     return <SplashScreen />;
@@ -290,6 +293,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="w-full h-screen flex flex-col">
       <MainHeader />
+      {isShowCallRND && <CallRND />}
       <Suspense fallback={<SplashScreen />}>
         <AppLayoutContent>{children}</AppLayoutContent>
       </Suspense>

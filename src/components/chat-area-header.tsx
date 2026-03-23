@@ -17,13 +17,14 @@ import {
 import { DropdownMenuSeparator } from "@radix-ui/react-dropdown-menu";
 import UserAvatar from "./avatar";
 import { useUserOnlineState } from "@/store/use-get-user-online-state";
+import { useCallRNDState } from "@/store/use-call-rnd";
 
 function ChatAreaHeader({
   contact,
   setActiveTab,
 }: {
   setActiveTab: (e: string) => void;
-  contact: any
+  contact: any;
 }) {
   const handleCloseChat = () => {
     setActiveTab("empty");
@@ -31,10 +32,16 @@ function ChatAreaHeader({
 
   const onlineUsers = useUserOnlineState((state) => state.onlineUsers) || [];
 
+  const setEnableCallRND = useCallRNDState().setEnableCallRND;
+
   return (
     <header className="flex items-center justify-between w-full h-16 px-4 bg-accent/40 shrink-0">
       <div className="flex items-center gap-3">
-        <UserAvatar src={contact.info.avatar_url} alt="avatar" isOnline={!!onlineUsers[contact.contact_user_id]} />
+        <UserAvatar
+          src={contact.info.avatar_url}
+          alt="avatar"
+          isOnline={!!onlineUsers[contact.contact_user_id]}
+        />
         <span className="font-medium text-sm">{contact.info.full_name}</span>
       </div>
 
@@ -57,16 +64,28 @@ function ChatAreaHeader({
             className="min-w-70 flex flex-col gap-2"
           >
             <DropdownMenuGroup className="flex items-center gap-3">
-              <UserAvatar src={contact.info.avatar_url} alt="avatar" isOnline={!!onlineUsers[contact.contact_user_id]} />
-              <span className="font-medium text-sm">{contact.info.full_name}</span>
+              <UserAvatar
+                src={contact.info.avatar_url}
+                alt="avatar"
+                isOnline={!!onlineUsers[contact.contact_user_id]}
+              />
+              <span className="font-medium text-sm">
+                {contact.info.full_name}
+              </span>
             </DropdownMenuGroup>
             <DropdownMenuSeparator className="h-px bg-accent" />
             <DropdownMenuGroup className="flex gap-2">
-              <Button className="flex-1 rounded-full flex items-center justify-center gap-2 cursor-pointer hover:bg-primary/80">
+              <Button
+                className="flex-1 rounded-full flex items-center justify-center gap-2 cursor-pointer hover:bg-primary/80"
+                onClick={() => setEnableCallRND("audio")}
+              >
                 <Phone className="size-5" strokeWidth={1.89} />
                 Audio
               </Button>
-              <Button className="flex-1 rounded-full flex items-center justify-center gap-2 cursor-pointer hover:bg-primary/80">
+              <Button
+                className="flex-1 rounded-full flex items-center justify-center gap-2 cursor-pointer hover:bg-primary/80"
+                onClick={() => setEnableCallRND("video")}
+              >
                 <Video className="size-5" strokeWidth={1.89} />
                 Video
               </Button>

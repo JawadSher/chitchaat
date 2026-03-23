@@ -18,6 +18,7 @@ import { DropdownMenuSeparator } from "@radix-ui/react-dropdown-menu";
 import UserAvatar from "./avatar";
 import { useUserOnlineState } from "@/store/use-get-user-online-state";
 import { useCallRNDState } from "@/store/use-call-rnd";
+import { useState } from "react";
 
 function ChatAreaHeader({
   contact,
@@ -26,6 +27,7 @@ function ChatAreaHeader({
   setActiveTab: (e: string) => void;
   contact: any;
 }) {
+  const [open, setOpen] = useState<boolean>(false);
   const handleCloseChat = () => {
     setActiveTab("empty");
   };
@@ -46,7 +48,7 @@ function ChatAreaHeader({
       </div>
 
       <div className="flex items-center gap-2">
-        <DropdownMenu>
+        <DropdownMenu open={open} onOpenChange={setOpen}>
           <DropdownMenuTrigger asChild>
             <Button
               variant="outline"
@@ -77,14 +79,19 @@ function ChatAreaHeader({
             <DropdownMenuGroup className="flex gap-2">
               <Button
                 className="flex-1 rounded-full flex items-center justify-center gap-2 cursor-pointer hover:bg-primary/80"
-                onClick={() => setEnableCallRND("audio")}
+                onClick={() => {
+                  setOpen(false)
+                  setEnableCallRND("audio")
+                }}
               >
                 <Phone className="size-5" strokeWidth={1.89} />
                 Audio
               </Button>
               <Button
                 className="flex-1 rounded-full flex items-center justify-center gap-2 cursor-pointer hover:bg-primary/80"
-                onClick={() => setEnableCallRND("video")}
+                onClick={() => {
+                  setOpen(false)
+                  setEnableCallRND("video")}}
               >
                 <Video className="size-5" strokeWidth={1.89} />
                 Video

@@ -72,6 +72,19 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
 
       await supabase.realtime.setAuth(token);
 
+      const incommingCall = supabase
+        .channel(`incomming-call:${user.id}`, {
+          config: {
+            private: true,
+          },
+        })
+        .on("broadcast", { event: "CALLING" }, (payload) => {
+          console.log("-----> incomming call", payload);
+        })
+        .subscribe((status) => {
+          if (status === "CLOSED") subscribe();
+        });
+
       const notificationChannel = supabase
         .channel(`notifications:${user.id}`, {
           config: { private: true },
@@ -217,7 +230,12 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
           }
         });
 
-      channels.push(notificationChannel, messageChannel, presenceChannel);
+      channels.push(
+        notificationChannel,
+        messageChannel,
+        presenceChannel,
+        incommingCall,
+      );
     };
 
     subscribe();

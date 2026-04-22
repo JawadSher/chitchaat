@@ -1,8 +1,9 @@
 import { Rnd } from "react-rnd";
 import { Button } from "./ui/button";
 import { Mic, Minus, Phone, ScreenShare, Square, Video, X } from "lucide-react";
-import { RefObject, useRef, useState } from "react";
+import { RefObject, useEffect, useRef, useState } from "react";
 import { useCallRNDState } from "@/store/use-call-rnd";
+import { useSendCallSignal } from "@/hooks/react-query/mutation-calls";
 
 function RNDHeader({
   rndRef,
@@ -124,11 +125,18 @@ function RNDFooter() {
 }
 
 function CallRND() {
+  const callee_id = useCallRNDState((state) => state.callee_id) as string;
+  const { mutate: sendCallSignal } = useSendCallSignal({ callee_id });
+
   const rndRef = useRef(null);
   const [minimized, setMinimized] = useState<boolean>(false);
 
   const width = window.innerWidth - 500;
   const height = window.innerHeight - 150;
+
+  useEffect(() => {
+    sendCallSignal({ calleeId: callee_id });
+  }, []);
 
   return (
     <Rnd

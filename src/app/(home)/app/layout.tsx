@@ -75,14 +75,15 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
       const incommingCall = supabase
         .channel(`incomming-call:${user.id}`, {
           config: {
-            private: true,
+            private: false,
           },
         })
         .on("broadcast", { event: "CALLING" }, (payload) => {
           console.log("-----> incomming call", payload);
         })
         .subscribe((status) => {
-          if (status === "CLOSED") subscribe();
+          if (status === "SUBSCRIBED") console.log("Subscribed to incomming-call channel");
+          if (status === "CLOSED") incommingCall.subscribe();
         });
 
       const notificationChannel = supabase
@@ -114,7 +115,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
         })
         .subscribe((status) => {
           if (status === "CLOSED") {
-            subscribe();
+            notificationChannel.subscribe();
           }
         });
 
@@ -201,7 +202,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
         )
         .subscribe((status) => {
           if (status === "CLOSED") {
-            subscribe();
+            messageChannel.subscribe();
           }
         });
 
@@ -226,7 +227,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
           }
 
           if (status === "CLOSED") {
-            subscribe();
+            presenceChannel.subscribe();
           }
         });
 

@@ -5,19 +5,22 @@ export async function sendCallSignal(
   { callee_id }: { callee_id: string },
 ) {
   try {
+    console.log("----> Callee_id: ", callee_id)
     const callChannel = supabase.channel(`incomming-call:${callee_id}`, {
-      config: { private: true },
+      config: { private: false },
     });
 
-    callChannel.subscribe((status) => {
-      if (status === "SUBSCRIBED") {
-        callChannel.send({
-          type: "broadcast",
-          event: "CALLING",
-          payload: { message: "Someone is calling you" },
-        });
-      }
+    const response = await callChannel.send({
+      type: "broadcast",
+      event: "CALLING",
+      payload: {
+        message: "Someone is calling you",
+        timestamp: new Date().toISOString(),
+      },
     });
+
+    console.log("Call signal sent:", response);
+    return response;
   } catch (error: any) {
     throw new Error(error.message);
   }

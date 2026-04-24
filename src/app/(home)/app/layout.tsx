@@ -53,6 +53,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const client = useQueryClient();
   const currentTab = searchParams.get("tab") || "chat";
   const notifyAudio = new Audio(SOUNDS.NOTIFICATION);
+  const ringtoneAudio = new Audio(SOUNDS.RINGTONE);
   const { setOnlineUsersBulk } = useUserOnlineState();
 
   const handleTabChange = (value: string) => {
@@ -78,11 +79,30 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
             private: false,
           },
         })
-        .on("broadcast", { event: "CALLING" }, (payload) => {
-          console.log("-----> incomming call", payload);
+        .on("broadcast", { event: "CALL" }, (payload) => {
+          const { caller_id, call_type } = payload.payload;
+
+          const contacts: any = client.getQueryData(["get-contacts", user.id]);
+
+          const res = contacts?.some(
+            (c: any) =>
+              c.contact_user_id === caller_id &&
+              c.status === "accepted" &&
+              !c.is_deleted,
+          );
+
+          const fullName = res.info.full_name;
+          const avatar = res.info.avatar_url;
+
+          ringtoneAudio.volume = 1;
+          ringtoneAudio.play();
+          setTimeout(() => {
+            ringtoneAudio.pause();
+          }, 20000);
         })
         .subscribe((status) => {
-          if (status === "SUBSCRIBED") console.log("Subscribed to incomming-call channel");
+          if (status === "SUBSCRIBED")
+            console.log("Subscribed to incomming-call channel");
           if (status === "CLOSED") incommingCall.subscribe();
         });
 

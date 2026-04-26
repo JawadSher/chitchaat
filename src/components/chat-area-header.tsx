@@ -80,8 +80,13 @@ function ChatAreaHeader({
               <Button
                 className="flex-1 rounded-full flex items-center justify-center gap-2 cursor-pointer hover:bg-primary/80"
                 onClick={() => {
-                  setOpen(false)
-                  setEnableCallRND("audio", contact?.contact_user_id)
+                  setOpen(false);
+                  setEnableCallRND({
+                    type: "audio",
+                    callee_id: contact?.contact_user_id,
+                    callMode: "direct",
+                    callDirection: "outgoing",
+                  });
                 }}
               >
                 <Phone className="size-5" strokeWidth={1.89} />
@@ -90,8 +95,14 @@ function ChatAreaHeader({
               <Button
                 className="flex-1 rounded-full flex items-center justify-center gap-2 cursor-pointer hover:bg-primary/80"
                 onClick={() => {
-                  setOpen(false)
-                  setEnableCallRND("video", contact?.contact_user_id)}}
+                  setOpen(false);
+                  setEnableCallRND({
+                    type: "video",
+                    callee_id: contact?.contact_user_id,
+                    callMode: "direct",
+                    callDirection: "outgoing",
+                  });
+                }}
               >
                 <Video className="size-5" strokeWidth={1.89} />
                 Video

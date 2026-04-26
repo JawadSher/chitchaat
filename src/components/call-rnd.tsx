@@ -1,9 +1,23 @@
 import { Rnd } from "react-rnd";
 import { Button } from "./ui/button";
-import { Mic, Minus, Phone, ScreenShare, Square, Video, X } from "lucide-react";
+import { Mic, Minus, Phone, PhoneCall, ScreenShare, Square, Video, X } from "lucide-react";
 import { RefObject, useEffect, useRef, useState } from "react";
 import { useCallRNDState } from "@/store/use-call-rnd";
 import { useSendCallSignal } from "@/hooks/react-query/mutation-calls";
+import { useQueryClient } from "@tanstack/react-query";
+import { useUser } from "@clerk/nextjs";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 function RNDHeader({
   rndRef,
@@ -75,14 +89,33 @@ function RNDHeader({
         >
           <Square className="size-4" strokeWidth={1.89} />
         </Button>
-        <Button
-          variant={"ghost"}
-          className="text-muted-foreground hover:text-foreground cursor-pointer w-fit h-fit"
-          type="button"
-          onClick={setDisableCallRND}
-        >
-          <X className="size-4" strokeWidth={1.89} />
-        </Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              variant={"ghost"}
+              className="text-muted-foreground hover:text-foreground cursor-pointer w-fit h-fit"
+              type="button"            >
+              <X className="size-4" strokeWidth={1.89} />
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent className="z-100">
+            <AlertDialogHeader>
+              <AlertDialogMedia className="bg-destructive/10 text-destructive dark:bg-destructive/20 dark:text-destructive">
+                <PhoneCall strokeWidth={1.89} size={4} />
+              </AlertDialogMedia>
+              <AlertDialogTitle>End call?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to end the call? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="cursor-pointer" variant="outline">Cancel</AlertDialogCancel>
+              <AlertDialogAction className="cursor-pointer" variant="destructive" onClick={setDisableCallRND}>
+                Close
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );
@@ -125,18 +158,44 @@ function RNDFooter() {
 }
 
 function CallRND() {
+  const client = useQueryClient();
   const callee_id = useCallRNDState((state) => state.callee_id) as string;
+  const caller_id = useCallRNDState((state) => state.caller_id) as
+    | string
+    | null;
+  const callType = useCallRNDState((state) => state.callType);
+  const callDirection = useCallRNDState((state) => state.callDirection);
   const { mutate: sendCallSignal } = useSendCallSignal({ callee_id });
-
+  const { user } = useUser();
   const rndRef = useRef(null);
   const [minimized, setMinimized] = useState<boolean>(false);
 
   const width = window.innerWidth - 500;
   const height = window.innerHeight - 150;
 
+  const callerInfo = (() => {
+    if (callDirection === "incoming" && caller_id) {
+      const contacts: any = client.getQueryData(["get-contacts", user?.id]);
+      const res = contacts?.find(
+        (c: any) =>
+          c.contact_user_id === caller_id &&
+          c.status === "accepted" &&
+          !c.is_deleted,
+      );
+      return {
+        name: res?.info.full_name ?? null,
+        avatar: res?.info.avatar_url ?? null,
+      };
+    }
+    return { name: null, avatar: null };
+  })();
+
   useEffect(() => {
-    sendCallSignal({ calleeId: callee_id });
-  }, []);
+    if (!callType || !callee_id) return;
+    if (callDirection === "incoming") return;
+
+    sendCallSignal({ calleeId: callee_id, callType });
+  }, [callType, callee_id, callDirection, sendCallSignal]);
 
   return (
     <Rnd

@@ -55,6 +55,8 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const notifyAudio = new Audio(SOUNDS.NOTIFICATION);
   const ringtoneAudio = new Audio(SOUNDS.RINGTONE);
   const { setOnlineUsersBulk } = useUserOnlineState();
+  const setEnableCallRND = useCallRNDState((state) => state.setEnableCallRND);
+  const setDisableCallRND = useCallRNDState((state) => state.setDisableCallRND);
 
   const handleTabChange = (value: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -66,7 +68,6 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
     if (!user?.id) return;
 
     const channels: any[] = [];
-
     const subscribe = async () => {
       const token = await session?.getToken({ template: "supabase" });
       if (!token) return;
@@ -80,30 +81,39 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
           },
         })
         .on("broadcast", { event: "CALL" }, (payload) => {
-          const { caller_id, call_type } = payload.payload;
+          console.log("Incoming call signal received:", payload);
+          const { caller_id, call_type, callDirection, call_mode } =
+            payload.payload;
+          const call_status = useCallRNDState.getState().call_status;
 
-          const contacts: any = client.getQueryData(["get-contacts", user.id]);
+          setEnableCallRND({
+            type: call_type,
+            callee_id: user.id,
+            callMode: call_mode,
+            callDirection:
+              callDirection === "outgoing" ? "incoming" : "outgoing",
+            caller_id,
+            call_status: "ringing",
+          });
 
-          const res = contacts?.some(
-            (c: any) =>
-              c.contact_user_id === caller_id &&
-              c.status === "accepted" &&
-              !c.is_deleted,
-          );
+          if (call_status === "ringing") {
+            ringtoneAudio.volume = 1;
+            ringtoneAudio.play();
 
-          const fullName = res.info.full_name;
-          const avatar = res.info.avatar_url;
-
-          ringtoneAudio.volume = 1;
-          ringtoneAudio.play();
-          setTimeout(() => {
+            setTimeout(() => {
+              ringtoneAudio.pause();
+              ringtoneAudio.currentTime = 0;
+              setDisableCallRND();
+            }, 20000);
+          } else {
             ringtoneAudio.pause();
-          }, 20000);
+            setDisableCallRND();
+          }
         })
         .subscribe((status) => {
           if (status === "SUBSCRIBED")
             console.log("Subscribed to incomming-call channel");
-          if (status === "CLOSED") incommingCall.subscribe();
+          if (status === "CLOSED") subscribe();
         });
 
       const notificationChannel = supabase
@@ -135,7 +145,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
         })
         .subscribe((status) => {
           if (status === "CLOSED") {
-            notificationChannel.subscribe();
+            subscribe();
           }
         });
 
@@ -222,7 +232,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
         )
         .subscribe((status) => {
           if (status === "CLOSED") {
-            messageChannel.subscribe();
+            subscribe();
           }
         });
 
@@ -247,7 +257,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
           }
 
           if (status === "CLOSED") {
-            presenceChannel.subscribe();
+            subscribe();
           }
         });
 

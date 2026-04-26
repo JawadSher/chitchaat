@@ -6,10 +6,12 @@ export async function sendCallSignal(
     callee_id,
     call_type,
     caller_id,
+    call_mode
   }: {
     callee_id: string;
     call_type: "audio" | "video";
     caller_id: string;
+    call_mode: "direct" | "group";
   },
 ) {
   try {
@@ -42,6 +44,8 @@ export async function sendCallSignal(
       payload: {
         caller_id,
         call_type,
+        callDirection: "outgoing",
+        call_mode
       },
     });
 

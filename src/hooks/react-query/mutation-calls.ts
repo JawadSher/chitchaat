@@ -10,11 +10,18 @@ export const useSendCallSignal = ({ callee_id }: { callee_id?: string }) => {
 
   return useMutation({
     mutationKey: ["send-call-signal", callee_id],
-    mutationFn: async ({ calleeId }: { calleeId: string }) => {
+    mutationFn: async ({
+      calleeId,
+      callType,
+    }: {
+      calleeId: string;
+      callType: "audio" | "video";
+    }) => {
       return await sendCallSignal(supabase, {
         callee_id: calleeId,
-        call_type: "audio",
+        call_type: callType,
         caller_id: user.user?.id!,
+        call_mode: "direct"
       });
     },
     onError: (error) => {

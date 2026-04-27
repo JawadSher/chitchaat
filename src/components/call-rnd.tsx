@@ -1,6 +1,15 @@
 import { Rnd } from "react-rnd";
 import { Button } from "./ui/button";
-import { Mic, Minus, Phone, PhoneCall, ScreenShare, Square, Video, X } from "lucide-react";
+import {
+  Mic,
+  Minus,
+  Phone,
+  PhoneCall,
+  ScreenShare,
+  Square,
+  Video,
+  X,
+} from "lucide-react";
 import { RefObject, useEffect, useRef, useState } from "react";
 import { useCallRNDState } from "@/store/use-call-rnd";
 import { useSendCallSignal } from "@/hooks/react-query/mutation-calls";
@@ -18,6 +27,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { SOUNDS } from "@/constants/sounds";
 
 function RNDHeader({
   rndRef,
@@ -94,7 +104,8 @@ function RNDHeader({
             <Button
               variant={"ghost"}
               className="text-muted-foreground hover:text-foreground cursor-pointer w-fit h-fit"
-              type="button"            >
+              type="button"
+            >
               <X className="size-4" strokeWidth={1.89} />
             </Button>
           </AlertDialogTrigger>
@@ -105,12 +116,19 @@ function RNDHeader({
               </AlertDialogMedia>
               <AlertDialogTitle>End call?</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to end the call? This action cannot be undone.
+                Are you sure you want to end the call? This action cannot be
+                undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel className="cursor-pointer" variant="outline">Cancel</AlertDialogCancel>
-              <AlertDialogAction className="cursor-pointer" variant="destructive" onClick={setDisableCallRND}>
+              <AlertDialogCancel className="cursor-pointer" variant="outline">
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                className="cursor-pointer"
+                variant="destructive"
+                onClick={setDisableCallRND}
+              >
                 Close
               </AlertDialogAction>
             </AlertDialogFooter>

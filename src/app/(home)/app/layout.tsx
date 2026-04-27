@@ -1,7 +1,8 @@
+/* eslint-disable no-var */
 "use client";
 
 import MainHeader from "@/components/main-header";
-import React, { Suspense, useEffect } from "react";
+import React, { Suspense, useEffect, useRef } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BellRing, MessageSquareText, Phone, UsersRound } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -53,16 +54,43 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const client = useQueryClient();
   const currentTab = searchParams.get("tab") || "chat";
   const notifyAudio = new Audio(SOUNDS.NOTIFICATION);
-  const ringtoneAudio = new Audio(SOUNDS.RINGTONE);
   const { setOnlineUsersBulk } = useUserOnlineState();
   const setEnableCallRND = useCallRNDState((state) => state.setEnableCallRND);
   const setDisableCallRND = useCallRNDState((state) => state.setDisableCallRND);
+  const ringtoneRef = useRef<HTMLAudioElement | null>(null);
+  const call_status = useCallRNDState((state) => state.call_status) as
+    | string
+    | null;
 
   const handleTabChange = (value: string) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set("tab", value);
     router.replace(`?${params.toString()}`);
   };
+
+  useEffect(() => {
+    if (!ringtoneRef.current) {
+      ringtoneRef.current = new Audio(SOUNDS.RINGTONE);
+    }
+
+    const ringtoneAudio = ringtoneRef.current;
+
+    if (call_status === "ringing") {
+      ringtoneAudio.volume = 1;
+      ringtoneAudio.play();
+
+      const timer = setTimeout(() => {
+        ringtoneAudio.pause();
+        ringtoneAudio.currentTime = 0;
+        setDisableCallRND();
+      }, 20000);
+
+      return () => clearTimeout(timer);
+    } else {
+      ringtoneAudio.pause();
+      ringtoneAudio.currentTime = 0;
+    }
+  }, [call_status, setDisableCallRND]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -84,7 +112,6 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
           console.log("Incoming call signal received:", payload);
           const { caller_id, call_type, callDirection, call_mode } =
             payload.payload;
-          const call_status = useCallRNDState.getState().call_status;
 
           setEnableCallRND({
             type: call_type,
@@ -95,20 +122,6 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
             caller_id,
             call_status: "ringing",
           });
-
-          if (call_status === "ringing") {
-            ringtoneAudio.volume = 1;
-            ringtoneAudio.play();
-
-            setTimeout(() => {
-              ringtoneAudio.pause();
-              ringtoneAudio.currentTime = 0;
-              setDisableCallRND();
-            }, 20000);
-          } else {
-            ringtoneAudio.pause();
-            setDisableCallRND();
-          }
         })
         .subscribe((status) => {
           if (status === "SUBSCRIBED")

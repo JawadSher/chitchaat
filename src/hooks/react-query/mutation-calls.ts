@@ -4,7 +4,7 @@ import { useUser } from "@clerk/nextjs";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-export const useSendCallSignal = ({ callee_id }: { callee_id?: string }) => {
+export const useSendCallSignal = ({ callee_id, setIsRinging }: { callee_id?: string, setIsRinging: (v:boolean) => void; }) => {
   const supabase = useSupabase();
   const user = useUser();
 
@@ -23,6 +23,9 @@ export const useSendCallSignal = ({ callee_id }: { callee_id?: string }) => {
         caller_id: user.user?.id!,
         call_mode: "direct"
       });
+    },
+    onSuccess: () => {
+      setIsRinging(true);
     },
     onError: (error) => {
       toast.error(error.message);

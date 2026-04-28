@@ -27,14 +27,21 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { SOUNDS } from "@/constants/sounds";
+import UserAvatar from "./avatar";
+import ShimmerText from "./kokonutui/shimmer-text";
 
 function RNDHeader({
   rndRef,
   setMinimized,
+  callDirection,
+  callType,
+  isRinging,
 }: {
   rndRef: RefObject<any>;
   setMinimized: (e: boolean) => void;
+  callDirection: "incoming" | "outgoing";
+  callType: "audio" | "video";
+  isRinging: boolean;
 }) {
   const [isMaximized, setIsMaximized] = useState(false);
   const setDisableCallRND = useCallRNDState().setDisableCallRND;
@@ -81,7 +88,17 @@ function RNDHeader({
 
   return (
     <div className="flex items-center justify-between px-4 py-1">
-      <span className="text-sm font-medium">Calling...</span>
+      {callDirection === "outgoing" ? (
+        <ShimmerText
+          className="text-sm font-medium"
+          text={isRinging ? "Ringing..." : "Calling..."}
+        />
+      ) : (
+        <ShimmerText
+          className="text-sm"
+          text={callType === "audio" ? "Voice call" : "Video call"}
+        />
+      )}
       <div className="flex items-center justify-center gap-3">
         <Button
           onClick={handleMinimize}
@@ -176,6 +193,7 @@ function RNDFooter() {
 }
 
 function CallRND() {
+  const [isRinging, setIsRinging] = useState<boolean>(false);
   const client = useQueryClient();
   const callee_id = useCallRNDState((state) => state.callee_id) as string;
   const caller_id = useCallRNDState((state) => state.caller_id) as
@@ -183,7 +201,10 @@ function CallRND() {
     | null;
   const callType = useCallRNDState((state) => state.callType);
   const callDirection = useCallRNDState((state) => state.callDirection);
-  const { mutate: sendCallSignal } = useSendCallSignal({ callee_id });
+  const { mutate: sendCallSignal } = useSendCallSignal({
+    callee_id,
+    setIsRinging,
+  });
   const { user } = useUser();
   const rndRef = useRef(null);
   const [minimized, setMinimized] = useState<boolean>(false);
@@ -191,12 +212,16 @@ function CallRND() {
   const width = window.innerWidth - 500;
   const height = window.innerHeight - 150;
 
-  const callerInfo = (() => {
-    if (callDirection === "incoming" && caller_id) {
+  const user_info = (() => {
+    if (
+      (callDirection === "incoming" && caller_id) ||
+      (callDirection === "outgoing" && callee_id)
+    ) {
       const contacts: any = client.getQueryData(["get-contacts", user?.id]);
       const res = contacts?.find(
         (c: any) =>
-          c.contact_user_id === caller_id &&
+          c.contact_user_id ===
+            (callDirection === "incoming" ? caller_id : callee_id) &&
           c.status === "accepted" &&
           !c.is_deleted,
       );
@@ -227,10 +252,36 @@ function CallRND() {
       className="bg-card text-card-foreground border border-border rounded-lg shadow-xl overflow-hidden z-60"
     >
       <div className="flex flex-col h-full w-full">
-        <RNDHeader rndRef={rndRef} setMinimized={setMinimized} />
+        <RNDHeader
+          isRinging={isRinging}
+          callDirection={callDirection ?? "incoming"}
+          callType={callType ?? "audio"}
+          rndRef={rndRef}
+          setMinimized={setMinimized}
+        />
 
         {!minimized && (
-          <div className="flex-1 flex flex-col items-center justify-center gap-4 bg-muted m-1 rounded-lg"></div>
+          <div className="flex-1 flex flex-col items-center justify-center gap-4 bg-muted m-1 rounded-lg border">
+            <UserAvatar
+              className="min-w-30 min-h-30"
+              src={user_info.avatar}
+              alt="avatar"
+            />
+            <p className="text-xl dark:text-white/90 font-semibold">
+              {user_info.name}
+            </p>
+            {callDirection === "outgoing" ? (
+              <ShimmerText
+                className="text-sm font-medium"
+                text={isRinging ? "Ringing..." : "Calling..."}
+              />
+            ) : (
+              <ShimmerText
+                className="text-sm"
+                text={callType === "audio" ? "Voice call" : "Video call"}
+              />
+            )}
+          </div>
         )}
 
         <RNDFooter />

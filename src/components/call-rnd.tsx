@@ -1,3 +1,4 @@
+/* eslint-disable no-var */
 import { Rnd } from "react-rnd";
 import { Button } from "./ui/button";
 import {
@@ -29,19 +30,15 @@ import {
 } from "@/components/ui/alert-dialog";
 import UserAvatar from "./avatar";
 import ShimmerText from "./kokonutui/shimmer-text";
+import Logo from "./logo";
+import { SOUNDS } from "@/constants/sounds";
 
 function RNDHeader({
   rndRef,
   setMinimized,
-  callDirection,
-  callType,
-  isRinging,
 }: {
   rndRef: RefObject<any>;
   setMinimized: (e: boolean) => void;
-  callDirection: "incoming" | "outgoing";
-  callType: "audio" | "video";
-  isRinging: boolean;
 }) {
   const [isMaximized, setIsMaximized] = useState(false);
   const setDisableCallRND = useCallRNDState().setDisableCallRND;
@@ -88,17 +85,7 @@ function RNDHeader({
 
   return (
     <div className="flex items-center justify-between px-4 py-1">
-      {callDirection === "outgoing" ? (
-        <ShimmerText
-          className="text-sm font-medium"
-          text={isRinging ? "Ringing..." : "Calling..."}
-        />
-      ) : (
-        <ShimmerText
-          className="text-sm"
-          text={callType === "audio" ? "Voice call" : "Video call"}
-        />
-      )}
+      <Logo className="w-18" />
       <div className="flex items-center justify-center gap-3">
         <Button
           onClick={handleMinimize}
@@ -193,6 +180,9 @@ function RNDFooter() {
 }
 
 function CallRND() {
+  const callBeepAudio = useRef(new Audio(SOUNDS.BEEP));
+
+  const [counter, setCounter] = useState<number>(0);
   const [isRinging, setIsRinging] = useState<boolean>(false);
   const client = useQueryClient();
   const callee_id = useCallRNDState((state) => state.callee_id) as string;
@@ -208,6 +198,7 @@ function CallRND() {
   const { user } = useUser();
   const rndRef = useRef(null);
   const [minimized, setMinimized] = useState<boolean>(false);
+  const setDisableCallRND = useCallRNDState((state) => state.setDisableCallRND);
 
   const width = window.innerWidth - 500;
   const height = window.innerHeight - 150;
@@ -234,6 +225,34 @@ function CallRND() {
   })();
 
   useEffect(() => {
+    if (!isRinging) return;
+
+    if (counter >= 20) {
+      setDisableCallRND();
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setCounter((prev) => prev + 1);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [counter, isRinging, setDisableCallRND]);
+
+  useEffect(() => {
+    if (!isRinging || callDirection !== "outgoing") return;
+
+    const interval = setInterval(() => {
+      callBeepAudio.current.pause();
+      callBeepAudio.current.currentTime = 0;
+      callBeepAudio.current.volume = 1;
+      callBeepAudio.current.play();
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [isRinging, callDirection]);
+
+  useEffect(() => {
     if (!callType || !callee_id) return;
     if (callDirection === "incoming") return;
 
@@ -252,13 +271,7 @@ function CallRND() {
       className="bg-card text-card-foreground border border-border rounded-lg shadow-xl overflow-hidden z-60"
     >
       <div className="flex flex-col h-full w-full">
-        <RNDHeader
-          isRinging={isRinging}
-          callDirection={callDirection ?? "incoming"}
-          callType={callType ?? "audio"}
-          rndRef={rndRef}
-          setMinimized={setMinimized}
-        />
+        <RNDHeader rndRef={rndRef} setMinimized={setMinimized} />
 
         {!minimized && (
           <div className="flex-1 flex flex-col items-center justify-center gap-4 bg-muted m-1 rounded-lg border">

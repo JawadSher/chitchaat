@@ -10,6 +10,7 @@ import {
   ScreenShare,
   Square,
   Video,
+  VideoOff,
   X,
 } from "lucide-react";
 import { RefObject, useEffect, useRef, useState } from "react";
@@ -170,7 +171,9 @@ function RNDFooter({
   sendCallSignal,
   callee_id,
   call_type,
+  call_direction,
 }: {
+  call_direction: "incoming" | "outgoing";
   callee_id: string;
   call_type: "video" | "audio" | null;
   sendCallSignal: ({
@@ -191,7 +194,11 @@ function RNDFooter({
         type="button"
         variant={"secondary"}
       >
-        <Video className="size-5" strokeWidth={1.89} />
+        {call_type === "video" ? (
+          <Video className="size-5" strokeWidth={1.89} />
+        ) : (
+          <VideoOff className="size-5" strokeWidth={1.89} />
+        )}
       </Button>
       <Button
         className="cursor-pointer rounded-full w-15"
@@ -207,8 +214,20 @@ function RNDFooter({
       >
         <ScreenShare className="size-5" strokeWidth={1.89} />
       </Button>
+      {call_direction === "incoming" && (
+        <Button
+          className="cursor-pointer bg-green-500 text-white hover:bg-green-600 rounded-full min-w-23"
+          type="button"
+          variant={"default"}
+          onClick={() => {
+            console.log("call attended");
+          }}
+        >
+          <Phone className="size-5 rotate-135" strokeWidth={1.89} />
+        </Button>
+      )}
       <Button
-        className="cursor-pointer bg-red-500  text-white hover:bg-destructive rounded-full w-25"
+        className="cursor-pointer bg-red-500  text-white hover:bg-destructive rounded-full w-23"
         type="button"
         variant={"default"}
         onClick={() => {
@@ -249,7 +268,7 @@ function CallRND() {
   const setDisableCallRND = useCallRNDState((state) => state.setDisableCallRND);
   const call_status = useCallRNDState((state) => state.call_status);
 
-  const width = window.innerWidth - 500;
+  const width = window.innerWidth - 550;
   const height = window.innerHeight - 150;
 
   const user_info = (() => {
@@ -319,7 +338,7 @@ function CallRND() {
   return (
     <Rnd
       default={{ x: 300, y: 100, width, height }}
-      minWidth={360}
+      minWidth={420}
       minHeight={minimized ? 70 : 400}
       ref={rndRef}
       onDrag={() => setMinimized(false)}
@@ -361,6 +380,7 @@ function CallRND() {
         )}
 
         <RNDFooter
+          call_direction={callDirection ?? "outgoing"}
           call_type={callType}
           callee_id={callDirection === "incoming" ? caller_id! : callee_id}
           sendCallSignal={sendCallSignal}

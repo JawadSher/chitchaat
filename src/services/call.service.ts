@@ -6,12 +6,14 @@ export async function sendCallSignal(
     callee_id,
     call_type,
     caller_id,
-    call_mode
+    call_mode,
+    call_status
   }: {
     callee_id: string;
     call_type: "audio" | "video";
     caller_id: string;
     call_mode: "direct" | "group";
+    call_status: "ringing" | "close"
   },
 ) {
   try {
@@ -28,8 +30,6 @@ export async function sendCallSignal(
       throw new Error(error.message);
     }
 
-    console.log(data);
-
     if(!data){
       throw new Error("Calls are allowed for contacts only.");
     }
@@ -45,11 +45,11 @@ export async function sendCallSignal(
         caller_id,
         call_type,
         callDirection: "outgoing",
-        call_mode
+        call_mode,
+        call_status
       },
     });
 
-    console.log("Call signal sent:", response);
     return response;
   } catch (error: any) {
     throw new Error(error.message);

@@ -61,6 +61,10 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const call_status = useCallRNDState((state) => state.call_status) as
     | string
     | null;
+  const cached_caller_id = useCallRNDState((state) => state.caller_id) as
+    | string
+    | null;
+  const updateCallStatus = useCallRNDState((state) => state.updateCallStatus);
 
   const handleTabChange = (value: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -109,9 +113,21 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
           },
         })
         .on("broadcast", { event: "CALL" }, (payload) => {
-          console.log("Incoming call signal received:", payload);
-          const { caller_id, call_type, callDirection, call_mode } =
-            payload.payload;
+          const {
+            caller_id,
+            call_type,
+            callDirection,
+            call_mode,
+            call_status,
+          } = payload.payload;
+
+          if (
+            payload.payload.call_status === "close" &&
+            cached_caller_id === caller_id
+          ) {
+            updateCallStatus({ call_status });
+            return;
+          }
 
           setEnableCallRND({
             type: call_type,
@@ -120,7 +136,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
             callDirection:
               callDirection === "outgoing" ? "incoming" : "outgoing",
             caller_id,
-            call_status: "ringing",
+            call_status,
           });
         })
         .subscribe((status) => {

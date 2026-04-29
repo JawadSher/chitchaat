@@ -13,15 +13,18 @@ export const useSendCallSignal = ({ callee_id, setIsRinging }: { callee_id?: str
     mutationFn: async ({
       calleeId,
       callType,
+      call_status
     }: {
       calleeId: string;
       callType: "audio" | "video";
+      call_status: "ringing" | "close"
     }) => {
       return await sendCallSignal(supabase, {
         callee_id: calleeId,
         call_type: callType,
         caller_id: user.user?.id!,
-        call_mode: "direct"
+        call_mode: "direct",
+        call_status
       });
     },
     onSuccess: () => {

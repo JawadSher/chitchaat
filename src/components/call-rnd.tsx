@@ -1,4 +1,5 @@
 /* eslint-disable no-var */
+"use client";
 import { Rnd } from "react-rnd";
 import { Button } from "./ui/button";
 import {
@@ -36,9 +37,23 @@ import { SOUNDS } from "@/constants/sounds";
 function RNDHeader({
   rndRef,
   setMinimized,
+  sendCallSignal,
+  callee_id,
+  call_type,
 }: {
   rndRef: RefObject<any>;
   setMinimized: (e: boolean) => void;
+  callee_id: string;
+  call_type: "video" | "audio" | null;
+  sendCallSignal: ({
+    calleeId,
+    callType,
+    call_status,
+  }: {
+    calleeId: string;
+    callType: "audio" | "video";
+    call_status: "ringing" | "close";
+  }) => void;
 }) {
   const [isMaximized, setIsMaximized] = useState(false);
   const setDisableCallRND = useCallRNDState().setDisableCallRND;
@@ -131,7 +146,16 @@ function RNDHeader({
               <AlertDialogAction
                 className="cursor-pointer"
                 variant="destructive"
-                onClick={setDisableCallRND}
+                onClick={() => {
+                  sendCallSignal({
+                    calleeId: callee_id,
+                    callType: call_type!,
+                    call_status: "close",
+                  });
+                  setTimeout(() => {
+                    setDisableCallRND();
+                  }, 900);
+                }}
               >
                 Close
               </AlertDialogAction>
@@ -142,7 +166,23 @@ function RNDHeader({
     </div>
   );
 }
-function RNDFooter() {
+function RNDFooter({
+  sendCallSignal,
+  callee_id,
+  call_type,
+}: {
+  callee_id: string;
+  call_type: "video" | "audio" | null;
+  sendCallSignal: ({
+    calleeId,
+    callType,
+    call_status,
+  }: {
+    calleeId: string;
+    callType: "audio" | "video";
+    call_status: "ringing" | "close";
+  }) => void;
+}) {
   const setDisableCallRND = useCallRNDState().setDisableCallRND;
   return (
     <div className="flex items-center justify-center gap-2 p-1">
@@ -171,7 +211,16 @@ function RNDFooter() {
         className="cursor-pointer bg-red-500  text-white hover:bg-destructive rounded-full w-25"
         type="button"
         variant={"default"}
-        onClick={setDisableCallRND}
+        onClick={() => {
+          sendCallSignal({
+            calleeId: callee_id,
+            callType: call_type!,
+            call_status: "close",
+          });
+          setTimeout(() => {
+            setDisableCallRND();
+          }, 900);
+        }}
       >
         <Phone className="size-5 rotate-135" strokeWidth={1.89} />
       </Button>
@@ -181,7 +230,6 @@ function RNDFooter() {
 
 function CallRND() {
   const callBeepAudio = useRef(new Audio(SOUNDS.BEEP));
-
   const [counter, setCounter] = useState<number>(0);
   const [isRinging, setIsRinging] = useState<boolean>(false);
   const client = useQueryClient();
@@ -199,6 +247,7 @@ function CallRND() {
   const rndRef = useRef(null);
   const [minimized, setMinimized] = useState<boolean>(false);
   const setDisableCallRND = useCallRNDState((state) => state.setDisableCallRND);
+  const call_status = useCallRNDState((state) => state.call_status);
 
   const width = window.innerWidth - 500;
   const height = window.innerHeight - 150;
@@ -223,6 +272,14 @@ function CallRND() {
     }
     return { name: null, avatar: null };
   })();
+
+  useEffect(() => {
+    if (call_status === "close") {
+      setTimeout(() => {
+        setDisableCallRND();
+      }, 2000);
+    }
+  }, [call_status, setDisableCallRND]);
 
   useEffect(() => {
     if (!isRinging) return;
@@ -256,7 +313,7 @@ function CallRND() {
     if (!callType || !callee_id) return;
     if (callDirection === "incoming") return;
 
-    sendCallSignal({ calleeId: callee_id, callType });
+    sendCallSignal({ calleeId: callee_id, callType, call_status: "ringing" });
   }, [callType, callee_id, callDirection, sendCallSignal]);
 
   return (
@@ -271,7 +328,13 @@ function CallRND() {
       className="bg-card text-card-foreground border border-border rounded-lg shadow-xl overflow-hidden z-60"
     >
       <div className="flex flex-col h-full w-full">
-        <RNDHeader rndRef={rndRef} setMinimized={setMinimized} />
+        <RNDHeader
+          call_type={callType}
+          callee_id={callee_id}
+          sendCallSignal={sendCallSignal}
+          rndRef={rndRef}
+          setMinimized={setMinimized}
+        />
 
         {!minimized && (
           <div className="flex-1 flex flex-col items-center justify-center gap-4 bg-muted m-1 rounded-lg border">
@@ -297,7 +360,11 @@ function CallRND() {
           </div>
         )}
 
-        <RNDFooter />
+        <RNDFooter
+          call_type={callType}
+          callee_id={callee_id}
+          sendCallSignal={sendCallSignal}
+        />
       </div>
     </Rnd>
   );

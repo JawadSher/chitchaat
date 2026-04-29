@@ -140,8 +140,6 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
           });
         })
         .subscribe((status) => {
-          if (status === "SUBSCRIBED")
-            console.log("Subscribed to incomming-call channel");
           if (status === "CLOSED") subscribe();
         });
 

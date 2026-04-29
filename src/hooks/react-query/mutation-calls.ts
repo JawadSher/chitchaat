@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 export const useSendCallSignal = ({ callee_id, setIsRinging }: { callee_id?: string, setIsRinging: (v:boolean) => void; }) => {
   const supabase = useSupabase();
-  const user = useUser();
+  const {user} = useUser();
 
   return useMutation({
     mutationKey: ["send-call-signal", callee_id],
@@ -21,8 +21,8 @@ export const useSendCallSignal = ({ callee_id, setIsRinging }: { callee_id?: str
     }) => {
       return await sendCallSignal(supabase, {
         callee_id: calleeId,
+        caller_id: user?.id!,
         call_type: callType,
-        caller_id: user.user?.id!,
         call_mode: "direct",
         call_status
       });

@@ -154,7 +154,7 @@ function RNDHeader({
                   });
                   setTimeout(() => {
                     setDisableCallRND();
-                  }, 900);
+                  }, 500);
                 }}
               >
                 Close
@@ -219,7 +219,7 @@ function RNDFooter({
           });
           setTimeout(() => {
             setDisableCallRND();
-          }, 900);
+          }, 500);
         }}
       >
         <Phone className="size-5 rotate-135" strokeWidth={1.89} />
@@ -330,7 +330,7 @@ function CallRND() {
       <div className="flex flex-col h-full w-full">
         <RNDHeader
           call_type={callType}
-          callee_id={callee_id}
+          callee_id={callDirection === "incoming" ? caller_id! : callee_id}
           sendCallSignal={sendCallSignal}
           rndRef={rndRef}
           setMinimized={setMinimized}
@@ -362,7 +362,7 @@ function CallRND() {
 
         <RNDFooter
           call_type={callType}
-          callee_id={callee_id}
+          callee_id={callDirection === "incoming" ? caller_id! : callee_id}
           sendCallSignal={sendCallSignal}
         />
       </div>

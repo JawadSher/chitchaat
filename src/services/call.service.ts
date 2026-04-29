@@ -17,6 +17,7 @@ export async function sendCallSignal(
   },
 ) {
   try {
+
     const {data, error} = await supabase
       .from("contacts")
       .select("user_id, contact_user_id, status, is_deleted")

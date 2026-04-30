@@ -15,7 +15,10 @@ import {
 } from "lucide-react";
 import { RefObject, useEffect, useRef, useState } from "react";
 import { useCallRNDState } from "@/store/use-call-rnd";
-import { useSendCallSignal } from "@/hooks/react-query/mutation-calls";
+import {
+  useSendCallSignal,
+  useUpdateIsInCall,
+} from "@/hooks/react-query/mutation-calls";
 import { useQueryClient } from "@tanstack/react-query";
 import { useUser } from "@clerk/nextjs";
 import {
@@ -267,7 +270,7 @@ function CallRND() {
   const [minimized, setMinimized] = useState<boolean>(false);
   const setDisableCallRND = useCallRNDState((state) => state.setDisableCallRND);
   const call_status = useCallRNDState((state) => state.call_status);
-
+  const { mutate: updateIsInCall } = useUpdateIsInCall();
   const width = window.innerWidth - 550;
   const height = window.innerHeight - 150;
 
@@ -295,15 +298,17 @@ function CallRND() {
   useEffect(() => {
     if (call_status === "close") {
       setTimeout(() => {
+        updateIsInCall({ is_in_call: false });
         setDisableCallRND();
       }, 2000);
     }
-  }, [call_status, setDisableCallRND]);
+  }, [call_status, setDisableCallRND, updateIsInCall]);
 
   useEffect(() => {
     if (!isRinging) return;
 
     if (counter >= 20) {
+      updateIsInCall({ is_in_call: false });
       setDisableCallRND();
       return;
     }
@@ -313,7 +318,7 @@ function CallRND() {
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [counter, isRinging, setDisableCallRND]);
+  }, [counter, isRinging, setDisableCallRND, updateIsInCall]);
 
   useEffect(() => {
     if (!isRinging || callDirection !== "outgoing") return;

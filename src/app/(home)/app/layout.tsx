@@ -25,6 +25,7 @@ import { IMessages } from "@/types/messages";
 import { useUserOnlineState } from "@/store/use-get-user-online-state";
 import { useCallRNDState } from "@/store/use-call-rnd";
 import CallRND from "@/components/call-rnd";
+import { useUpdateIsInCall } from "@/hooks/react-query/mutation-calls";
 
 type TabItem = {
   Icon: keyof typeof icons;
@@ -65,7 +66,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
     | string
     | null;
   const updateCallStatus = useCallRNDState((state) => state.updateCallStatus);
-
+  const { mutate: updateIsInCall } = useUpdateIsInCall();
   const handleTabChange = (value: string) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set("tab", value);
@@ -86,6 +87,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
       const timer = setTimeout(() => {
         ringtoneAudio.pause();
         ringtoneAudio.currentTime = 0;
+        updateIsInCall({ is_in_call: false });
         setDisableCallRND();
       }, 20000);
 
@@ -94,7 +96,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
       ringtoneAudio.pause();
       ringtoneAudio.currentTime = 0;
     }
-  }, [call_status, setDisableCallRND]);
+  }, [call_status, setDisableCallRND, updateIsInCall]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -121,14 +123,12 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
             call_status,
           } = payload.payload;
 
-          if (
-            payload.payload.call_status === "close" &&
-            cached_caller_id === caller_id
-          ) {
+          if (call_status === "close" && cached_caller_id === caller_id) {
             updateCallStatus({ call_status });
             return;
           }
 
+          updateIsInCall({ is_in_call: true });
           setEnableCallRND({
             type: call_type,
             callee_id: user.id,

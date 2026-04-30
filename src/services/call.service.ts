@@ -3,22 +3,23 @@ import { SupabaseClient } from "@supabase/supabase-js";
 export async function sendCallSignal(
   supabase: SupabaseClient,
   {
+    user_id,
     callee_id,
     call_type,
     caller_id,
     call_mode,
-    call_status
+    call_status,
   }: {
+    user_id: string;
     callee_id: string;
     call_type: "audio" | "video";
     caller_id: string;
     call_mode: "direct" | "group";
-    call_status: "ringing" | "close"
+    call_status: "ringing" | "close";
   },
 ) {
   try {
-
-    const {data, error} = await supabase
+    const { data, error } = await supabase
       .from("contacts")
       .select("user_id, contact_user_id, status, is_deleted")
       .eq("user_id", caller_id)
@@ -26,32 +27,63 @@ export async function sendCallSignal(
       .eq("status", "accepted")
       .eq("is_deleted", false)
       .maybeSingle();
-    
-    if(error){
+
+    if (error) {
       throw new Error(error.message);
     }
 
-    if(!data){
+    if (!data) {
       throw new Error("Calls are allowed for contacts only.");
+    }
+
+    if (call_status === "ringing") {
+      const { error: is_in_call_error, data: is_in_call_data } = await supabase
+        .from("users_public")
+        .select("user_id, is_in_call")
+        .eq("user_id", callee_id);
+
+      if (is_in_call_error) throw new Error(is_in_call_error.message);
+      if (is_in_call_data[0].is_in_call)
+        throw new Error("The user is busy on another call.");
     }
 
     const callChannel = supabase.channel(`incomming-call:${callee_id}`, {
       config: { private: false },
     });
 
-    const response = await callChannel.send({
-      type: "broadcast",
-      event: "CALL",
-      payload: {
-        caller_id,
-        call_type,
-        callDirection: "outgoing",
-        call_mode,
-        call_status
-      },
-    });
+    const [, channel_Res] = await Promise.all([
+      supabase
+        .from("users")
+        .update({ is_in_call: call_status === "close" ? false : true })
+        .eq("user_id", user_id),
 
-    return response;
+      callChannel.send({
+        type: "broadcast",
+        event: "CALL",
+        payload: {
+          caller_id,
+          call_type,
+          callDirection: "outgoing",
+          call_mode,
+          call_status,
+        },
+      }),
+    ]);
+
+    return channel_Res;
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
+}
+
+export async function updateIsInCall(
+  supabase: SupabaseClient,
+  { user_id, is_in_call }: { user_id: string; is_in_call: boolean },
+) {
+  try {
+    await supabase.from("users").update({ is_in_call }).eq("user_id", user_id);
+
+    return true;
   } catch (error: any) {
     throw new Error(error.message);
   }

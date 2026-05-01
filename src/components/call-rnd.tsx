@@ -222,9 +222,6 @@ function RNDFooter({
           className="cursor-pointer bg-green-500 text-white hover:bg-green-600 rounded-full min-w-23"
           type="button"
           variant={"default"}
-          onClick={() => {
-            console.log("call attended");
-          }}
         >
           <Phone className="size-5 rotate-135" strokeWidth={1.89} />
         </Button>

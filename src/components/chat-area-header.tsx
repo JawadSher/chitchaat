@@ -45,7 +45,7 @@ function ChatAreaHeader({
 
       return true;
     } catch (error: any) {
-      if (error.message === "Permission dismissed") {
+      if (error.name === "NotAllowedError") {
         toast.error(
           type === "video"
             ? "You need to allow camera and microphone access to use this feature."

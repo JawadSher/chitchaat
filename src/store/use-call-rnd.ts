@@ -1,6 +1,8 @@
 import { create } from "zustand";
 
 type CallRNDType = {
+  roomName: string | null;
+  token: string | null;
   isShowCallRND: boolean;
   callType: "video" | "audio" | null;
   callMode: "direct" | "group" | null;
@@ -18,6 +20,13 @@ type CallRNDType = {
     callDirection: "incoming" | "outgoing" | null;
     caller_id?: string | null;
     call_status?: "ringing" | "close" | null;
+  }) => void;
+  updateLiveKitInfo: ({
+    roomName,
+    token,
+  }: {
+    roomName: string | null;
+    token: string | null;
   }) => void;
   updateCallStatus: ({
     call_status,
@@ -39,6 +48,8 @@ export const useCallRNDState = create<CallRNDType>((set) => ({
   callDirection: null,
   caller_id: null,
   call_status: null,
+  roomName: null,
+  token: null,
   setEnableCallRND: ({
     type,
     callee_id,
@@ -57,8 +68,15 @@ export const useCallRNDState = create<CallRNDType>((set) => ({
       call_status,
     }));
   },
+  updateLiveKitInfo: ({
+    roomName,
+    token,
+  }: {
+    roomName: string | null;
+    token: string | null;
+  }) => set(() => ({ roomName, token })),
   updateCallStatus: ({ call_status }: { call_status: "ringing" | "close" }) =>
-    set(() => ({ call_status: call_status })),
+    set(() => ({ call_status })),
   setDisableCallRND: () => {
     set(() => ({
       isShowCallRND: false,

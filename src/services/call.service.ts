@@ -1,3 +1,4 @@
+import { API } from "@/constants/routes";
 import { SupabaseClient } from "@supabase/supabase-js";
 
 export async function sendCallSignal(
@@ -51,6 +52,15 @@ export async function sendCallSignal(
       config: { private: false },
     });
 
+    let roomName = null;
+    let token = null;
+    if (call_status === "ringing") {
+      const res = await fetch(API.LIVE_KIT, { method: "POST" });
+      const { token: TN, roomName: RN } = await res?.json();
+      token = TN;
+      roomName = RN;
+    }
+
     const [, channel_Res] = await Promise.all([
       supabase
         .from("users")
@@ -66,11 +76,12 @@ export async function sendCallSignal(
           callDirection: "outgoing",
           call_mode,
           call_status,
+          roomName,
         },
       }),
     ]);
 
-    return channel_Res;
+    return { channel_Res, token, roomName };
   } catch (error: any) {
     throw new Error(error.message);
   }

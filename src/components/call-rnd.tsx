@@ -356,7 +356,7 @@ function CallRND() {
           rndRef={rndRef}
           setMinimized={setMinimized}
         />
-
+        
         {!minimized && (
           <div className="flex-1 flex flex-col items-center justify-center gap-4 bg-muted m-1 rounded-lg border">
             <UserAvatar

@@ -15,6 +15,7 @@ export const useSendCallSignal = ({
   const supabase = useSupabase();
   const { user } = useUser();
   const setDisableCallRND = useCallRNDState((state) => state.setDisableCallRND);
+  const updateLiveKitInfo = useCallRNDState((state) => state.updateLiveKitInfo);
 
   return useMutation({
     mutationKey: ["send-call-signal", callee_id],
@@ -36,7 +37,9 @@ export const useSendCallSignal = ({
         call_status,
       });
     },
-    onSuccess: () => {
+    onSuccess: (res: any) => {
+      const { roomName, token } = res;
+      updateLiveKitInfo({ roomName, token });
       setIsRinging(true);
     },
     onError: (error) => {
@@ -52,7 +55,7 @@ export const useUpdateIsInCall = () => {
 
   return useMutation({
     mutationKey: ["update-is-in-call"],
-    mutationFn: async ({ is_in_call } : { is_in_call: boolean }) => {
+    mutationFn: async ({ is_in_call }: { is_in_call: boolean }) => {
       return await updateIsInCall(supabase, { user_id: user?.id!, is_in_call });
     },
     onError: (error) => {

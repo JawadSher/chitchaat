@@ -1,6 +1,25 @@
 import { API } from "@/constants/routes";
 import { SupabaseClient } from "@supabase/supabase-js";
 
+export async function getLiveKitToken({
+  RN = ""
+}: {
+  RN?: string | null;
+}): Promise<{
+  token: string;
+  roomName: string;
+} | null> {
+  const res = await fetch(API.LIVE_KIT, {
+    method: "POST",
+    body: JSON.stringify({ roomName: RN }),
+  });
+
+  if (!res) return null;
+
+  const { token, roomName } = await res?.json();
+
+  return { token, roomName };
+}
 export async function sendCallSignal(
   supabase: SupabaseClient,
   {
@@ -55,10 +74,13 @@ export async function sendCallSignal(
     let roomName = null;
     let token = null;
     if (call_status === "ringing") {
-      const res = await fetch(API.LIVE_KIT, { method: "POST" });
-      const { token: TN, roomName: RN } = await res?.json();
-      token = TN;
+      const result = await getLiveKitToken({});
+      if (!result) {
+        throw new Error("Failed to create a call session");
+      }
+      const { token: TN, roomName: RN } = result;
       roomName = RN;
+      token = TN;
     }
 
     const [, channel_Res] = await Promise.all([

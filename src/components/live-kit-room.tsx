@@ -12,11 +12,13 @@ function LiveKitCallRoom() {
   const token = useCallRNDState((state) => state.token);
   const call_type = useCallRNDState((state) => state.callType)
 
-  if(!token) return null;
+  console.log("------> ROOM_NAME", roomName);
+  console.log("------> TOKEN:", token)
+
 
   return (
     <LiveKitRoom
-      token={token}
+      token={token || undefined}
       serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL}
       connect={true}
       video={call_type === "video"}

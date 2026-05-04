@@ -37,6 +37,8 @@ import UserAvatar from "./avatar";
 import ShimmerText from "./kokonutui/shimmer-text";
 import Logo from "./logo";
 import { SOUNDS } from "@/constants/sounds";
+import { getLiveKitToken } from "@/services/call.service";
+import LiveKitCallRoom from "./live-kit-room";
 
 function RNDHeader({
   rndRef,
@@ -268,6 +270,8 @@ function CallRND() {
   const setDisableCallRND = useCallRNDState((state) => state.setDisableCallRND);
   const call_status = useCallRNDState((state) => state.call_status);
   const { mutate: updateIsInCall } = useUpdateIsInCall();
+  const updateLiveKitInfo = useCallRNDState((state) => state.updateLiveKitInfo);
+  const roomName = useCallRNDState((state) => state.roomName);
   const width = window.innerWidth - 550;
   const height = window.innerHeight - 150;
 
@@ -331,9 +335,25 @@ function CallRND() {
   }, [isRinging, callDirection]);
 
   useEffect(() => {
+    if (callDirection === "incoming" && roomName) {
+      async function getToken() {
+        const result = await getLiveKitToken({ RN: roomName });
+        if (!result) {
+          setCounter(20);
+          return;
+        }
+
+        updateLiveKitInfo({ roomName: result.roomName, token: result.token });
+      }
+
+      getToken();
+    }
+  }, [roomName, callDirection, updateLiveKitInfo]);
+
+  useEffect(() => {
     if (!callType || !callee_id) return;
     if (callDirection === "incoming") return;
-
+    
     sendCallSignal({ calleeId: callee_id, callType, call_status: "ringing" });
   }, [callType, callee_id, callDirection, sendCallSignal]);
 
@@ -356,7 +376,7 @@ function CallRND() {
           rndRef={rndRef}
           setMinimized={setMinimized}
         />
-        
+        <LiveKitCallRoom />
         {!minimized && (
           <div className="flex-1 flex flex-col items-center justify-center gap-4 bg-muted m-1 rounded-lg border">
             <UserAvatar

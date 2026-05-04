@@ -86,6 +86,8 @@ export const useCallRNDState = create<CallRNDType>((set) => ({
       callDirection: null,
       caller_id: null,
       call_status: null,
+      token: null,
+      roomName: null
     }));
   },
 }));

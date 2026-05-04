@@ -65,6 +65,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const cached_caller_id = useCallRNDState((state) => state.caller_id) as
     | string
     | null;
+  const updateLiveKitInfo = useCallRNDState((state) => state.updateLiveKitInfo);
   const updateCallStatus = useCallRNDState((state) => state.updateCallStatus);
   const { mutate: updateIsInCall } = useUpdateIsInCall();
   const handleTabChange = (value: string) => {
@@ -121,6 +122,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
             callDirection,
             call_mode,
             call_status,
+            roomName,
           } = payload.payload;
 
           if (call_status === "close" && cached_caller_id === caller_id) {
@@ -138,6 +140,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
             caller_id,
             call_status,
           });
+          updateLiveKitInfo({ roomName, token: null });
         })
         .subscribe((status) => {
           if (status === "CLOSED") subscribe();

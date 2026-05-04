@@ -1,10 +1,12 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { AccessToken } from "livekit-server-sdk";
 import { currentUser } from "@clerk/nextjs/server";
 import { v4 as uuidv4 } from "uuid";
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
+    const body = await request.json();
+    const { roomName: RN } = body;
     const user = await currentUser();
     const userId = user?.id;
     if (!userId) {
@@ -21,8 +23,8 @@ export async function POST() {
       return new NextResponse("LiveKit server env vars are missing", {
         status: 500,
       });
-
-    const roomName = uuidv4();
+    
+    const roomName = RN && RN.trim() ? RN : uuidv4();
     const at = new AccessToken(apiKey, apiSecret, {
       identity: String(userId),
     });

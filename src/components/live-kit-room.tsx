@@ -8,14 +8,10 @@ import {
 } from "@livekit/components-react";
 
 function LiveKitCallRoom() {
-  const roomName = useCallRNDState((state) => state.roomName);
   const token = useCallRNDState((state) => state.token);
   const call_type = useCallRNDState((state) => state.callType)
 
-  console.log("------> ROOM_NAME", roomName);
-  console.log("------> TOKEN:", token)
-
-
+  if(!token) return;
   return (
     <LiveKitRoom
       token={token || undefined}

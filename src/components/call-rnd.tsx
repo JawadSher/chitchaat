@@ -188,10 +188,12 @@ function RNDFooter({
   }: {
     calleeId: string;
     callType: "audio" | "video";
-    call_status: "ringing" | "close";
+    call_status: "ringing" | "close" | "missed" | "accepted";
   }) => void;
 }) {
+  
   const setDisableCallRND = useCallRNDState().setDisableCallRND;
+  const updateCallStatus = useCallRNDState().updateCallStatus;
   return (
     <div className="flex items-center justify-center gap-2 p-1">
       <Button
@@ -224,6 +226,10 @@ function RNDFooter({
           className="cursor-pointer bg-green-500 text-white hover:bg-green-600 rounded-full min-w-23"
           type="button"
           variant={"default"}
+          onClick={() => {
+            sendCallSignal({ calleeId: callee_id, callType: call_type!, call_status: "accepted" });
+            updateCallStatus({ call_status: "accepted" });
+          }}
         >
           <Phone className="size-5 rotate-135" strokeWidth={1.89} />
         </Button>
@@ -335,7 +341,7 @@ function CallRND() {
   }, [isRinging, callDirection]);
 
   useEffect(() => {
-    if (callDirection === "incoming" && roomName) {
+    if (callDirection === "incoming" && roomName && call_status === "accepted") {
       async function getToken() {
         const result = await getLiveKitToken({ RN: roomName });
         if (!result) {
@@ -348,12 +354,12 @@ function CallRND() {
 
       getToken();
     }
-  }, [roomName, callDirection, updateLiveKitInfo]);
+  }, [roomName, callDirection, updateLiveKitInfo, call_status]);
 
   useEffect(() => {
     if (!callType || !callee_id) return;
     if (callDirection === "incoming") return;
-    
+
     sendCallSignal({ calleeId: callee_id, callType, call_status: "ringing" });
   }, [callType, callee_id, callDirection, sendCallSignal]);
 

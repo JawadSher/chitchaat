@@ -26,7 +26,7 @@ export const useSendCallSignal = ({
     }: {
       calleeId: string;
       callType: "audio" | "video";
-      call_status: "ringing" | "close";
+      call_status: "ringing" | "close" | "missed" | "accepted";
     }) => {
       return await sendCallSignal(supabase, {
         user_id: user?.id!,

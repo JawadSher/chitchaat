@@ -19,7 +19,7 @@ type CallRNDType = {
     callMode: "direct" | "group" | null;
     callDirection: "incoming" | "outgoing" | null;
     caller_id?: string | null;
-    call_status?: "ringing" | "close" | null;
+    call_status?: "ringing" | "close" | "missed" | "accepted" | null;
   }) => void;
   updateLiveKitInfo: ({
     roomName,
@@ -31,13 +31,13 @@ type CallRNDType = {
   updateCallStatus: ({
     call_status,
   }: {
-    call_status: "close" | "ringing";
+    call_status: "ringing" | "close" | "missed" | "accepted";
   }) => void;
   setDisableCallRND: () => void;
   callee_id: string | null;
   callDirection: "incoming" | "outgoing" | null;
   caller_id?: string | null;
-  call_status: "ringing" | "close" | null;
+  call_status: "ringing" | "close" | "missed" | "accepted" | null;
 };
 
 export const useCallRNDState = create<CallRNDType>((set) => ({
@@ -75,8 +75,11 @@ export const useCallRNDState = create<CallRNDType>((set) => ({
     roomName: string | null;
     token: string | null;
   }) => set(() => ({ roomName, token })),
-  updateCallStatus: ({ call_status }: { call_status: "ringing" | "close" }) =>
-    set(() => ({ call_status })),
+  updateCallStatus: ({
+    call_status,
+  }: {
+    call_status: "ringing" | "close" | "missed" | "accepted";
+  }) => set(() => ({ call_status })),
   setDisableCallRND: () => {
     set(() => ({
       isShowCallRND: false,
@@ -87,7 +90,7 @@ export const useCallRNDState = create<CallRNDType>((set) => ({
       caller_id: null,
       call_status: null,
       token: null,
-      roomName: null
+      roomName: null,
     }));
   },
 }));

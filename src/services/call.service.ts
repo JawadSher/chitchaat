@@ -35,7 +35,7 @@ export async function sendCallSignal(
     call_type: "audio" | "video";
     caller_id: string;
     call_mode: "direct" | "group";
-    call_status: "ringing" | "close";
+    call_status: "ringing" | "close" | "missed" | "accepted";
   },
 ) {
   try {
@@ -73,7 +73,7 @@ export async function sendCallSignal(
 
     let roomName = null;
     let token = null;
-    if (call_status === "ringing") {
+    if (call_status === "accepted") {
       const result = await getLiveKitToken({});
       if (!result) {
         throw new Error("Failed to create a call session");

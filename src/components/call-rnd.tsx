@@ -1,19 +1,29 @@
-/* eslint-disable no-var */
 "use client";
 import { Rnd } from "react-rnd";
 import { Button } from "./ui/button";
 import {
   Mic,
+  MicOff,
   Minus,
   Phone,
   PhoneCall,
+  PhoneOff,
   ScreenShare,
+  ScreenShareOff,
   Square,
   Video,
   VideoOff,
   X,
 } from "lucide-react";
-import { RefObject, useEffect, useRef, useState } from "react";
+import {
+  type ButtonHTMLAttributes,
+  type ReactNode,
+  RefObject,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useCallRNDState } from "@/store/use-call-rnd";
 import {
   useSendCallSignal,
@@ -33,12 +43,33 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import UserAvatar from "./avatar";
-import ShimmerText from "./kokonutui/shimmer-text";
 import Logo from "./logo";
 import { SOUNDS } from "@/constants/sounds";
 import { getLiveKitToken } from "@/services/call.service";
 import LiveKitCallRoom from "./live-kit-room";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useMaybeRoomContext, useTrackToggle } from "@livekit/components-react";
+import { Track } from "livekit-client";
+import { cn } from "@/lib/utils";
+
+function formatCallDuration(totalSeconds: number) {
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  const formattedMinutes = String(minutes).padStart(2, "0");
+  const formattedSeconds = String(seconds).padStart(2, "0");
+
+  if (hours > 0) {
+    return `${hours}:${formattedMinutes}:${formattedSeconds}`;
+  }
+
+  return `${formattedMinutes}:${formattedSeconds}`;
+}
 
 function RNDHeader({
   rndRef,
@@ -177,10 +208,12 @@ function RNDFooter({
   callee_id,
   call_type,
   call_direction,
+  call_status,
 }: {
   call_direction: "incoming" | "outgoing";
   callee_id: string;
   call_type: "video" | "audio" | null;
+  call_status: "ringing" | "close" | "missed" | "accepted" | null;
   sendCallSignal: ({
     calleeId,
     callType,
@@ -191,37 +224,110 @@ function RNDFooter({
     call_status: "ringing" | "close" | "missed" | "accepted";
   }) => void;
 }) {
-  
+  const room = useMaybeRoomContext();
+  const micToggle = useTrackToggle({ source: Track.Source.Microphone });
+  const cameraToggle = useTrackToggle({ source: Track.Source.Camera });
+  const screenShareToggle = useTrackToggle({ source: Track.Source.ScreenShare });
   const setDisableCallRND = useCallRNDState().setDisableCallRND;
   const updateCallStatus = useCallRNDState().updateCallStatus;
+
+  const isAccepted = call_status === "accepted";
+  const canControlMedia = Boolean(room && isAccepted);
+  const canUseCamera = canControlMedia && call_type === "video";
+
+  const handleCloseCall = () => {
+    room?.disconnect();
+    sendCallSignal({
+      calleeId: callee_id,
+      callType: call_type!,
+      call_status: "close",
+    });
+    setTimeout(() => {
+      setDisableCallRND();
+    }, 500);
+  };
+
+  const renderControlButton = ({
+    label,
+    activeLabel,
+    enabled,
+    disabled,
+    buttonProps,
+    children,
+  }: {
+    label: string;
+    activeLabel: string;
+    enabled: boolean;
+    disabled: boolean;
+    buttonProps: ButtonHTMLAttributes<HTMLButtonElement>;
+    children: ReactNode;
+  }) => {
+    const { className, disabled: liveKitDisabled, ...restButtonProps } =
+      buttonProps;
+
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            {...restButtonProps}
+            aria-label={enabled ? activeLabel : label}
+            className={cn(
+              "cursor-pointer rounded-full w-15",
+              !enabled &&
+                "bg-destructive/10 text-destructive hover:bg-destructive/15",
+              className,
+            )}
+            disabled={disabled || liveKitDisabled}
+            type="button"
+            variant={"secondary"}
+          >
+            {children}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>{enabled ? activeLabel : label}</TooltipContent>
+      </Tooltip>
+    );
+  };
+
   return (
     <div className="flex items-center justify-center gap-2 p-1">
-      <Button
-        className="cursor-pointer rounded-full w-15"
-        type="button"
-        variant={"secondary"}
-      >
-        {call_type === "video" ? (
+      {renderControlButton({
+        label: "Unmute microphone",
+        activeLabel: "Mute microphone",
+        enabled: micToggle.enabled,
+        disabled: !canControlMedia,
+        buttonProps: micToggle.buttonProps,
+        children: micToggle.enabled ? (
+          <Mic className="size-5" strokeWidth={1.89} />
+        ) : (
+          <MicOff className="size-5" strokeWidth={1.89} />
+        ),
+      })}
+      {renderControlButton({
+        label: "Turn camera on",
+        activeLabel: "Turn camera off",
+        enabled: cameraToggle.enabled,
+        disabled: !canUseCamera,
+        buttonProps: cameraToggle.buttonProps,
+        children: cameraToggle.enabled ? (
           <Video className="size-5" strokeWidth={1.89} />
         ) : (
           <VideoOff className="size-5" strokeWidth={1.89} />
-        )}
-      </Button>
-      <Button
-        className="cursor-pointer rounded-full w-15"
-        type="button"
-        variant={"secondary"}
-      >
-        <Mic className="size-5" strokeWidth={1.89} />
-      </Button>
-      <Button
-        className="cursor-pointer rounded-full w-15"
-        type="button"
-        variant={"secondary"}
-      >
-        <ScreenShare className="size-5" strokeWidth={1.89} />
-      </Button>
-      {call_direction === "incoming" && (
+        ),
+      })}
+      {renderControlButton({
+        label: "Share screen",
+        activeLabel: "Stop sharing",
+        enabled: screenShareToggle.enabled,
+        disabled: !canControlMedia,
+        buttonProps: screenShareToggle.buttonProps,
+        children: screenShareToggle.enabled ? (
+          <ScreenShareOff className="size-5" strokeWidth={1.89} />
+        ) : (
+          <ScreenShare className="size-5" strokeWidth={1.89} />
+        ),
+      })}
+      {call_direction === "incoming" && !isAccepted && (
         <Button
           className="cursor-pointer bg-green-500 text-white hover:bg-green-600 rounded-full min-w-23"
           type="button"
@@ -238,18 +344,9 @@ function RNDFooter({
         className="cursor-pointer bg-red-500  text-white hover:bg-destructive rounded-full w-23"
         type="button"
         variant={"default"}
-        onClick={() => {
-          sendCallSignal({
-            calleeId: callee_id,
-            callType: call_type!,
-            call_status: "close",
-          });
-          setTimeout(() => {
-            setDisableCallRND();
-          }, 500);
-        }}
+        onClick={handleCloseCall}
       >
-        <Phone className="size-5 rotate-135" strokeWidth={1.89} />
+        <PhoneOff className="size-5" strokeWidth={1.89} />
       </Button>
     </div>
   );
@@ -258,6 +355,9 @@ function RNDFooter({
 function CallRND() {
   const callBeepAudio = useRef(new Audio(SOUNDS.BEEP));
   const [counter, setCounter] = useState<number>(0);
+  const [callDuration, setCallDuration] = useState<number>(0);
+  const [hasConversationStarted, setHasConversationStarted] =
+    useState<boolean>(false);
   const [isRinging, setIsRinging] = useState<boolean>(false);
   const client = useQueryClient();
   const callee_id = useCallRNDState((state) => state.callee_id) as string;
@@ -276,10 +376,24 @@ function CallRND() {
   const setDisableCallRND = useCallRNDState((state) => state.setDisableCallRND);
   const call_status = useCallRNDState((state) => state.call_status);
   const { mutate: updateIsInCall } = useUpdateIsInCall();
+  const updateCallStatus = useCallRNDState((state) => state.updateCallStatus);
   const updateLiveKitInfo = useCallRNDState((state) => state.updateLiveKitInfo);
   const roomName = useCallRNDState((state) => state.roomName);
   const width = window.innerWidth - 550;
   const height = window.innerHeight - 150;
+  const isWaitingForAnswer = isRinging && call_status === "ringing";
+  const isCallAccepted = call_status === "accepted";
+  const callStatusText = hasConversationStarted
+    ? formatCallDuration(callDuration)
+    : isCallAccepted
+      ? "Connecting..."
+      : callDirection === "outgoing"
+      ? isWaitingForAnswer
+        ? "Ringing..."
+        : "Calling..."
+      : callType === "audio"
+        ? "Voice call"
+        : "Video call";
 
   const user_info = (() => {
     if (
@@ -312,7 +426,7 @@ function CallRND() {
   }, [call_status, setDisableCallRND, updateIsInCall]);
 
   useEffect(() => {
-    if (!isRinging) return;
+    if (!isWaitingForAnswer) return;
 
     if (counter >= 20) {
       updateIsInCall({ is_in_call: false });
@@ -325,10 +439,10 @@ function CallRND() {
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [counter, isRinging, setDisableCallRND, updateIsInCall]);
+  }, [counter, isWaitingForAnswer, setDisableCallRND, updateIsInCall]);
 
   useEffect(() => {
-    if (!isRinging || callDirection !== "outgoing") return;
+    if (!isWaitingForAnswer || callDirection !== "outgoing") return;
 
     const interval = setInterval(() => {
       callBeepAudio.current.pause();
@@ -338,7 +452,21 @@ function CallRND() {
     }, 2000);
 
     return () => clearInterval(interval);
-  }, [isRinging, callDirection]);
+  }, [isWaitingForAnswer, callDirection]);
+
+  const handleConversationConnected = useCallback(() => {
+    setHasConversationStarted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hasConversationStarted) return;
+    
+    const timer = setInterval(() => {
+      setCallDuration((prev) => prev + 1);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [hasConversationStarted]);
 
   useEffect(() => {
     if (callDirection === "incoming" && roomName && call_status === "accepted") {
@@ -360,8 +488,9 @@ function CallRND() {
     if (!callType || !callee_id) return;
     if (callDirection === "incoming") return;
 
+    updateCallStatus({ call_status: "ringing" });
     sendCallSignal({ calleeId: callee_id, callType, call_status: "ringing" });
-  }, [callType, callee_id, callDirection, sendCallSignal]);
+  }, [callType, callee_id, callDirection, sendCallSignal, updateCallStatus]);
 
   return (
     <Rnd
@@ -382,37 +511,20 @@ function CallRND() {
           rndRef={rndRef}
           setMinimized={setMinimized}
         />
-        <LiveKitCallRoom />
-        {!minimized && (
-          <div className="flex-1 flex flex-col items-center justify-center gap-4 bg-muted m-1 rounded-lg border">
-            <UserAvatar
-              className="min-w-30 min-h-30"
-              src={user_info.avatar}
-              alt="avatar"
-            />
-            <p className="text-xl dark:text-white/90 font-semibold">
-              {user_info.name}
-            </p>
-            {callDirection === "outgoing" ? (
-              <ShimmerText
-                className="text-sm font-medium"
-                text={isRinging ? "Ringing..." : "Calling..."}
-              />
-            ) : (
-              <ShimmerText
-                className="text-sm"
-                text={callType === "audio" ? "Voice call" : "Video call"}
-              />
-            )}
-          </div>
-        )}
-
-        <RNDFooter
-          call_direction={callDirection ?? "outgoing"}
-          call_type={callType}
-          callee_id={callDirection === "incoming" ? caller_id! : callee_id}
-          sendCallSignal={sendCallSignal}
-        />
+        <LiveKitCallRoom
+          minimized={minimized}
+          onConversationConnected={handleConversationConnected}
+          statusText={callStatusText}
+          userInfo={user_info}
+        >
+          <RNDFooter
+            call_direction={callDirection ?? "outgoing"}
+            call_type={callType}
+            call_status={call_status}
+            callee_id={callDirection === "incoming" ? caller_id! : callee_id}
+            sendCallSignal={sendCallSignal}
+          />
+        </LiveKitCallRoom>
       </div>
     </Rnd>
   );

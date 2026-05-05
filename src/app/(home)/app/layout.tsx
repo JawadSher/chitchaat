@@ -62,6 +62,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const call_status = useCallRNDState((state) => state.call_status) as
     | string
     | null;
+  const callDirection = useCallRNDState((state) => state.callDirection);
   const cached_caller_id = useCallRNDState((state) => state.caller_id) as
     | string
     | null;
@@ -81,7 +82,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
 
     const ringtoneAudio = ringtoneRef.current;
 
-    if (call_status === "ringing") {
+    if (call_status === "ringing" && callDirection === "incoming") {
       ringtoneAudio.volume = 1;
       ringtoneAudio.play();
 
@@ -97,7 +98,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
       ringtoneAudio.pause();
       ringtoneAudio.currentTime = 0;
     }
-  }, [call_status, setDisableCallRND, updateIsInCall]);
+  }, [call_status, callDirection, setDisableCallRND, updateIsInCall]);
 
   useEffect(() => {
     if (!user?.id) return;

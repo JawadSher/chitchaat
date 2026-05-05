@@ -37,10 +37,10 @@ export const useSendCallSignal = ({
         call_status,
       });
     },
-    onSuccess: (res: any) => {
+    onSuccess: (res: any, variables) => {
       const { roomName, token } = res;
       updateLiveKitInfo({ roomName, token });
-      setIsRinging(true);
+      setIsRinging(variables.call_status === "ringing");
     },
     onError: (error) => {
       toast.error(error.message);

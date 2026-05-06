@@ -1,8 +1,9 @@
 import { API } from "@/constants/routes";
+import { Call } from "@/types/call";
 import { SupabaseClient } from "@supabase/supabase-js";
 
 export async function getLiveKitToken({
-  RN = ""
+  RN = "",
 }: {
   RN?: string | null;
 }): Promise<{
@@ -108,7 +109,6 @@ export async function sendCallSignal(
     throw new Error(error.message);
   }
 }
-
 export async function updateIsInCall(
   supabase: SupabaseClient,
   { user_id, is_in_call }: { user_id: string; is_in_call: boolean },
@@ -117,6 +117,38 @@ export async function updateIsInCall(
     await supabase.from("users").update({ is_in_call }).eq("user_id", user_id);
 
     return true;
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
+}
+export async function getCalls(
+  supabase: SupabaseClient,
+  { userId }: { userId: string },
+): Promise<Call[]> {
+  try {
+    const { data, error } = await supabase
+      .from("calls")
+      .select(
+        "*, participants: call_participants!call_participants_participant_id(*)",
+      )
+      .eq("caller_id", userId)
+      .eq("is_deleted", false)
+      .order("created_at", { ascending: false });
+
+    if (error) throw new Error(error.message);
+
+
+    console.log("------>", data)
+
+    return data;
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
+}
+export async function createCall(supabase: SupabaseClient, { }){
+  try {
+    
+    
   } catch (error: any) {
     throw new Error(error.message);
   }

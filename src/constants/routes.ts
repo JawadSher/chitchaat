@@ -7,5 +7,7 @@ export const ROUTES = {
 };
 
 export const API = {
-  LIVE_KIT: "/api/token/live-kit"
+  LIVE_KIT: "/api/token/live-kit",
+  LIVE_KIT_WEBHOOK: "/api/webhooks/livekit",
+  CLERK_WEBHOOK: "/api/webhooks/clerk"
 }

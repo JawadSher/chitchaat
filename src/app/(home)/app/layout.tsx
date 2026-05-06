@@ -1,11 +1,11 @@
-/* eslint-disable no-var */
 "use client";
 
 import MainHeader from "@/components/main-header";
-import React, { Suspense, useEffect, useRef } from "react";
+import React, { Suspense, useCallback, useEffect, useRef } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BellRing, MessageSquareText, Phone, UsersRound } from "lucide-react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { ModeToggle } from "@/components/theme-toggle";
 import {
   SignedIn,
@@ -48,13 +48,14 @@ const items: TabItem[] = [
 
 function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   const router = useRouter();
   const { user } = useUser();
   const { session } = useSession();
   const supabase = useSupabase();
   const client = useQueryClient();
   const currentTab = searchParams.get("tab") || "chat";
-  const notifyAudio = new Audio(SOUNDS.NOTIFICATION);
+  const notifyAudioRef = useRef<HTMLAudioElement | null>(null);
   const { setOnlineUsersBulk } = useUserOnlineState();
   const setEnableCallRND = useCallRNDState((state) => state.setEnableCallRND);
   const setDisableCallRND = useCallRNDState((state) => state.setDisableCallRND);
@@ -69,11 +70,15 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const updateLiveKitInfo = useCallRNDState((state) => state.updateLiveKitInfo);
   const updateCallStatus = useCallRNDState((state) => state.updateCallStatus);
   const { mutate: updateIsInCall } = useUpdateIsInCall();
-  const handleTabChange = (value: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("tab", value);
-    router.replace(`?${params.toString()}`);
-  };
+
+  const handleTabChange = useCallback(
+    (value: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("tab", value);
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    },
+    [pathname, router, searchParams],
+  );
 
   useEffect(() => {
     if (!ringtoneRef.current) {
@@ -168,8 +173,12 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
             queryKey: ["notifications", user.id],
           });
 
-          notifyAudio.volume = 1;
-          notifyAudio.play();
+          if (!notifyAudioRef.current) {
+            notifyAudioRef.current = new Audio(SOUNDS.NOTIFICATION);
+          }
+
+          notifyAudioRef.current.volume = 1;
+          notifyAudioRef.current.play();
           toast(payload.payload.title, {
             description: payload.payload.body,
           });
@@ -322,13 +331,24 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
           <TabsList className="flex bg-sidebar flex-col flex-1 items-center justify-start gap-2 p-2 border-none rounded-none w-14">
             {items.map((item) => {
               const Icon = icons[item.Icon];
+              const params = new URLSearchParams(searchParams.toString());
+              params.set("tab", item.value);
+
               return (
                 <TabsTrigger
                   key={item.value}
                   value={item.value}
+                  asChild
                   className="flex items-center justify-center dark:data-[state=active]:bg-primary-foreground gap-2 rounded-full border-none max-h-9 min-w-9 p-2 cursor-pointer"
                 >
-                  <Icon className="size-5" strokeWidth={1.89} />
+                  <Link
+                    href={`${pathname}?${params.toString()}`}
+                    replace
+                    scroll={false}
+                    aria-label={item.value}
+                  >
+                    <Icon className="size-5" strokeWidth={1.89} />
+                  </Link>
                 </TabsTrigger>
               );
             })}

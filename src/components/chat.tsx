@@ -46,8 +46,9 @@ function Chat() {
       >
         <ResizablePanelGroup direction="horizontal" className="h-full">
           <ChatTabSidebar contacts={data} loading={isLoading} />
-          <ResizableHandle withHandle />
+          <ResizableHandle withHandle={false} />
           <ResizablePanel>
+
             <TabsContent value="empty" className="h-full">
               <div className="h-full flex items-center justify-center text-muted-foreground">
                 <div className="text-center space-y-2">

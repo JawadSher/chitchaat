@@ -21,6 +21,31 @@ import { useCallRNDState } from "@/store/use-call-rnd";
 import { useState } from "react";
 import { toast } from "sonner";
 
+export async function requestUserMediaAccess({
+  type,
+}: {
+  type: "video" | "audio";
+}) {
+  try {
+    await navigator.mediaDevices.getUserMedia({
+      video: type === "video" ? true : false,
+      audio: true,
+    });
+
+    return true;
+  } catch (error: any) {
+    if (error.name === "NotAllowedError") {
+      toast.error(
+        type === "video"
+          ? "You need to allow camera and microphone access to use this feature."
+          : "You need to allow microphone access to use this feature.",
+      );
+    }
+
+    return false;
+  }
+}
+
 function ChatAreaHeader({
   contact,
   setActiveTab,
@@ -35,27 +60,6 @@ function ChatAreaHeader({
 
   const onlineUsers = useUserOnlineState((state) => state.onlineUsers) || [];
   const setEnableCallRND = useCallRNDState().setEnableCallRND;
-
-  async function requestUserMediaAccess({ type }: { type: "video" | "audio" }) {
-    try {
-      await navigator.mediaDevices.getUserMedia({
-        video: type === "video" ? true : false,
-        audio: true,
-      });
-
-      return true;
-    } catch (error: any) {
-      if (error.name === "NotAllowedError") {
-        toast.error(
-          type === "video"
-            ? "You need to allow camera and microphone access to use this feature."
-            : "You need to allow microphone access to use this feature.",
-        );
-      }
-
-      return false;
-    }
-  }
 
   return (
     <header className="flex items-center justify-between w-full h-16 px-4 bg-accent/40 shrink-0">
@@ -102,7 +106,7 @@ function ChatAreaHeader({
                 className="flex-1 rounded-full flex items-center justify-center gap-2 cursor-pointer hover:bg-primary/80"
                 onClick={async () => {
                   const res = await requestUserMediaAccess({ type: "audio" });
-                  if(!res) return;
+                  if (!res) return;
                   setOpen(false);
                   setEnableCallRND({
                     type: "audio",
@@ -119,7 +123,7 @@ function ChatAreaHeader({
                 className="flex-1 rounded-full flex items-center justify-center gap-2 cursor-pointer hover:bg-primary/80"
                 onClick={async () => {
                   const res = await requestUserMediaAccess({ type: "video" });
-                  if(!res) return;
+                  if (!res) return;
                   setOpen(false);
                   setEnableCallRND({
                     type: "video",

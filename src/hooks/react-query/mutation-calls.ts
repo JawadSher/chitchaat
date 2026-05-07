@@ -1,5 +1,10 @@
 import { useSupabase } from "@/providers/supabase-provider";
-import { sendCallSignal, updateIsInCall } from "@/services/call.service";
+import {
+  insertCall,
+  sendCallSignal,
+  updateCall,
+  updateIsInCall,
+} from "@/services/call.service";
 import { useCallRNDState } from "@/store/use-call-rnd";
 import { useUser } from "@clerk/nextjs";
 import { useMutation } from "@tanstack/react-query";
@@ -60,6 +65,62 @@ export const useUpdateIsInCall = () => {
     },
     onError: (error) => {
       toast.error(error.message);
+    },
+  });
+};
+
+export const useInsertCall = () => {
+  const supabase = useSupabase();
+  return useMutation({
+    mutationKey: ["insert-call"],
+    mutationFn: async ({
+      call_type,
+      group_id,
+      caller_id,
+      callee_id,
+      call_mode,
+      room_name,
+      status,
+    }: {
+      call_type?: "video" | "audio";
+      group_id?: string;
+      caller_id: string;
+      callee_id: string;
+      call_mode: "group" | "direct";
+      status: "ingoing" | "outgoing" | "missed" | "rejected";
+      room_name: string;
+    }) => {
+      return await insertCall(supabase, {
+        call_type,
+        group_id,
+        caller_id,
+        callee_id,
+        call_mode,
+        room_name,
+        status,
+      });
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+};
+
+export const useUpdateCall = () => {
+  const supabase = useSupabase();
+  return useMutation({
+    mutationKey: ["update-call"],
+    mutationFn: async ({
+      room_name,
+      call_status,
+    }: {
+      room_name: string;
+      call_status: "ingoing" | "outgoing" | "missed";
+    }) => {
+      return await updateCall(supabase, { room_name, call_status });
+    },
+    onError: (error) => {
+      throw new Error(error.message);
     },
   });
 };

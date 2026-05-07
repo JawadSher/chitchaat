@@ -4,8 +4,10 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
+    const event = body.event;
 
-    console.log(body);
+    console.log(event);
+    console.log(body.room);
 
     return NextResponse.json({ status: 200, success: true });
   } catch (error: any) {

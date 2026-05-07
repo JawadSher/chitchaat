@@ -26,7 +26,9 @@ import {
 } from "react";
 import { useCallRNDState } from "@/store/use-call-rnd";
 import {
+  useInsertCall,
   useSendCallSignal,
+  useUpdateCall,
   useUpdateIsInCall,
 } from "@/hooks/react-query/mutation-calls";
 import { useQueryClient } from "@tanstack/react-query";
@@ -227,7 +229,9 @@ function RNDFooter({
   const room = useMaybeRoomContext();
   const micToggle = useTrackToggle({ source: Track.Source.Microphone });
   const cameraToggle = useTrackToggle({ source: Track.Source.Camera });
-  const screenShareToggle = useTrackToggle({ source: Track.Source.ScreenShare });
+  const screenShareToggle = useTrackToggle({
+    source: Track.Source.ScreenShare,
+  });
   const setDisableCallRND = useCallRNDState().setDisableCallRND;
   const updateCallStatus = useCallRNDState().updateCallStatus;
 
@@ -262,8 +266,11 @@ function RNDFooter({
     buttonProps: ButtonHTMLAttributes<HTMLButtonElement>;
     children: ReactNode;
   }) => {
-    const { className, disabled: liveKitDisabled, ...restButtonProps } =
-      buttonProps;
+    const {
+      className,
+      disabled: liveKitDisabled,
+      ...restButtonProps
+    } = buttonProps;
 
     return (
       <Tooltip>
@@ -333,7 +340,11 @@ function RNDFooter({
           type="button"
           variant={"default"}
           onClick={() => {
-            sendCallSignal({ calleeId: callee_id, callType: call_type!, call_status: "accepted" });
+            sendCallSignal({
+              calleeId: callee_id,
+              callType: call_type!,
+              call_status: "accepted",
+            });
             updateCallStatus({ call_status: "accepted" });
           }}
         >
@@ -379,6 +390,7 @@ function CallRND() {
   const updateCallStatus = useCallRNDState((state) => state.updateCallStatus);
   const updateLiveKitInfo = useCallRNDState((state) => state.updateLiveKitInfo);
   const roomName = useCallRNDState((state) => state.roomName);
+  const { mutate: updateCallFN } = useUpdateCall();
   const width = window.innerWidth - 550;
   const height = window.innerHeight - 150;
   const isWaitingForAnswer = isRinging && call_status === "ringing";
@@ -388,12 +400,12 @@ function CallRND() {
     : isCallAccepted
       ? "Connecting..."
       : callDirection === "outgoing"
-      ? isWaitingForAnswer
-        ? "Ringing..."
-        : "Calling..."
-      : callType === "audio"
-        ? "Voice call"
-        : "Video call";
+        ? isWaitingForAnswer
+          ? "Ringing..."
+          : "Calling..."
+        : callType === "audio"
+          ? "Voice call"
+          : "Video call";
 
   const user_info = (() => {
     if (
@@ -430,6 +442,7 @@ function CallRND() {
 
     if (counter >= 20) {
       updateIsInCall({ is_in_call: false });
+      updateCallFN({ call_status: "missed", room_name: roomName! });
       setDisableCallRND();
       return;
     }
@@ -439,7 +452,14 @@ function CallRND() {
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [counter, isWaitingForAnswer, setDisableCallRND, updateIsInCall]);
+  }, [
+    counter,
+    isWaitingForAnswer,
+    setDisableCallRND,
+    updateIsInCall,
+    updateCallFN,
+    roomName,
+  ]);
 
   useEffect(() => {
     if (!isWaitingForAnswer || callDirection !== "outgoing") return;
@@ -460,7 +480,7 @@ function CallRND() {
 
   useEffect(() => {
     if (!hasConversationStarted) return;
-    
+
     const timer = setInterval(() => {
       setCallDuration((prev) => prev + 1);
     }, 1000);
@@ -469,7 +489,11 @@ function CallRND() {
   }, [hasConversationStarted]);
 
   useEffect(() => {
-    if (callDirection === "incoming" && roomName && call_status === "accepted") {
+    if (
+      callDirection === "incoming" &&
+      roomName &&
+      call_status === "accepted"
+    ) {
       async function getToken() {
         const result = await getLiveKitToken({ RN: roomName });
         if (!result) {

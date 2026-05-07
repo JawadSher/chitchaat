@@ -21,6 +21,88 @@ export async function getLiveKitToken({
 
   return { token, roomName };
 }
+
+export async function insertCall(
+  supabase: SupabaseClient,
+  {
+    call_type,
+    group_id,
+    caller_id,
+    callee_id,
+    call_mode,
+    room_name,
+    status,
+  }: {
+    call_type?: "video" | "audio";
+    group_id?: string;
+    caller_id: string;
+    callee_id: string;
+    call_mode: "group" | "direct";
+    status: "ingoing" | "outgoing" | "missed" | "rejected";
+    room_name: string;
+  },
+) {
+  const created_at = new Date().toISOString();
+
+  const { data: participantData, error: participantError } = await supabase
+    .from("call_participants")
+    .insert({ created_at, callee_id })
+    .select()
+    .single();
+
+  if (participantError) {
+    throw new Error(
+      `Failed to create call participant: ${participantError.message}`,
+    );
+  }
+
+  const { data: callData, error: callError } = await supabase
+    .from("calls")
+    .insert({
+      created_at,
+      call_type,
+      group_id,
+      status,
+      caller_id,
+      call_mode,
+      room_name,
+      participant_id: participantData.id,
+    })
+    .select()
+    .single();
+
+  if (callError) {
+    await supabase
+      .from("call_participants")
+      .delete()
+      .eq("id", participantData.id);
+
+    throw new Error(`Failed to create call: ${callError.message}`);
+  }
+
+  return callData;
+}
+
+export async function updateCall(
+  supabase: SupabaseClient,
+  {
+    room_name,
+    call_status,
+  }: { room_name: string; call_status: "ingoing" | "outgoing" | "missed" },
+) {
+  try {
+    await supabase
+      .from("calls")
+      .update({ status: call_status })
+      .eq("room_name", room_name)
+      .eq("is_deleted", false);
+
+    return true;
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
+}
+
 export async function sendCallSignal(
   supabase: SupabaseClient,
   {
@@ -102,7 +184,19 @@ export async function sendCallSignal(
           roomName,
         },
       }),
-    ]);
+    ]).catch((error: any) => {
+      throw new Error(error.message);
+    });
+
+    if (call_status === "ringing")
+      await insertCall(supabase, {
+        call_type,
+        caller_id,
+        callee_id,
+        call_mode,
+        status: "outgoing",
+        room_name: roomName!,
+      });
 
     return { channel_Res, token, roomName };
   } catch (error: any) {
@@ -137,18 +231,9 @@ export async function getCalls(
 
     if (error) throw new Error(error.message);
 
-
-    console.log("------>", data)
+    console.log("------>", data);
 
     return data;
-  } catch (error: any) {
-    throw new Error(error.message);
-  }
-}
-export async function createCall(supabase: SupabaseClient, { }){
-  try {
-    
-    
   } catch (error: any) {
     throw new Error(error.message);
   }

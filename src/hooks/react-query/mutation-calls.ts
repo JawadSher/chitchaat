@@ -79,7 +79,6 @@ export const useInsertCall = () => {
       caller_id,
       callee_id,
       call_mode,
-      room_name,
       status,
     }: {
       call_type?: "video" | "audio";
@@ -88,7 +87,6 @@ export const useInsertCall = () => {
       callee_id: string;
       call_mode: "group" | "direct";
       status: "ingoing" | "outgoing" | "missed" | "rejected";
-      room_name: string;
     }) => {
       return await insertCall(supabase, {
         call_type,
@@ -96,7 +94,6 @@ export const useInsertCall = () => {
         caller_id,
         callee_id,
         call_mode,
-        room_name,
         status,
       });
     },
@@ -111,13 +108,13 @@ export const useUpdateCall = () => {
   return useMutation({
     mutationKey: ["update-call"],
     mutationFn: async ({
-      room_name,
+      caller_id,
       call_status,
     }: {
-      room_name: string;
+      caller_id: string;
       call_status: "ingoing" | "outgoing" | "missed";
     }) => {
-      return await updateCall(supabase, { room_name, call_status });
+      return await updateCall(supabase, { caller_id, call_status });
     },
     onError: (error) => {
       throw new Error(error.message);

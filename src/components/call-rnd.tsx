@@ -442,7 +442,9 @@ function CallRND() {
 
     if (counter >= 20) {
       updateIsInCall({ is_in_call: false });
-      updateCallFN({ call_status: "missed", room_name: roomName! });
+      if (user?.id === caller_id) {
+        updateCallFN({ call_status: "missed", caller_id });
+      }
       setDisableCallRND();
       return;
     }
@@ -458,7 +460,8 @@ function CallRND() {
     setDisableCallRND,
     updateIsInCall,
     updateCallFN,
-    roomName,
+    caller_id,
+    user,
   ]);
 
   useEffect(() => {

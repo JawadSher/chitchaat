@@ -13,7 +13,6 @@ export interface Call {
   participant_id?: number;
   call_mode: "direct" | "group";
   created_at: Date | number;
-  room_name: UUIDTypes;
   participants?: [
     {
       id?: number;

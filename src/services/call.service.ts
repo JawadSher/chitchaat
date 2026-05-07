@@ -30,7 +30,6 @@ export async function insertCall(
     caller_id,
     callee_id,
     call_mode,
-    room_name,
     status,
   }: {
     call_type?: "video" | "audio";
@@ -39,7 +38,6 @@ export async function insertCall(
     callee_id: string;
     call_mode: "group" | "direct";
     status: "ingoing" | "outgoing" | "missed" | "rejected";
-    room_name: string;
   },
 ) {
   const created_at = new Date().toISOString();
@@ -65,8 +63,8 @@ export async function insertCall(
       status,
       caller_id,
       call_mode,
-      room_name,
       participant_id: participantData.id,
+      user_id: caller_id,
     })
     .select()
     .single();
@@ -86,15 +84,15 @@ export async function insertCall(
 export async function updateCall(
   supabase: SupabaseClient,
   {
-    room_name,
+    caller_id,
     call_status,
-  }: { room_name: string; call_status: "ingoing" | "outgoing" | "missed" },
+  }: { caller_id: string; call_status: "ingoing" | "outgoing" | "missed" },
 ) {
   try {
     await supabase
       .from("calls")
       .update({ status: call_status })
-      .eq("room_name", room_name)
+      .eq("caller_id", caller_id)
       .eq("is_deleted", false);
 
     return true;
@@ -195,7 +193,6 @@ export async function sendCallSignal(
         callee_id,
         call_mode,
         status: "outgoing",
-        room_name: roomName!,
       });
 
     return { channel_Res, token, roomName };

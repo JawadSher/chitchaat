@@ -390,7 +390,6 @@ function CallRND() {
   const updateCallStatus = useCallRNDState((state) => state.updateCallStatus);
   const updateLiveKitInfo = useCallRNDState((state) => state.updateLiveKitInfo);
   const roomName = useCallRNDState((state) => state.roomName);
-  const { mutate: updateCallFN } = useUpdateCall();
   const width = window.innerWidth - 550;
   const height = window.innerHeight - 150;
   const isWaitingForAnswer = isRinging && call_status === "ringing";
@@ -442,9 +441,6 @@ function CallRND() {
 
     if (counter >= 20) {
       updateIsInCall({ is_in_call: false });
-      if (user?.id === caller_id) {
-        updateCallFN({ call_status: "missed", caller_id });
-      }
       setDisableCallRND();
       return;
     }
@@ -459,7 +455,6 @@ function CallRND() {
     isWaitingForAnswer,
     setDisableCallRND,
     updateIsInCall,
-    updateCallFN,
     caller_id,
     user,
   ]);

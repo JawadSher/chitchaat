@@ -64,7 +64,6 @@ export async function insertCall(
       caller_id,
       call_mode,
       participant_id: participantData.id,
-      user_id: caller_id,
     })
     .select()
     .single();

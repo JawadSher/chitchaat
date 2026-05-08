@@ -1,6 +1,6 @@
 "use client";
 import "@livekit/components-styles";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import {
   Clock3,
   Lock,
@@ -36,6 +36,7 @@ import { useState } from "react";
 import UserAvatar from "./avatar";
 import { requestUserMediaAccess } from "./chat-area-header";
 import { useCallRNDState } from "@/store/use-call-rnd";
+import { useGetCalls } from "@/hooks/react-query/query-calls";
 
 type CallStatus = "Outgoing" | "Missed" | "Incoming";
 
@@ -136,6 +137,7 @@ function StatusLine({ status }: { status: CallStatus }) {
 }
 
 function Calls() {
+  const { data, error, isLoading } = useGetCalls();
   const setEnableCallRND = useCallRNDState((state) => state.setEnableCallRND);
   const [openContactDialog, setOpenContactDialog] = useState(false);
   const [callType, setCallType] = useState<"video" | "audio">("video");
@@ -162,6 +164,8 @@ function Calls() {
     );
   }, []);
 
+
+  useEffect(() => { console.log(data)}, [data])
   const handleTabChange = useCallback(
     (value: string) => {
       const params = new URLSearchParams(searchParams.toString());

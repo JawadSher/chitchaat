@@ -1,5 +1,4 @@
 import { API } from "@/constants/routes";
-import { Call } from "@/types/call";
 import { SupabaseClient } from "@supabase/supabase-js";
 
 export async function getLiveKitToken({
@@ -26,14 +25,12 @@ export async function insertCall(
   supabase: SupabaseClient,
   {
     call_type,
-    group_id,
     caller_id,
     callee_id,
     call_mode,
     status,
   }: {
     call_type?: "video" | "audio";
-    group_id?: string;
     caller_id: string;
     callee_id: string;
     call_mode: "group" | "direct";
@@ -42,40 +39,20 @@ export async function insertCall(
 ) {
   const created_at = new Date().toISOString();
 
-  const { data: participantData, error: participantError } = await supabase
-    .from("call_participants")
-    .insert({ created_at, callee_id })
-    .select()
-    .single();
-
-  if (participantError) {
-    throw new Error(
-      `Failed to create call participant: ${participantError.message}`,
-    );
-  }
-
   const { data: callData, error: callError } = await supabase
     .from("calls")
     .insert({
       created_at,
       call_type,
-      group_id,
       status,
       caller_id,
       call_mode,
-      participant_id: participantData.id,
+      callee_id,
     })
     .select()
     .single();
 
-  if (callError) {
-    await supabase
-      .from("call_participants")
-      .delete()
-      .eq("id", participantData.id);
-
-    throw new Error(`Failed to create call: ${callError.message}`);
-  }
+  if (callError) throw new Error(`Failed to create call: ${callError.message}`);
 
   return callData;
 }
@@ -185,7 +162,7 @@ export async function sendCallSignal(
       throw new Error(error.message);
     });
 
-    if (call_status === "ringing")
+    if (call_status === "ringing") {
       await insertCall(supabase, {
         call_type,
         caller_id,
@@ -193,6 +170,7 @@ export async function sendCallSignal(
         call_mode,
         status: "outgoing",
       });
+    }
 
     return { channel_Res, token, roomName };
   } catch (error: any) {
@@ -215,21 +193,16 @@ export async function updateIsInCall(
 export async function getCalls(
   supabase: SupabaseClient,
   { userId }: { userId: string },
-): Promise<Call[]> {
-  try {
-    const { data, error } = await supabase
-      .from("calls")
-      .select("*, participants:call_participants(*)")
-      .eq("is_deleted", false)
-      .or(`caller_id.eq.${userId},participant_id.eq.${userId}`)
-      .order("created_at", { ascending: false });
+) {
+  const { data, error } = await supabase
+    .from("calls")
+    .select("*")
+    .eq("is_deleted", false)
+    .or(`caller_id.eq.${userId},callee_id.eq.${userId}`)
+    .order("created_at", { ascending: false });
 
-    if (error) throw new Error(error.message);
+  if (error) console.log(error);
+  if (error) throw new Error(error.message);
 
-    console.log("------>", data);
-
-    return data;
-  } catch (error: any) {
-    throw new Error(error.message);
-  }
+  return data;
 }

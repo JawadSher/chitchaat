@@ -26,9 +26,7 @@ import {
 } from "react";
 import { useCallRNDState } from "@/store/use-call-rnd";
 import {
-  useInsertCall,
   useSendCallSignal,
-  useUpdateCall,
   useUpdateIsInCall,
 } from "@/hooks/react-query/mutation-calls";
 import { useQueryClient } from "@tanstack/react-query";

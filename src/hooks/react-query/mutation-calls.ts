@@ -75,7 +75,6 @@ export const useInsertCall = () => {
     mutationKey: ["insert-call"],
     mutationFn: async ({
       call_type,
-      group_id,
       caller_id,
       callee_id,
       call_mode,
@@ -90,7 +89,6 @@ export const useInsertCall = () => {
     }) => {
       return await insertCall(supabase, {
         call_type,
-        group_id,
         caller_id,
         callee_id,
         call_mode,

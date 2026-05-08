@@ -7,7 +7,7 @@ import {
 } from "@/services/call.service";
 import { useCallRNDState } from "@/store/use-call-rnd";
 import { useUser } from "@clerk/nextjs";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 export const useSendCallSignal = ({
@@ -21,6 +21,7 @@ export const useSendCallSignal = ({
   const { user } = useUser();
   const setDisableCallRND = useCallRNDState((state) => state.setDisableCallRND);
   const updateLiveKitInfo = useCallRNDState((state) => state.updateLiveKitInfo);
+  const client = useQueryClient();
 
   return useMutation({
     mutationKey: ["send-call-signal", callee_id],
@@ -46,6 +47,14 @@ export const useSendCallSignal = ({
       const { roomName, token } = res;
       updateLiveKitInfo({ roomName, token });
       setIsRinging(variables.call_status === "ringing");
+      if (
+        variables.call_status === "ringing" ||
+        variables.call_status === "close"
+      ) {
+        client.invalidateQueries({
+          queryKey: ["get-calls", user?.id],
+        });
+      }
     },
     onError: (error) => {
       toast.error(error.message);

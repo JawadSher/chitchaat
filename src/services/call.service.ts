@@ -211,6 +211,7 @@ export async function updateIsInCall(
     throw new Error(error.message);
   }
 }
+
 export async function getCalls(
   supabase: SupabaseClient,
   { userId }: { userId: string },
@@ -218,11 +219,9 @@ export async function getCalls(
   try {
     const { data, error } = await supabase
       .from("calls")
-      .select(
-        "*, participants: call_participants!call_participants_participant_id(*)",
-      )
-      .eq("caller_id", userId)
+      .select("*, participants:call_participants(*)")
       .eq("is_deleted", false)
+      .or(`caller_id.eq.${userId},participant_id.eq.${userId}`)
       .order("created_at", { ascending: false });
 
     if (error) throw new Error(error.message);

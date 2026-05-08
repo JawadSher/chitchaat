@@ -1,15 +1,14 @@
 "use client";
 import "@livekit/components-styles";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import {
   Clock3,
   Lock,
   MessageCircle,
   PhoneCall,
   PhoneIncoming,
-  PhoneMissed,
+  PhoneOutgoing,
   Search,
-  UserRoundPlus,
   Video,
 } from "lucide-react";
 import {
@@ -18,7 +17,6 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import { useUser } from "@clerk/nextjs";
-import { useQueryClient } from "@tanstack/react-query";
 import { TabsContent } from "./ui/tabs";
 import { Separator } from "./ui/separator";
 import { Input } from "./ui/input";
@@ -37,135 +35,164 @@ import UserAvatar from "./avatar";
 import { requestUserMediaAccess } from "./chat-area-header";
 import { useCallRNDState } from "@/store/use-call-rnd";
 import { useGetCalls } from "@/hooks/react-query/query-calls";
+import { useGetContacts } from "@/hooks/react-query/query-contact";
+import { cn } from "@/lib/utils";
 
-type CallStatus = "Outgoing" | "Missed" | "Incoming";
+type CallStatus = "Outgoing" | "Incoming";
+
+type CallRecord = {
+  id: string | number;
+  call_mode: "direct" | "group";
+  call_type: "audio" | "video";
+  callee_id: string;
+  caller_id: string;
+  created_at: string;
+  duration: number | string | null;
+  ended_at: string | null;
+  is_deleted: boolean;
+  started_at: string | null;
+  status: string;
+};
 
 type CallItem = {
   id: string;
   name: string;
-  number?: string;
+  avatar: string | null;
   date: string;
   time: string;
   duration: string;
   status: CallStatus;
+  callType: "audio" | "video";
+  isUnanswered: boolean;
 };
 
-const mockCalls: CallItem[] = [
-  {
-    id: "1",
-    name: "+92 313 9762310",
-    date: "28/04/2026",
-    time: "09:42 PM",
-    duration: "2 hours",
-    status: "Outgoing",
-  },
-  {
-    id: "2",
-    name: "+92 313 9762310",
-    date: "28/04/2026",
-    time: "05:14 PM",
-    duration: "2 seconds",
-    status: "Missed",
-  },
-  {
-    id: "3",
-    name: "+92 313 9762310",
-    date: "28/04/2026",
-    time: "12:06 PM",
-    duration: "1 hour",
-    status: "Outgoing",
-  },
-  {
-    id: "4",
-    name: "+92 313 9762310",
-    date: "18/03/2026",
-    time: "11:59 PM",
-    duration: "3 days",
-    status: "Missed",
-  },
-  {
-    id: "5",
-    name: "Saeed",
-    number: "+92 301 985 8842",
-    date: "03/12/2025",
-    time: "10:12 AM",
-    duration: "45 minutes",
-    status: "Missed",
-  },
-  {
-    id: "6",
-    name: "Saeed",
-    number: "+92 301 985 8842",
-    date: "01/12/2025",
-    time: "01:30 PM",
-    duration: "18 minutes",
-    status: "Missed",
-  },
-  {
-    id: "7",
-    name: "Saeed",
-    number: "+92 301 985 8842",
-    date: "01/12/2025",
-    time: "08:05 PM",
-    duration: "2 hours",
-    status: "Outgoing",
-  },
-];
+function formatCallDate(value: string) {
+  return new Intl.DateTimeFormat(undefined, {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(new Date(value));
+}
 
-function StatusLine({ status }: { status: CallStatus }) {
-  if (status === "Missed") {
-    return (
-      <p className="flex items-center gap-1 text-xs text-rose-500">
-        <PhoneMissed className="size-3.5" /> Missed
-      </p>
-    );
+function formatCallTime(value: string) {
+  return new Intl.DateTimeFormat(undefined, {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
+}
+
+function formatCallDuration(duration: CallRecord["duration"]) {
+  if (
+    duration === null ||
+    duration === undefined ||
+    duration === "" ||
+    Number(duration) === 0
+  ) {
+    return "Unanswered";
   }
 
-  if (status === "Incoming") {
+  if (typeof duration === "string") return duration;
+
+  const totalSeconds = Math.max(0, Math.floor(duration));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  if (minutes === 0) return `${seconds}s`;
+
+  return `${minutes}m ${seconds}s`;
+}
+
+function getCallStatusStyles(item: Pick<CallItem, "isUnanswered" | "status">) {
+  if (item.isUnanswered) {
+    return {
+      row: "border-l-2 border-destructive bg-destructive/5 hover:bg-destructive/10",
+      iconWrap: "bg-destructive/10 text-destructive",
+      text: "text-destructive",
+      badge: "bg-destructive/10 text-destructive",
+    };
+  }
+
+  if (item.status === "Outgoing") {
+    return {
+      row: "border-l-2 border-primary bg-primary/5 hover:bg-primary/10",
+      iconWrap: "bg-primary/10 text-primary",
+      text: "text-primary",
+      badge: "bg-primary/10 text-primary",
+    };
+  }
+
+  return {
+    row: "border-l-2 border-border bg-accent/40 hover:bg-accent/70",
+    iconWrap: "bg-muted text-muted-foreground",
+    text: "text-muted-foreground",
+    badge: "bg-muted text-muted-foreground",
+  };
+}
+
+function StatusLine({
+  isUnanswered,
+  status,
+}: {
+  isUnanswered: boolean;
+  status: CallStatus;
+}) {
+  const styles = getCallStatusStyles({ isUnanswered, status });
+  const Icon = status === "Outgoing" ? PhoneOutgoing : PhoneIncoming;
+
+  if (isUnanswered) {
     return (
-      <p className="flex items-center gap-1 text-xs text-muted-foreground">
-        <PhoneIncoming className="size-3.5" /> Incoming
+      <p className={cn("flex items-center gap-1 text-xs", styles.text)}>
+        <Icon className="size-3.5" /> Unanswered {status.toLowerCase()}
       </p>
     );
   }
 
   return (
-    <p className="flex items-center gap-1 text-xs text-muted-foreground">
-      <PhoneCall className="size-3.5" /> Outgoing
+    <p className={cn("flex items-center gap-1 text-xs", styles.text)}>
+      <Icon className="size-3.5" /> {status}
     </p>
   );
 }
 
 function Calls() {
   const { data, error, isLoading } = useGetCalls();
+  const { data: cachedContacts = [] } = useGetContacts();
   const setEnableCallRND = useCallRNDState((state) => state.setEnableCallRND);
   const [openContactDialog, setOpenContactDialog] = useState(false);
   const [callType, setCallType] = useState<"video" | "audio">("video");
   const { user } = useUser();
-  const queryClient = useQueryClient();
+  const currentUserId = user?.id;
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
-  const cachedContacts =
-    (queryClient.getQueryData(["get-contacts", user?.id]) as any[]) || [];
-  const initialsMap = useMemo(() => {
-    return new Map(
-      mockCalls.map((item) => [
-        item.id,
-        item.name
-          .split(" ")
-          .filter(Boolean)
-          .slice(0, 2)
-          .map((part) => part[0])
-          .join("")
-          .slice(0, 2)
-          .toUpperCase(),
-      ]),
-    );
-  }, []);
+  const recentCalls = useMemo<CallItem[]>(() => {
+    if (!currentUserId || !data) return [];
 
+    return (data as CallRecord[]).map((call) => {
+      const isOutgoing = call.caller_id === currentUserId;
+      const otherUserId = isOutgoing ? call.callee_id : call.caller_id;
+      const contact = cachedContacts.find(
+        (item) =>
+          item.contact_user_id === otherUserId &&
+          item.status === "accepted" &&
+          !item.is_deleted,
+      );
+      const duration = formatCallDuration(call.duration);
 
-  useEffect(() => { console.log(data)}, [data])
+      return {
+        id: String(call.id),
+        name: contact?.info?.full_name ?? "Unknown Contact",
+        avatar: contact?.info?.avatar_url ?? null,
+        date: formatCallDate(call.created_at),
+        time: formatCallTime(call.created_at),
+        duration,
+        status: isOutgoing ? "Outgoing" : "Incoming",
+        callType: call.call_type,
+        isUnanswered: duration === "Unanswered",
+      };
+    });
+  }, [cachedContacts, currentUserId, data]);
+
   const handleTabChange = useCallback(
     (value: string) => {
       const params = new URLSearchParams(searchParams.toString());
@@ -203,74 +230,139 @@ function Calls() {
 
               <div className="min-h-0 flex-1 overflow-y-auto px-2">
                 <h3 className="mb-4 text-lg font-semibold">Recent</h3>
-                <ul className="space-y-4">
-                  {mockCalls.map((item) => (
-                    <Tooltip key={item.id}>
-                      <TooltipTrigger asChild>
-                        <li className="flex cursor-pointer items-start justify-between gap-4 rounded-md px-1 py-1 transition-colors hover:bg-accent/60">
-                          <div className="flex min-w-0 items-start gap-3">
-                            <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-semibold tracking-wide text-foreground">
-                              {initialsMap.get(item.id)}
-                            </div>
-                            <div className="min-w-0">
-                              <p className="truncate text-base font-medium text-foreground">
-                                {item.name}
-                              </p>
-                              {item.number ? (
-                                <p className="truncate text-xs text-muted-foreground">
-                                  {item.number}
+                {isLoading ? (
+                  <div className="px-1 py-6 text-sm text-muted-foreground">
+                    Loading calls...
+                  </div>
+                ) : error ? (
+                  <div className="px-1 py-6 text-sm text-destructive">
+                    Failed to load calls.
+                  </div>
+                ) : recentCalls.length === 0 ? (
+                  <div className="px-1 py-6 text-sm text-muted-foreground">
+                    No recent calls yet.
+                  </div>
+                ) : (
+                  <ul className="space-y-4">
+                    {recentCalls.map((item) => {
+                      const styles = getCallStatusStyles(item);
+                      const DirectionIcon =
+                        item.status === "Outgoing"
+                          ? PhoneOutgoing
+                          : PhoneIncoming;
+
+                      return (
+                        <Tooltip key={item.id}>
+                          <TooltipTrigger asChild>
+                            <li
+                              className={cn(
+                                "flex cursor-pointer items-start justify-between gap-4 rounded-md px-2 py-2 transition-colors",
+                                styles.row,
+                              )}
+                            >
+                              <div className="flex min-w-0 items-start gap-3">
+                                <UserAvatar
+                                  src={item.avatar}
+                                  alt={item.name}
+                                  isOnline={false}
+                                />
+                                <div className="min-w-0">
+                                  <p className="truncate text-base font-medium text-foreground">
+                                    {item.name}
+                                  </p>
+                                  <p className="truncate text-xs capitalize text-muted-foreground">
+                                    {item.callType} call
+                                  </p>
+                                  <StatusLine
+                                    isUnanswered={item.isUnanswered}
+                                    status={item.status}
+                                  />
+                                </div>
+                              </div>
+                              <span className="shrink-0 pt-1 text-xs text-muted-foreground">
+                                {item.date}
+                              </span>
+                            </li>
+                          </TooltipTrigger>
+                          <TooltipContent
+                            side="right"
+                            align="start"
+                            className="w-56 rounded-xl border border-border bg-popover p-3 text-popover-foreground shadow-md"
+                          >
+                            <div className="flex items-start gap-2">
+                              <div
+                                className={cn(
+                                  "flex size-7 shrink-0 items-center justify-center rounded-full",
+                                  styles.iconWrap,
+                                )}
+                              >
+                                <DirectionIcon className="size-4" />
+                              </div>
+                              <div className="min-w-0">
+                                <p className="truncate text-sm font-semibold">
+                                  {item.name}
                                 </p>
-                              ) : null}
-                              <StatusLine status={item.status} />
+                                <p className="mt-0.5 truncate text-xs capitalize text-muted-foreground">
+                                  {item.callType} call
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                          <span className="shrink-0 pt-1 text-xs text-muted-foreground">
-                            {item.date}
-                          </span>
-                        </li>
-                      </TooltipTrigger>
-                      <TooltipContent
-                        side="right"
-                        align="start"
-                        className="w-56 rounded-xl border border-border bg-popover p-3 text-popover-foreground shadow-md"
-                      >
-                        <p className="truncate text-sm font-semibold">
-                          {item.name}
-                        </p>
-                        {item.number ? (
-                          <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                            {item.number}
-                          </p>
-                        ) : null}
-                        <div className="mt-2 space-y-1.5 text-xs">
-                          <p className="flex items-center justify-between gap-2">
-                            <span className="text-muted-foreground">
-                              Status
-                            </span>
-                            <span>{item.status}</span>
-                          </p>
-                          <p className="flex items-center justify-between gap-2">
-                            <span className="text-muted-foreground">Date</span>
-                            <span>{item.date}</span>
-                          </p>
-                          <p className="flex items-center justify-between gap-2">
-                            <span className="text-muted-foreground">Time</span>
-                            <span className="inline-flex items-center gap-1">
-                              <Clock3 className="size-3" />
-                              {item.time}
-                            </span>
-                          </p>
-                          <p className="flex items-center justify-between gap-2">
-                            <span className="text-muted-foreground">
-                              Duration
-                            </span>
-                            <span>{item.duration}</span>
-                          </p>
-                        </div>
-                      </TooltipContent>
-                    </Tooltip>
-                  ))}
-                </ul>
+                            <div className="mt-2 space-y-1.5 text-xs">
+                              <p className="flex items-center justify-between gap-2">
+                                <span className="text-muted-foreground">
+                                  Status
+                                </span>
+                                <span
+                                  className={cn(
+                                    "rounded-full px-2 py-0.5 font-medium",
+                                    styles.badge,
+                                  )}
+                                >
+                                  {item.isUnanswered
+                                    ? "Unanswered"
+                                    : item.status}
+                                </span>
+                              </p>
+                              <p className="flex items-center justify-between gap-2">
+                                <span className="text-muted-foreground">
+                                  Direction
+                                </span>
+                                <span>{item.status}</span>
+                              </p>
+                              <p className="flex items-center justify-between gap-2">
+                                <span className="text-muted-foreground">
+                                  Date
+                                </span>
+                                <span>{item.date}</span>
+                              </p>
+                              <p className="flex items-center justify-between gap-2">
+                                <span className="text-muted-foreground">
+                                  Time
+                                </span>
+                                <span className="inline-flex items-center gap-1">
+                                  <Clock3 className="size-3" />
+                                  {item.time}
+                                </span>
+                              </p>
+                              <p className="flex items-center justify-between gap-2">
+                                <span className="text-muted-foreground">
+                                  Duration
+                                </span>
+                                <span
+                                  className={cn(
+                                    item.isUnanswered && styles.text,
+                                  )}
+                                >
+                                  {item.duration}
+                                </span>
+                              </p>
+                            </div>
+                          </TooltipContent>
+                        </Tooltip>
+                      );
+                    })}
+                  </ul>
+                )}
               </div>
 
               <div className="border-t border-border px-6 py-4">

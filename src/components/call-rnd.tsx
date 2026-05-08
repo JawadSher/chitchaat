@@ -388,6 +388,7 @@ function CallRND() {
   const updateCallStatus = useCallRNDState((state) => state.updateCallStatus);
   const updateLiveKitInfo = useCallRNDState((state) => state.updateLiveKitInfo);
   const roomName = useCallRNDState((state) => state.roomName);
+  const outgoingRingSignalKeyRef = useRef<string | null>(null);
   const width = window.innerWidth - 550;
   const height = window.innerHeight - 150;
   const isWaitingForAnswer = isRinging && call_status === "ringing";
@@ -508,6 +509,10 @@ function CallRND() {
     if (!callType || !callee_id) return;
     if (callDirection === "incoming") return;
 
+    const signalKey = `${callee_id}:${callType}`;
+    if (outgoingRingSignalKeyRef.current === signalKey) return;
+
+    outgoingRingSignalKeyRef.current = signalKey;
     updateCallStatus({ call_status: "ringing" });
     sendCallSignal({ calleeId: callee_id, callType, call_status: "ringing" });
   }, [callType, callee_id, callDirection, sendCallSignal, updateCallStatus]);

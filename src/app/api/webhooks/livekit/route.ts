@@ -21,8 +21,6 @@ export async function POST(request: NextRequest) {
 
     const event = await receiver.receive(body, authorization);
 
-    console.log(event);
-
     return NextResponse.json({
       success: true,
       status: 200,

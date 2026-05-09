@@ -29,12 +29,14 @@ export async function insertCall(
     callee_id,
     call_mode,
     status,
+    room_name,
   }: {
     call_type?: "video" | "audio";
     caller_id: string;
     callee_id: string;
     call_mode: "group" | "direct";
     status: "ingoing" | "outgoing" | "missed" | "rejected";
+    room_name?: string | null;
   },
 ) {
   const created_at = new Date().toISOString();
@@ -48,6 +50,7 @@ export async function insertCall(
       caller_id,
       call_mode,
       callee_id,
+      room_name,
     })
     .select()
     .single();
@@ -130,11 +133,13 @@ export async function sendCallSignal(
 
     let roomName = null;
     let token = null;
-    if (call_status === "accepted") {
-      const result = await getLiveKitToken({});
+
+    if (call_status === "ringing") {
+      const result = await getLiveKitToken({ RN: roomName });
       if (!result) {
         throw new Error("Failed to create a call session");
       }
+
       const { token: TN, roomName: RN } = result;
       roomName = RN;
       token = TN;
@@ -169,6 +174,7 @@ export async function sendCallSignal(
         callee_id,
         call_mode,
         status: "outgoing",
+        room_name: roomName!,
       });
     }
 

@@ -11,6 +11,7 @@ import {
   useParticipants,
   useTracks,
   VideoTrack,
+  setLogLevel,
 } from "@livekit/components-react";
 import { ConnectionState, Track } from "livekit-client";
 import { useCallRNDState } from "@/store/use-call-rnd";
@@ -28,6 +29,7 @@ type LiveKitCallRoomProps = {
   userInfo: CallUserInfo;
 };
 
+setLogLevel("silent", { liveKitClientLogLevel: "silent" });
 function ConnectionBadge() {
   const connectionState = useConnectionState();
   const participants = useParticipants();
@@ -50,7 +52,7 @@ function ConnectionBadge() {
 }
 
 function CallTimerBadge({ statusText }: { statusText: string }) {
-  if(statusText.startsWith("Con")) return;
+  if (statusText.startsWith("Con")) return;
 
   return (
     <div className="absolute right-3 top-3 z-10 rounded-full bg-background/80 px-3 py-1 text-xs font-semibold tabular-nums text-foreground shadow-sm ring-1 ring-border backdrop-blur">
@@ -166,7 +168,9 @@ function VideoCallStage({
   const cameraTracks = tracks.filter(
     (trackRef) => trackRef.source === Track.Source.Camera,
   );
-  const visibleTracks = screenShareTracks.length ? screenShareTracks : cameraTracks;
+  const visibleTracks = screenShareTracks.length
+    ? screenShareTracks
+    : cameraTracks;
 
   return (
     <div className="relative flex flex-1 min-h-0 flex-col bg-muted m-1 rounded-lg border">
@@ -206,7 +210,9 @@ function CallStage({
   userInfo: CallUserInfo;
 }) {
   const callType = useCallRNDState((state) => state.callType);
-  const tracks = useTracks([{ source: Track.Source.ScreenShare, withPlaceholder: false }]);
+  const tracks = useTracks([
+    { source: Track.Source.ScreenShare, withPlaceholder: false },
+  ]);
   const hasScreenShare = tracks.length > 0;
 
   if (minimized) return null;

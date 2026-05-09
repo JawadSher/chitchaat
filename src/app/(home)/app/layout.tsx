@@ -147,6 +147,9 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
             call_status,
           });
           updateLiveKitInfo({ roomName, token: null });
+          client.invalidateQueries({
+            queryKey: ["get-calls", user?.id],
+          });
         })
         .subscribe((status) => {
           if (status === "CLOSED") subscribe();

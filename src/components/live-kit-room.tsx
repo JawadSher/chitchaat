@@ -15,6 +15,7 @@ import {
 } from "@livekit/components-react";
 import { ConnectionState, Track } from "livekit-client";
 import { useCallRNDState } from "@/store/use-call-rnd";
+import { toast } from "sonner";
 
 type CallUserInfo = {
   name: string | null;
@@ -256,6 +257,7 @@ function LiveKitCallRoom({
 }: LiveKitCallRoomProps) {
   const token = useCallRNDState((state) => state.token);
   const callType = useCallRNDState((state) => state.callType);
+  const setDisableCallRND = useCallRNDState((state) => state.setDisableCallRND);
 
   if (!token) {
     return (
@@ -276,6 +278,10 @@ function LiveKitCallRoom({
       connect={true}
       video={callType === "video"}
       audio={true}
+      onError={(error: any) => {
+        toast.error(error.message);
+        setDisableCallRND();
+      }}
     >
       <ConversationConnectionWatcher
         onConversationConnected={onConversationConnected}

@@ -160,6 +160,7 @@ function Calls() {
   const setEnableCallRND = useCallRNDState((state) => state.setEnableCallRND);
   const [openContactDialog, setOpenContactDialog] = useState(false);
   const [callType, setCallType] = useState<"video" | "audio">("video");
+  const [searchQuery, setSearchQuery] = useState("");
   const { user } = useUser();
   const currentUserId = user?.id;
   const searchParams = useSearchParams();
@@ -192,6 +193,15 @@ function Calls() {
       };
     });
   }, [cachedContacts, currentUserId, data]);
+  const filteredRecentCalls = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+
+    if (!query) return recentCalls;
+
+    return recentCalls.filter((item) =>
+      item.name.toLowerCase().includes(query),
+    );
+  }, [recentCalls, searchQuery]);
 
   const handleTabChange = useCallback(
     (value: string) => {
@@ -217,6 +227,8 @@ function Calls() {
 
               <div className="w-full h-fit relative">
                 <Input
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
                   className="rounded-full border-none pl-8"
                   placeholder="Search your friends list..."
                 />
@@ -242,9 +254,13 @@ function Calls() {
                   <div className="px-1 py-6 text-sm text-muted-foreground">
                     No recent calls yet.
                   </div>
+                ) : filteredRecentCalls.length === 0 ? (
+                  <div className="px-1 py-6 text-sm text-muted-foreground">
+                    No calls found for {searchQuery.trim()}.
+                  </div>
                 ) : (
                   <ul className="space-y-4">
-                    {recentCalls.map((item) => {
+                    {filteredRecentCalls.map((item) => {
                       const styles = getCallStatusStyles(item);
                       const DirectionIcon =
                         item.status === "Outgoing"

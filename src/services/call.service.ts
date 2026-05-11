@@ -89,6 +89,7 @@ export async function sendCallSignal(
     caller_id,
     call_mode,
     call_status,
+    room_name,
   }: {
     user_id: string;
     callee_id: string;
@@ -96,10 +97,10 @@ export async function sendCallSignal(
     caller_id: string;
     call_mode: "direct" | "group";
     call_status: "ringing" | "close" | "missed" | "accepted";
+    room_name?: string | null;
   },
 ) {
   try {
-    console.log("---------- Step 4-------");
     const { data, error } = await supabase
       .from("contacts")
       .select("user_id, contact_user_id, status, is_deleted")
@@ -118,7 +119,6 @@ export async function sendCallSignal(
     }
 
     if (call_status === "ringing") {
-      console.log("---------- Step 5-------");
       const { error: is_in_call_error, data: is_in_call_data } = await supabase
         .from("users_public")
         .select("user_id, is_in_call")
@@ -129,18 +129,14 @@ export async function sendCallSignal(
         throw new Error("The user is busy on another call.");
     }
 
-    console.log("---------- Step 6-------");
-
     const callChannel = supabase.channel(`incomming-call:${callee_id}`, {
       config: { private: false },
     });
 
-    let roomName = null;
+    let roomName = room_name ?? null;
     let token = null;
 
     if (call_status === "ringing") {
-      console.log("---------- Step 7-------");
-
       const result = await getLiveKitToken({ RN: roomName });
       if (!result) {
         throw new Error("Failed to create a call session");
@@ -150,8 +146,6 @@ export async function sendCallSignal(
       roomName = RN;
       token = TN;
     }
-
-    console.log("---------- Step 8-------");
 
     const [, channel_Res] = await Promise.all([
       supabase
@@ -176,8 +170,6 @@ export async function sendCallSignal(
     });
 
     if (call_status === "ringing") {
-      console.log("---------- Step 9-------");
-
       await insertCall(supabase, {
         call_type,
         caller_id,
@@ -186,11 +178,7 @@ export async function sendCallSignal(
         status: "outgoing",
         room_name: roomName!,
       });
-      console.log("---------- Step 10-------");
     }
-
-    console.log("---------- Step 11 - Call Signal Send Completed -------");
-    console.log("---------- Step 12 - Call Signal Send Completed -------");
 
     return { channel_Res, token, roomName };
   } catch (error: any) {

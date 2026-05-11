@@ -131,14 +131,18 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
             roomName,
           } = payload.payload;
 
-          console.log("---------- Callee Side - Step 14-------");
-
           if (call_status === "close" && cached_caller_id === caller_id) {
             updateCallStatus({ call_status });
             return;
           }
 
-          console.log("---------- Step 15-------");
+          if (call_status === "accepted") {
+            updateCallStatus({ call_status });
+            if (roomName) {
+              updateLiveKitInfo({ roomName, token: null });
+            }
+            return;
+          }
 
           updateIsInCall({ is_in_call: true });
           setEnableCallRND({

@@ -29,10 +29,12 @@ export const useSendCallSignal = ({
       calleeId,
       callType,
       call_status,
+      room_name,
     }: {
       calleeId: string;
       callType: "audio" | "video";
       call_status: "ringing" | "close" | "missed" | "accepted";
+      room_name?: string | null;
     }) => {
       return await sendCallSignal(supabase, {
         user_id: user?.id!,
@@ -41,13 +43,15 @@ export const useSendCallSignal = ({
         call_type: callType,
         call_mode: "direct",
         call_status,
+        room_name,
       });
     },
     onSuccess: (res: any, variables) => {
-      const { roomName, token } = res;
+      const { roomName } = res;
       
-      console.log("---------- Step 13 -------")
-      updateLiveKitInfo({ roomName, token });
+      if (variables.call_status === "ringing") {
+        updateLiveKitInfo({ roomName, token: null });
+      }
       setIsRinging(variables.call_status === "ringing");
       if (variables.call_status === "close") {
         client.invalidateQueries({

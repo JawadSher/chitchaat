@@ -212,19 +212,23 @@ function RNDFooter({
   call_type,
   call_direction,
   call_status,
+  room_name,
 }: {
   call_direction: "ingoing" | "outgoing";
   callee_id: string;
   call_type: "video" | "audio" | null;
   call_status: "ringing" | "close" | "missed" | "accepted" | null;
+  room_name: string | null;
   sendCallSignal: ({
     calleeId,
     callType,
     call_status,
+    room_name,
   }: {
     calleeId: string;
     callType: "audio" | "video";
     call_status: "ringing" | "close" | "missed" | "accepted";
+    room_name?: string | null;
   }) => void;
 }) {
   const room = useMaybeRoomContext();
@@ -345,6 +349,7 @@ function RNDFooter({
               calleeId: callee_id,
               callType: call_type!,
               call_status: "accepted",
+              room_name,
             });
             updateCallStatus({ call_status: "accepted" });
           }}
@@ -464,7 +469,6 @@ function CallRND() {
 
   useEffect(() => {
     if (!isWaitingForAnswer || callDirection !== "outgoing") return;
-    console.log("---------- Step 3-------")
 
     const interval = setInterval(() => {
       callBeepAudio.current.pause();
@@ -491,12 +495,7 @@ function CallRND() {
   }, [hasConversationStarted]);
 
   useEffect(() => {
-    if (
-      callDirection === "ingoing" &&
-      roomName?.length &&
-      call_status === "accepted"
-    ) {
-          console.log("---------- Step 16-------")
+    if (roomName?.length && call_status === "accepted") {
 
       if (roomName.length && token?.length) {
         return;
@@ -510,11 +509,10 @@ function CallRND() {
         }
 
         updateLiveKitInfo({ roomName, token: result.token });
-        console.log("---------- Step 17-------")
       }
       getToken();
     }
-  }, [roomName, callDirection, updateLiveKitInfo, call_status, token]);
+  }, [roomName, updateLiveKitInfo, call_status, token]);
 
   useEffect(() => {
     if (callDirection === "ingoing") return;
@@ -525,7 +523,6 @@ function CallRND() {
     if (outgoingRingSignalKeyRef.current === signalKey) return;
     outgoingRingSignalKeyRef.current = signalKey;
 
-    console.log("---------- Step 2-------")
     updateCallStatus({ call_status: "ringing" });
     sendCallSignal({ calleeId: callee_id, callType, call_status: "ringing" });
   }, [callType, callee_id, callDirection, sendCallSignal, updateCallStatus]);
@@ -559,6 +556,7 @@ function CallRND() {
             call_direction={callDirection ?? "outgoing"}
             call_type={callType}
             call_status={call_status}
+            room_name={roomName}
             callee_id={callDirection === "ingoing" ? caller_id! : callee_id}
             sendCallSignal={sendCallSignal}
           />

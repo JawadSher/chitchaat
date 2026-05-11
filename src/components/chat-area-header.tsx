@@ -105,7 +105,6 @@ function ChatAreaHeader({
               <Button
                 className="flex-1 rounded-full flex items-center justify-center gap-2 cursor-pointer hover:bg-primary/80"
                 onClick={async () => {
-                  console.log("---------- Step 1 ---------")
                   const res = await requestUserMediaAccess({ type: "audio" });
                   if (!res) return;
                   setOpen(false);

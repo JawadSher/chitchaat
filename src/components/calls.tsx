@@ -390,7 +390,7 @@ function Calls() {
                     }}
                     className="flex min-h-25 items-center justify-center gap-2 rounded-xl bg-accent/40 px-5 py-5 text-md font-medium text-foreground transition-colors hover:bg-accent cursor-pointer"
                   >
-                    <Video className="size-6 text-primary" />
+                    <Video strokeWidth={1.89} className="size-6 text-primary" />
                     Video call
                   </Button>
                   <Button
@@ -401,7 +401,7 @@ function Calls() {
                     }}
                     className="flex min-h-25 items-center justify-center gap-2 rounded-xl bg-accent/40 px-5 py-5 text-md font-medium text-foreground transition-colors hover:bg-accent cursor-pointer"
                   >
-                    <PhoneCall className="size-6 text-primary" />
+                    <PhoneCall strokeWidth={1.89} className="size-6 text-primary" />
                     Audio call
                   </Button>
                   <Button
@@ -409,7 +409,7 @@ function Calls() {
                     type="button"
                     className="flex min-h-25 items-center justify-center gap-2 rounded-xl bg-accent/40 px-5 py-5 text-md font-medium text-foreground transition-colors hover:bg-accent sm:col-span-2 cursor-pointer"
                   >
-                    <MessageCircle className="size-6 text-primary" />
+                    <MessageCircle strokeWidth={1.89} className="size-6 text-primary" />
                     Message
                   </Button>
                 </div>

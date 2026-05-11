@@ -86,10 +86,12 @@ function RNDHeader({
     calleeId,
     callType,
     call_status,
+    room_name,
   }: {
     calleeId: string;
     callType: "audio" | "video";
     call_status: "ringing" | "close";
+    room_name: string | null;
   }) => void;
 }) {
   const [isMaximized, setIsMaximized] = useState(false);
@@ -188,6 +190,7 @@ function RNDHeader({
                     calleeId: callee_id,
                     callType: call_type!,
                     call_status: "close",
+                    room_name: null,
                   });
                   setTimeout(() => {
                     setDisableCallRND();
@@ -210,7 +213,7 @@ function RNDFooter({
   call_direction,
   call_status,
 }: {
-  call_direction: "incoming" | "outgoing";
+  call_direction: "ingoing" | "outgoing";
   callee_id: string;
   call_type: "video" | "audio" | null;
   call_status: "ringing" | "close" | "missed" | "accepted" | null;
@@ -332,7 +335,7 @@ function RNDFooter({
           <ScreenShare className="size-5" strokeWidth={1.89} />
         ),
       })}
-      {call_direction === "incoming" && !isAccepted && (
+      {call_direction === "ingoing" && !isAccepted && (
         <Button
           className="cursor-pointer bg-green-500 text-white hover:bg-green-600 rounded-full min-w-23"
           type="button"
@@ -388,6 +391,7 @@ function CallRND() {
   const updateCallStatus = useCallRNDState((state) => state.updateCallStatus);
   const updateLiveKitInfo = useCallRNDState((state) => state.updateLiveKitInfo);
   const roomName = useCallRNDState((state) => state.roomName);
+  const token = useCallRNDState((state) => state.token);
   const outgoingRingSignalKeyRef = useRef<string | null>(null);
   const width = window.innerWidth - 550;
   const height = window.innerHeight - 150;
@@ -407,14 +411,14 @@ function CallRND() {
 
   const user_info = (() => {
     if (
-      (callDirection === "incoming" && caller_id) ||
+      (callDirection === "ingoing" && caller_id) ||
       (callDirection === "outgoing" && callee_id)
     ) {
       const contacts: any = client.getQueryData(["get-contacts", user?.id]);
       const res = contacts?.find(
         (c: any) =>
           c.contact_user_id ===
-            (callDirection === "incoming" ? caller_id : callee_id) &&
+            (callDirection === "ingoing" ? caller_id : callee_id) &&
           c.status === "accepted" &&
           !c.is_deleted,
       );
@@ -460,6 +464,7 @@ function CallRND() {
 
   useEffect(() => {
     if (!isWaitingForAnswer || callDirection !== "outgoing") return;
+    console.log("---------- Step 3-------")
 
     const interval = setInterval(() => {
       callBeepAudio.current.pause();
@@ -487,10 +492,16 @@ function CallRND() {
 
   useEffect(() => {
     if (
-      callDirection === "incoming" &&
-      roomName &&
+      callDirection === "ingoing" &&
+      roomName?.length &&
       call_status === "accepted"
     ) {
+          console.log("---------- Step 16-------")
+
+      if (roomName.length && token?.length) {
+        return;
+      }
+
       async function getToken() {
         const result = await getLiveKitToken({ RN: roomName });
         if (!result) {
@@ -498,21 +509,23 @@ function CallRND() {
           return;
         }
 
-        updateLiveKitInfo({ roomName: result.roomName, token: result.token });
+        updateLiveKitInfo({ roomName, token: result.token });
+        console.log("---------- Step 17-------")
       }
-
       getToken();
     }
-  }, [roomName, callDirection, updateLiveKitInfo, call_status]);
+  }, [roomName, callDirection, updateLiveKitInfo, call_status, token]);
 
   useEffect(() => {
+    if (callDirection === "ingoing") return;
     if (!callType || !callee_id) return;
-    if (callDirection === "incoming") return;
 
+    
     const signalKey = `${callee_id}:${callType}`;
     if (outgoingRingSignalKeyRef.current === signalKey) return;
-
     outgoingRingSignalKeyRef.current = signalKey;
+
+    console.log("---------- Step 2-------")
     updateCallStatus({ call_status: "ringing" });
     sendCallSignal({ calleeId: callee_id, callType, call_status: "ringing" });
   }, [callType, callee_id, callDirection, sendCallSignal, updateCallStatus]);
@@ -531,7 +544,7 @@ function CallRND() {
       <div className="flex flex-col h-full w-full">
         <RNDHeader
           call_type={callType}
-          callee_id={callDirection === "incoming" ? caller_id! : callee_id}
+          callee_id={callDirection === "ingoing" ? caller_id! : callee_id}
           sendCallSignal={sendCallSignal}
           rndRef={rndRef}
           setMinimized={setMinimized}
@@ -546,7 +559,7 @@ function CallRND() {
             call_direction={callDirection ?? "outgoing"}
             call_type={callType}
             call_status={call_status}
-            callee_id={callDirection === "incoming" ? caller_id! : callee_id}
+            callee_id={callDirection === "ingoing" ? caller_id! : callee_id}
             sendCallSignal={sendCallSignal}
           />
         </LiveKitCallRoom>

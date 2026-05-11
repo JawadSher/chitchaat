@@ -17,7 +17,7 @@ type CallRNDType = {
     type: "video" | "audio";
     callee_id: string;
     callMode: "direct" | "group" | null;
-    callDirection: "incoming" | "outgoing" | null;
+    callDirection: "ingoing" | "outgoing" | null;
     caller_id?: string | null;
     call_status?: "ringing" | "close" | "missed" | "accepted" | null;
   }) => void;
@@ -35,7 +35,7 @@ type CallRNDType = {
   }) => void;
   setDisableCallRND: () => void;
   callee_id: string | null;
-  callDirection: "incoming" | "outgoing" | null;
+  callDirection: "ingoing" | "outgoing" | null;
   caller_id?: string | null;
   call_status: "ringing" | "close" | "missed" | "accepted" | null;
 };

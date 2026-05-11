@@ -45,12 +45,11 @@ export const useSendCallSignal = ({
     },
     onSuccess: (res: any, variables) => {
       const { roomName, token } = res;
+      
+      console.log("---------- Step 13 -------")
       updateLiveKitInfo({ roomName, token });
       setIsRinging(variables.call_status === "ringing");
-      if (
-        variables.call_status === "ringing" ||
-        variables.call_status === "close"
-      ) {
+      if (variables.call_status === "close") {
         client.invalidateQueries({
           queryKey: ["get-calls", user?.id],
         });

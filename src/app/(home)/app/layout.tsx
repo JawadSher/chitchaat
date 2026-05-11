@@ -87,7 +87,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
 
     const ringtoneAudio = ringtoneRef.current;
 
-    if (call_status === "ringing" && callDirection === "incoming") {
+    if (call_status === "ringing" && callDirection === "ingoing") {
       ringtoneAudio.volume = 1;
       ringtoneAudio.play();
 
@@ -131,10 +131,14 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
             roomName,
           } = payload.payload;
 
+          console.log("---------- Callee Side - Step 14-------");
+
           if (call_status === "close" && cached_caller_id === caller_id) {
             updateCallStatus({ call_status });
             return;
           }
+
+          console.log("---------- Step 15-------");
 
           updateIsInCall({ is_in_call: true });
           setEnableCallRND({
@@ -142,14 +146,17 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
             callee_id: user.id,
             callMode: call_mode,
             callDirection:
-              callDirection === "outgoing" ? "incoming" : "outgoing",
+              callDirection === "outgoing" ? "ingoing" : "outgoing",
             caller_id,
             call_status,
           });
-          updateLiveKitInfo({ roomName, token: null });
-          client.invalidateQueries({
-            queryKey: ["get-calls", user?.id],
-          });
+
+          if (call_status !== "accepted") {
+            updateLiveKitInfo({ roomName, token: null });
+            client.invalidateQueries({
+              queryKey: ["get-calls", user?.id],
+            });
+          }
         })
         .subscribe((status) => {
           if (status === "CLOSED") subscribe();

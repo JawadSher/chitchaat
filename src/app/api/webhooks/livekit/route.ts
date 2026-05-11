@@ -1,3 +1,4 @@
+import { createWebhookClient } from "@/lib/supabase/createWebHookClient";
 import { WebhookReceiver } from "livekit-server-sdk";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -19,9 +20,28 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    const supabase = createWebhookClient();
     const event = await receiver.receive(body, authorization);
 
-    console.log(event);
+    if (event.event === "room_finished") {
+      const started_at = new Date(Number(event.room?.creationTime) * 1000);
+
+      const ended_at = new Date(Number(event.createdAt) * 1000);
+
+      const duration = Math.floor(
+        (ended_at.getTime() - started_at.getTime()) / 1000,
+      );
+
+      await supabase
+        .from("calls")
+        .update({
+          started_at,
+          ended_at,
+          duration,
+        })
+        .eq("room_name", event.room?.name)
+        .eq("is_deleted", false);
+    }
 
     return NextResponse.json({
       success: true,

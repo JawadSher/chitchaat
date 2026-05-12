@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/context-menu";
 import { requestUserMediaAccess } from "./chat-area-header";
 import { useCallRNDState } from "@/store/use-call-rnd";
+import { useRemoveContact } from "@/hooks/react-query/mutation-contact";
 
 function ChatTabSidebar({
   contacts,
@@ -38,6 +39,7 @@ function ChatTabSidebar({
   const onlineUsers = useUserOnlineState((state) => state.onlineUsers) || [];
   const [openContextId, setOpenContextId] = useState<string | null>(null);
   const setEnableCallRND = useCallRNDState((state) => state.setEnableCallRND);
+  const { mutate: removeContactFn, isPending } = useRemoveContact();
 
   return (
     <ResizablePanel
@@ -157,9 +159,12 @@ function ChatTabSidebar({
                         <ContextMenuItem
                           className="cursor-pointer gap-5"
                           variant="destructive"
+                          onClick={() =>
+                            removeContactFn({ id: contact.contact_user_id })
+                          }
                         >
                           <TrashIcon strokeWidth={1.89} className="size-4" />
-                          Delete
+                          {isPending ? "Deleting..." : "Delete"}
                         </ContextMenuItem>
                       </ContextMenuGroup>
                     </ContextMenuContent>
